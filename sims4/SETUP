@@ -1,0 +1,8 @@
+setupLSST
+setup afw -t v7_2
+setenv CAT_SHARE_DATA /lsst/home/aconnolly/imsim/starSED/
+setenv SIMS_DATA_DIR /lsst/home/aconnolly/imsim/starSED/
+setup -k -r ~/LSST/sims/throughputs
+setup -k -r ~/LSST/sims/catalogs/generation/
+setup -k -r ~/LSST/sims/catalogs/measures/
+setup -k -r ~/LSST/DMS/phosim-3.3.2/
