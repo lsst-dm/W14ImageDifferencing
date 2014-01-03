@@ -56,6 +56,7 @@ def distributeFilesForiRODs(topLevelDir, fileName):
     # move file
     try:
         shutil.move(fileName, os.path.join(dir,filename))
+        #print fileName, "->", os.path.join(dir,filename)
     except:
         raise OSError("Unable to move filename %s" % fileName)
 

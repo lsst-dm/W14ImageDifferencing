@@ -1,7 +1,7 @@
 import sys, re
 
 A0V = "starSED/kurucz/kp01_9750.fits_g45_9830.gz"
-M2V = "starSED/mlt/m2.0Full.dat"
+M2V = "starSED/mlt/m2.0Full.dat.gz"
 G0V = "starSED/kurucz/km20_6000.fits_g30_6020.gz"
 
 trimIn = sys.argv[1]
