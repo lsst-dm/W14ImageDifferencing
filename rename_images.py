@@ -26,12 +26,12 @@ def parseFileName(fileName):
     if stubs[0].startswith("lsst_a"):
         imageType, a, obshistid, filter, raft, sensor, channel, exposure = stubs[0].split("_")
         filter = filtmap[filter]
-   	path = "raw/v%08d-%s/%s/%s/%s/" % (int(obshistid),filter, exposure, raft, sensor)
-        filename = "imsim_%08d_%s_%s_%s_%s.fits.gz"%(int(obshistid),raft,sensor,channel,exposure)
+   	path = "raw/v%d-%s/%s/%s/%s/" % (int(obshistid),filter, exposure, raft, sensor)
+        filename = "imsim_%d_%s_%s_%s_%s.fits.gz"%(int(obshistid),raft,sensor,channel,exposure)
     elif stubs[0].startswith("lsst_e"):
 	imageType, e, obshistid, filter, raft, sensor, exposure = stubs[0].split("_")
    	filter = filtmap[filter]
-        path = "eimage/v%08d-%s/%s/%s/" % (int(obshistid),filter,exposure, raft)
+        path = "eimage/v%d-%s/%s/%s/" % (int(obshistid),filter,exposure, raft)
         filename = "eimage_%s_%s_%s_%s.fits.gz"%(obshistid,raft,sensor,exposure)
     else:
        raise TypeError("Incorrect file name: %s" % fileName)
