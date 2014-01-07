@@ -1,0 +1,849 @@
+
+Installing and using PhoSim are relatively easy.  There are instructions here:
+https://dev.lsstcorp.org/trac/wiki/IS_phosim_usability
+
+Star_SEDS.dat contains the SEDs that go into the Galactic model.  Draw from these.
+
+The files used for the W13 sims are:
+/lsst/home/aconnolly/phosim/randomStars.2.seeing.0.6.trim
+/lsst/home/aconnolly/phosim/randomStars.2.seeing.0.88.trim
+/lsst/home/aconnolly/phosim/randomStars.2.seeing.1.2.trim
+/lsst/home/aconnolly/phosim/randomStars.2.trim
+
+NOTE: these are actually not at zero airmass!
+  ZENITH  =        20.2906458698 / Zenith Angle (degrees)
+
+I will want to use these to remake the sims anyways...
+Note that the files for this can be found at:
+
+  /lsst/home/aconnolly/imsim/starSED/
+
+This needs to be CAT_SHARE_DATA.  At NCSA all installed at
+
+  /nfs/lsst/home/becker/LSST/sims
+
+##################
+########## SIMS0
+##################
+
+Running the first set of sims (redoing W13) at
+/nfs/lsst/home/becker/Winter2014/sims0.  Coped files from AJC and
+modified.  Notes on fields:
+
+ Exposure time is SIM_VISTIME
+ Opsim_obshistid is the visit number
+ Opsim_rawseeing is the requested seeing in arcseconds
+
+./phosim examples/star -c examples/nobackground 
+
+ star is a trim file
+ nobackground is a control file.  need both
+
+Which control file did AJC use?  I will start with
+
+  /lsst/home/aconnolly/phosim/examples/clean.params.nobackground
+
+for now
+
+# Errors
+# RuntimeError: randomStars.2.seeing.0.6.out does not exist.
+> mkdir randomStars.2.seeing.0.6.out
+
+# RuntimeError: randomStars.2.seeing.0.6.work does not exist.
+> mkdir randomStars.2.seeing.0.6.work
+
+# IOError: [Errno 2] No such file or directory: 'clean.params.nobackground'
+>  -c clean.params.nobackground
+
+python $PHOSIM_DIR/phosim.py randomStars.2.seeing.0.6.trim -w randomStars.2.seeing.0.6.work -o randomStars.2.seeing.0.6.out -c $PWD/clean.params.nobackground
+
+# Can't find SED file: /nfs/lsst/home/becker/LSST/DMS/phosim/data/SEDs/starSED/kurucz/km50_5000.fits_g20_5140.gz
+# RuntimeError: Error running /nfs/lsst/home/becker/LSST/DMS/phosim/bin/raytrace < raytrace_6866601_R13_S20_E001.pars
+My dirs /nfs/lsst/home/becker/LSST/DMS/phosim/data/SEDs/starSED are incomplete
+Use AJCs
+
+pushd /nfs/lsst/home/becker/LSST/DMS/phosim/data/SEDs/starSED
+mv kurucz kurucz_bad
+mv mlt mlt_bad
+mv wDs wDs_bad
+mv gizis_SED gizis_SED_old
+ln -s /lsst/home/aconnolly/phosim/data/SEDs/starSED/* .
+
+# SHeet, works, but its running all the sensors back to back (6 hours apiece!)
+Want to parallelize on sensor
+
+
+-s R22_S00 
+# Got raft but not sensor
+------------------------------------------------------------------------------------------
+Trim Catalog
+------------------------------------------------------------------------------------------
+Found 1027 source(s) for chip R22_S00.
+Found 997 source(s) for chip R22_S01.
+Found 1035 source(s) for chip R22_S02.
+Found 1050 source(s) for chip R22_S10.
+Found 1015 source(s) for chip R22_S11.
+Found 999 source(s) for chip R22_S12.
+Found 924 source(s) for chip R22_S20.
+Found 1052 source(s) for chip R22_S21.
+Found 968 source(s) for chip R22_S22.
+
+It will guess how many photons its going to produce, and then print out every 10th of the way.
+Per sensor and per snap
+
+# OSError: [Errno 2] No such file or directory: 'randomStars.2.seeing.0.6.work'
+> JESUS!
+
+
+python $PHOSIM_DIR/phosim.py $PWD/randomStars.2.seeing.0.6.trim -w $PWD/randomStars.2.seeing.0.6.work -o $PWD/randomStars.2.seeing.0.6.out -c $PWD/clean.params.nobackground -s R22_S00
+
+# OK, this worked, but had no background (see name of control file)
+
+Got clean.params.beta from AJC:
+zenith_v 23.0
+backbeta 4
+qevariation 0.0
+raydensity 0.0
+airglowvariation 0
+cleartracking
+clearperturbations
+clearclouds
+saturation 0
+blooming 0
+
+Now make a script to run on lsst-dev
+ makeCommands.py
+It needs to make the output dirs.  And it looks like I need a separate work/out dir for each process.  Make that also...
+
+
+SIM_VISTIME 603.0 
+means 300, 3, 300
+
+For 1 snap (test me with shorter exptime)
+SIM_VISTIME 300.0 
+SIM_NSNAP 1
+
+
+To move stuff around, use:
+https://dev.lsstcorp.org/cgit/LSST/DMS/daf_replicate.git/tree/bin 	vdist_pt1_1.py
+
+wget https://dev.lsstcorp.org/cgit/LSST/DMS/daf_replicate.git/plain/bin/vdist_pt1_1.py
+# edit it
+foreach i (*.out)
+  cd $i
+  python ../../vdist_pt1_1.py ../../inputs0 */*E000.fits.gz
+  cd ../
+  end
+
+cd inputs0
+setup obs_lsstSim -t v7_3
+python $OBS_LSSTSIM_DIR/bin/genInputRegistry.py .
+
+# Note that I had to do some serious editing of vdist_pt1_1.py to get
+  the output filename formats correct.  
+
+# Registry built!
+
+Don't forget the mapper...
+
+echo "lsst.obs.lsstSim.lsstSimMapper.LsstSimMapper" >> _mapper
+$OBS_LSSTSIM_DIR/bin/processEimage.py . --id visit=6866603 raft=2,2 sensor=1,1 snap=0
+# does not work?
+# data exist
+sqlite> select * from raw where visit=6866603 and raft="2,2" and sensor="1,1" and snap=0;
+
+Ah, we made sure the raw/ images were in the right format by running
+genInputRegistry.py.  But since we are processing eimage/, are image
+names may be in the wrong format.  Which they appear to be.  I think
+its the extra "0" in the directory names.
+
+cd eimage/
+mv v06866601-fi v6866601-fi
+cd ../
+$OBS_LSSTSIM_DIR/bin/processEimage.py . --id visit=6866601 raft=2,2 sensor=1,1 snap=0
+# BOOM!
+RuntimeError: astrometry_net_data is not setup
+
+Oops...  I will need to generate a astrometry_net_data product from
+the trim catalogs since I will be changing the SEDs.
+
+For now, you can use the astrometry.net data in /lsst8/krughoff/diffim_data.
+
+setup -k -r /lsst8/krughoff/diffim_data/astrometry_net_data
+
+#########3
+ssh lsst-dev
+cd Winter2014/inputs0/
+setupLSST 
+setup obs_lsstSim -t v7_3
+$OBS_LSSTSIM_DIR/bin/processEimage.py . --id visit=6866601^6866602^6866603^88868666 -j 10
+
+##########
+Boom! 
+Now have a look at the image subtraction; use a nominal good configuration from W13
+
+# original
+setup -k -r /lsst8/krughoff/diffim_data/astrometry_net_data ;$PIPE_TASKS_DIR/bin/imageDifference.py /nfs/lsst8/krughoff/diffim_data/sparse_diffim_output_masked/ --id visit=6866601^6866602^6866603 --output=production10_sparse/borderMask0_order5_doPreConvolveFalse_alardDegGauss5_alardNGauss3 --configfile imageDifferenceConfig.py --config winter2013borderMask=0 diaSourceMatchRadius=2.0 doAddCalexpBackground=False useWinter2013Hacks=True winter2013templateId=88868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" >& production10_sparse/borderMask0_order5_doPreConvolveFalse_alardDegGauss5_alardNGauss3/stdout &
+
+# modified
+# shoot, i'll need to use my 2822 since it didn't get merged back to master
+pushd ~/LSST/DMS/pipe_tasks/
+git checkout tickets/2822
+git pull
+setup -k -r .
+scons opt=3
+
+pushd ~/LSST/DMS/ip_diffim/
+git checkout tickets/2822
+git pull
+setup -k -r .
+scons opt=3
+
+cp ~/sparse_diffim/imageDifferenceConfig.py .
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py /nfs/lsst/home/becker/Winter2014/inputs0 --id visit=6866601 --output=/nfs/lsst/home/becker/Winter2014/outputs0 --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=88868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" -j 9
+
+######### Compare images
+
+ds9 inputs0/calexp/v6866601-fi/R22/S11.fits /nfs/lsst8/krughoff/diffim_data/sparse_diffim_output_v7_2/calexp/v6866601-fi/R22/S11.fits 
+
+# Different!   Big diff is:
+
+
+< CREATOR = 'PHOSIM  '                                                            
+< VERSION = 'ddd0d3460ab3425642ee4bee946a77ba9383caa4'                            
+< BRANCH  = 'v3.3.2-6-gddd0d34'                                                   
+< DATE    = '2013-11-22T01:56:21' / file creation date (YYYY-MM-DDThh:mm:ss UT)   
+---
+> CREATOR = 'LSST IMAGE SIMULATOR'                                                
+> VERSION = 'a0621a928086b4f0407b757d316ecc04f122fc21'                            
+> BRANCH  = 'v3.2.2  '                                                            
+> DATE    = '2013-01-25T22:02:08' / file creation date (YYYY-MM-DDThh:mm:ss UT)   
+
+pushd ~/LSST/DMS/phosim/
+
+get v3.2.2
+wget https://dev.lsstcorp.org/cgit/LSST/sims/phosim.git/snapshot/phosim-3.2.2.tar.gz
+hmm this version is very different
+
+ln -s $PHOSIM_DIR/default_instcat 
+
+##################
+########## SIMS1
+##################
+
+[becker@lsst-dev sims1]$ /lsst/home/becker/LSST/DMS/phosim-3.2.2/bin/atmosphere < randomStars.2.seeing.0.6.work/R22_S00/obs_6866601.pars 
+------------------------------------------------------------------------------------------
+Atmosphere Creator
+------------------------------------------------------------------------------------------
+Segmentation fault
+
+
+cd $PHOSIM_DIR/data/SEDs/
+ln -s ../../../phosim/data/SEDs/* .
+
+####################
+
+python $PHOSIM_DIR/phosim /lsst/home/becker/Winter2014/sims1/randomStars.2.seeing.0.6.trim -w /lsst/home/becker/Winter2014/sims1/randomStars.2.seeing.0.6.work/R22_S00 -o /lsst/home/becker/Winter2014/sims1/randomStars.2.seeing.0.6.out/R22_S00 -c /lsst/home/becker/Winter2014/sims1/clean.params.beta -s R22_S00 -b $PHOSIM_DIR/bin/ -d $PHOSIM_DIR/data/
+
+
+# Grr, have to use 3.3.2 package
+# Redo in /nfs/lsst/home/becker/Winter2014/sims1
+
+ds9 randomStars.2.seeing.0.6.out/R22_S00/lsst_e_6866601_f3_R22_S00_E000.fits.gz  /nfs/lsst8/krughoff/diffim_data/sparse_diffim_output_v7_2/_parent/eimage/v6866601-fi/E000/R22/eimage_6866601_R22_S00_E000.fits.gz
+
+#####
+
+3.3.2 still has the damn borders...
+
+Need to revert all the way to 3.2.2 and deal with the segfaults
+
+##################
+########## SIMS2
+##################
+
+# Grrr apparently I have to run it in the sims dir!!!
+
+cd ~/LSST/DMS/phosim-3.2.2/
+
+python phosim ~/Winter2014/sims2/randomStars.2.seeing.0.6.trim -p 5 -s "R22_S00|R22_S01|R22_S02|R22_S10|R22_S11|R22_S12|R22_S20|R22_S21|R22_S22" -o randomStars.2.seeing.0.6.out -w randomStars.2.seeing.0.6.work &
+
+python phosim ~/Winter2014/sims2/randomStars.2.seeing.0.88.trim -p 5 -s "R22_S00|R22_S01|R22_S02|R22_S10|R22_S11|R22_S12|R22_S20|R22_S21|R22_S22" -o randomStars.2.seeing.0.88.out -w randomStars.2.seeing.0.88.work &
+
+python phosim ~/Winter2014/sims2/randomStars.2.seeing.1.2.trim -p 5 -s "R22_S00|R22_S01|R22_S02|R22_S10|R22_S11|R22_S12|R22_S20|R22_S21|R22_S22" -o randomStars.2.seeing.1.2.out -w randomStars.2.seeing.1.2.work &
+
+python phosim ~/Winter2014/sims2/randomStars.2.template.trim -p 16 -s "R22_S00|R22_S01|R22_S02|R22_S10|R22_S11|R22_S12|R22_S20|R22_S21|R22_S22" -o randomStars.2.template.out -w randomStars.2.template.work &
+
+
+These images have messed up backgrounds.  Something is clearly wrong here...
+
+####
+
+According to the ticket I filed with John, the borders in 3.2.2 can be
+turned off with "fieldanisotropy 0" in the command file.  Sigh, I
+guess I try this next.
+
+##################
+########## SIMS3
+##################
+
+
+cd sims3
+ doit
+cd ../
+mv vdist_pt1_1.py rename_images.py
+mkdir 
+inputs3
+cd sims3/
+foreach i (*.out)
+  cd $i
+  python ../../rename_images.py ../../inputs3 */*E000.fits.gz
+  cd ../
+  end
+cd ../
+cd inputs3
+setup obs_lsstSim -t v7_3
+python $OBS_LSSTSIM_DIR/bin/genInputRegistry.py .
+  ./raw/v88868666-fi ... started
+  ./raw/v88868666-fi/E000/R22 ... 112 processed, 0 skipped, 0 unrecognized
+  ./raw/v88868666-fi ... completed
+  ./raw/v06866602-fi ... started
+  ./raw/v06866602-fi/E000/R22 ... 144 processed, 0 skipped, 0 unrecognized
+  ./raw/v06866602-fi ... completed
+  ./raw/v06866601-fi ... started
+  ./raw/v06866601-fi/E000/R22 ... 144 processed, 0 skipped, 0 unrecognized
+  ./raw/v06866601-fi ... completed
+  ./raw/v06866603-fi ... started
+  ./raw/v06866603-fi/E000/R22 ... 144 processed, 0 skipped, 0 unrecognized
+  ./raw/v06866603-fi ... completed
+
+  # might be missing some data in 88868666 but lets not worry about it for now
+
+echo "lsst.obs.lsstSim.lsstSimMapper.LsstSimMapper" >> _mapper
+cd eimage/
+mv v06866601-fi v6866601-fi
+mv v06866602-fi v6866602-fi
+mv v06866603-fi v6866603-fi
+cd ../
+setup -k -r /lsst8/krughoff/diffim_data/astrometry_net_data
+$OBS_LSSTSIM_DIR/bin/processEimage.py . --id visit=6866601  raft=2,2 sensor=1,1 snap=0
+$OBS_LSSTSIM_DIR/bin/processEimage.py . --id visit=6866602  raft=2,2 sensor=1,1 snap=0
+$OBS_LSSTSIM_DIR/bin/processEimage.py . --id visit=6866603  raft=2,2 sensor=1,1 snap=0
+$OBS_LSSTSIM_DIR/bin/processEimage.py . --id visit=88868666 raft=2,2 sensor=1,1 snap=0
+
+
+# until I get 2822 tagged
+setup -k -r ~/LSST/DMS/obs_lsstSim/
+setup -k -r ~/LSST/DMS/pipe_tasks/
+setup -k -r ~/LSST/DMS/ip_diffim
+
+
+cd /nfs/lsst/home/becker/Winter2014/
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py /nfs/lsst/home/becker/Winter2014/inputs3 --id visit=6866601 --output=/nfs/lsst/home/becker/Winter2014/outputs3 --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=88868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" -j 9
+
+If I hit up arrow, I find
+
+  AssertionError: config is of type lsst.pex.config.config.Config instead of lsst.pipe.tasks.imageDifference.Winter2013ImageDifferenceConfig
+
+Solution is to clobber the config:
+
+  --clobber-config
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py /nfs/lsst/home/becker/Winter2014/inputs3 --id visit=6866601^6866602^6866603 raft=2,2 sensor=1,1 --output=/nfs/lsst/home/becker/Winter2014/outputs3_doPreConvolveFalse --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=88868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" -j 9 --clobber-config
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py /nfs/lsst/home/becker/Winter2014/inputs3 --id visit=6866601^6866602^6866603 raft=2,2 sensor=1,1 --output=/nfs/lsst/home/becker/Winter2014/outputs3_doPreConvolveTrue --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=88868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" -j 9 --clobber-config
+ 
+# Data output dirs are at:
+/nfs/lsst/home/becker/Winter2014/outputs3_doPreConvolveFalse
+/nfs/lsst/home/becker/Winter2014/outputs3_doPreConvolveTrue
+
+# Compare
+ds9 ~/sparse_diffim/production10_sparse/borderMask0_order5_doPreConvolveTrue_alardDegGauss5_alardNGauss3/deepDiff/v6866603-fi/R22/diffexp-S11.fits outputs3_doPreConvolveTrue/deepDiff/v6866603-fi/R22/diffexp-S11.fits
+
+
+#######################
+
+Validating the results on darkstar
+Use 
+
+/astro/users/acbecker/python/LSST/winter2013_countDiaSources.py
+
+I need to add the _mapper to each directory:
+echo "lsst.obs.lsstSim.lsstSimMapper.LsstSimMapper" >> outputs3_doPreConvolveFalse/_mapper
+echo "lsst.obs.lsstSim.lsstSimMapper.LsstSimMapper" >> outputs3_doPreConvolveTrue/_mapper
+
+python winter2013_countDiaSources.py --id visit=6866601 raft=2,2 sensor=1,1
+
+Unfortunately, pipe_base has changed so datasetType="deepDiff_diaSrc"
+does not work anymore.  I need to track this down...
+
+# Add:
+        parser.add_id_argument(name="--id", datasetType="deepDiff_diaSrc", 
+                               help="data ID, e.g. --id visit=6866601 raft=2,2 sensor=1,1", level="sensor")
+
+# However, 
+  RuntimeError: No registry for lookup
+
+rm outputs3_doPreConvolve*/_parent
+scp becker@lsst5.ncsa.uiuc.edu:/nfs/lsst/home/becker/Winter2014/outputs3/_parent/registry.sqlite3 .
+cd outputs3_doPreConvolveFalse/; ln -s ../ _parent; cd ../
+cd outputs3_doPreConvolveTrue/; ln -s ../ _parent; cd ../
+
+#
+python winter2013_countDiaSources.py --id visit=6866601 raft=2,2 sensor=1,1
+
+
+#####
+
+FINALLY, able to compare R22S11
+
+Before:
+ 6866601
+   False 23 0 23
+   True 10 0 10
+ 6866602
+   False 8 0 8
+   True 7 0 7
+ 6866603
+   False 7 0 7
+   True 3 0 3
+
+After:
+ 6866601
+  False 68676 595 67451
+  True 25 7 18
+ 6866602
+  False 8 0 8
+  True 8 0 8
+ 6866603
+  False 5 0 5
+  True 11 5 5
+
+
+Ruh roh...  Make sure its not the software.  Re-run the W13 data
+#########
+
+$OBS_LSSTSIM_DIR/bin/processEimage.py /nfs/lsst8/krughoff/diffim_data/sparse_diffim_data --id visit=6866601  raft=2,2 sensor=1,1 snap=0 --output=inputs_W13
+$OBS_LSSTSIM_DIR/bin/processEimage.py /nfs/lsst8/krughoff/diffim_data/sparse_diffim_data --id visit=6866602  raft=2,2 sensor=1,1 snap=0 --output=inputs_W13
+$OBS_LSSTSIM_DIR/bin/processEimage.py /nfs/lsst8/krughoff/diffim_data/sparse_diffim_data --id visit=6866603  raft=2,2 sensor=1,1 snap=0 --output=inputs_W13
+$OBS_LSSTSIM_DIR/bin/processEimage.py /nfs/lsst8/krughoff/diffim_data/sparse_diffim_data --id visit=88868666 raft=2,2 sensor=1,1 snap=0 --output=inputs_W13
+
+AttributeError: 'module' object has no attribute 'SOURCE_IO_NO_HEAVY_FOOTPRINTS'
+# soln temporary edit to /lsst/home/becker/LSST/DMS/pipe_tasks/python/lsst/pipe/tasks/processImage.py
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs_W13 --id visit=6866601^6866602^6866603 raft=2,2 sensor=1,1 --output=/nfs/lsst/home/becker/Winter2014/outputs_W13_doPreConvolveTrue --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=88868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" -j 9 --clobber-config
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs_W13 --id visit=6866601^6866602^6866603 raft=2,2 sensor=1,1 --output=/nfs/lsst/home/becker/Winter2014/outputs_W13_doPreConvolveFalse --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=88868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" -j 9 --clobber-config
+
+Re-reduction of W13 data with v7_2 stack:
+ 6866601
+  False 72 11 58
+  True 26 14 12
+ 6866602
+  False 26 15 10
+  True 29 15 13
+ 6866603
+  False 12 0 10
+  True 19 6 10
+
+
+######  OK, go into the metatdata:
+
+python getMetadata.py
+
+# Alard Lupton configuration, basically the same
+
+AL W13 0 6866601          (3, 3, 3)   3   (1.0346439501149352, 1.6359157248384133, 3.0164795507064537)   21
+AL W13 0 6866602          (5, 2, 2)   3   (0.7, 1.4, 2.8)                                                21
+AL W13 0 6866603          (5, 2, 2)   3   (0.9640382144169239, 1.9280764288338479, 3.8561528576676958)   23
+AL W13 1 6866601          (5, 2, 2)   3   (0.7, 1.4, 2.8)                                                21
+AL W13 1 6866602          (5, 2, 2)   3   (1.05426653096716, 2.10853306193432, 4.21706612386864)         25
+AL W13 1 6866603          (5, 2, 2)   3   (1.7196911219080573, 3.4393822438161146, 6.878764487632229)    35
+
+AL W14 of W13 0 6866601   (3, 3, 3)   3   (1.0391950633819946, 1.6431116667450725, 3.029748211970562)    21
+AL W14 of W13 0 6866602   (5, 2, 2)   3   (0.7, 1.4, 2.8)                                                21
+AL W14 of W13 0 6866603   (5, 2, 2)   3   (0.9743323439412189, 1.9486646878824379, 3.8973293757648757)   23
+AL W14 of W13 1 6866601   (5, 2, 2)   3   (0.7, 1.4, 2.8)                                                21
+AL W14 of W13 1 6866602   (5, 2, 2)   3   (1.0558307509687426, 2.111661501937485, 4.22332300387497)      25
+AL W14 of W13 1 6866603   (5, 2, 2)   3   (1.7326271689296666, 3.4652543378593332, 6.9305086757186665)   35
+
+# The WCS RMS basically the same:
+
+SIP_RMS W13        0 6866601 0.0186791582901
+SIP_RMS W13        0 6866602 0.0248329278293
+SIP_RMS W13        0 6866603 0.0319371189512
+SIP_RMS W13        1 6866601 0.0186791582901
+SIP_RMS W13        1 6866602 0.0248329278293
+SIP_RMS W13        1 6866603 0.0319371189512
+
+SIP_RMS W14 of W13 0 6866601 0.0186232749509
+SIP_RMS W14 of W13 0 6866602 0.024978827538
+SIP_RMS W14 of W13 0 6866603 0.0320761094344
+SIP_RMS W14 of W13 1 6866601 0.0186232749509
+SIP_RMS W14 of W13 1 6866602 0.024978827538
+SIP_RMS W14 of W13 1 6866603 0.0320761094344
+
+# Log at log outputs
+/nfs/lsst8/becker/sparse_diffim/production10_sparse/borderMask0_order5_doPreConvolveTrue_alardDegGauss5_alardNGauss3/stdout
+
+imageDifference: Processing {'filter': 'i', 'raft': '2,2', 'sensor': '1,1', 'visit': 6866603}
+imageDifference WARNING: USING WINTER2013 HACK: DEEP CALEXP AS TEMPLATE
+imageDifference: Source selection via src product
+imageDifference: Selected 647 / 827 sources for Psf matching (162 for control sample)
+imageDifference: Registering images
+imageDifference.register: Matching within 1.0 arcsec: 796 matches
+imageDifference.register: Registration WCS: final WCS RMS=0.031937 pixels from 774 matches
+imageDifference: Subtracting images
+imageDifference.subtract: Template Wcs : 1.389584,-0.166863 -> 1.392097,-0.171814
+imageDifference.subtract: Science Wcs : 1.389584,-0.166863 -> 1.392097,-0.171814
+imageDifference.subtract: Growing 647 kernel candidate stars by 35 pixels
+imageDifference.subtract: Selected 618 / 647 sources for KernelCandidacy
+imageDifference.subtract: Matching Psf FWHM 4.94 -> 9.48 pix
+imageDifference.subtract: Final spatial kernel sum 0.050
+imageDifference.subtract: Spatial model condition number 7.269e+09
+imageDifference.subtract: Doing stats of kernel candidates used in the spatial fit.
+imageDifference.subtract: 618 candidates total, 0 rejected, 617 used
+imageDifference.subtract: Spatial kernel model well constrained; 617 candidates, 21 terms, 33 bases
+imageDifference.subtract: Spatial background model appears well constrained; 617 candidates, 3 terms
+imageDifference: Running diaSource detection
+imageDifference.detection: Detected 0 positive sources to 5 sigma.
+imageDifference.detection: Detected 3 negative sources to 5 sigma
+imageDifference: Merging detections into 3 sources
+imageDifference: Running diaSource measurement
+imageDifference.dipolemeasurement: Measuring 3 sources
+imageDifference: Running diaSource measurement
+imageDifference.dipolemeasurement: Measuring 3 sources
+imageDifference.dipolemeasurement: Applying aperture correction to 3 sources
+imageDifference.dipolemeasurement: Classifying 3 sources
+imageDifference: Matched 0 / 3 diaSources to sources
+meas.astrom WARNING: No matches found between input sources and reference catalogue.
+imageDifference WARNING: No diaSource matches with reference catalog
+imageDifference: Evaluating metrics and control sample
+imageDifference: Growing 162 kernel candidate stars by 35 pixels
+imageDifference: Selected 152 / 162 sources for KernelCandidacy
+
+# VS
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs_W13 --id visit=6866603 raft=2,2 sensor=1,1 --output=/nfs/lsst/home/becker/Winter2014/outputs_W13_doPreConvolveTrue --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=88868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" -j 9 --clobber-config
+
+winter2013ImageDifference: Processing {'filter': 'i', 'raft': '2,2', 'sensor': '1,1', 'visit': 6866603}
+winter2013ImageDifference WARNING: USING WINTER2013 : DEEP CALEXP AS TEMPLATE
+winter2013ImageDifference: Source selection via src product
+lsst.ip.diffim.DiaCatalogSourceSelector WARNING: Cannot cut on color info; fields 'g' and 'r' do not exist
+winter2013ImageDifference: Selected 162 / 830 sources for Psf matching (162 for control sample)
+winter2013ImageDifference: Registering images
+winter2013ImageDifference.register: Matching within 1.0 arcsec: 798 matches
+winter2013ImageDifference.register: Registration WCS: final WCS RMS=0.032076 pixels from 770 matches
+winter2013ImageDifference: Subtracting images
+winter2013ImageDifference.subtract: Template Wcs : 1.389584,-0.166863 -> 1.392097,-0.171814
+winter2013ImageDifference.subtract: Science Wcs : 1.389584,-0.166863 -> 1.392097,-0.171814
+winter2013ImageDifference.subtract: Growing 162 kernel candidate stars by 35 pixels
+winter2013ImageDifference.subtract: Selected 155 / 162 sources for KernelCandidacy
+winter2013ImageDifference.subtract: Matching Psf FWHM 4.95 -> 9.54 pix
+winter2013ImageDifference.subtract: Final spatial kernel sum 0.050
+winter2013ImageDifference.subtract: Spatial model condition number 9.816e+09
+winter2013ImageDifference.subtract: Doing stats of kernel candidates used in the spatial fit.
+winter2013ImageDifference.subtract: 155 candidates total, 0 rejected, 155 used
+winter2013ImageDifference.subtract: Spatial kernel model well constrained; 155 candidates, 21 terms, 33 bases
+winter2013ImageDifference.subtract: Spatial background model appears well constrained; 155 candidates, 3 terms
+winter2013ImageDifference: Running diaSource detection
+winter2013ImageDifference.detection: Detected 11 positive sources to 5 sigma.
+winter2013ImageDifference.detection: Detected 11 negative sources to 5 sigma
+winter2013ImageDifference: Merging detections into 22 sources
+winter2013ImageDifference: Running diaSource measurement
+winter2013ImageDifference.dipoleMeasurement: Measuring 22 sources
+winter2013ImageDifference.dipoleMeasurement: Classifying 22 sources
+winter2013ImageDifference: Matched 6 / 22 diaSources to sources
+winter2013ImageDifference: Matched 6 / 22 diaSources to reference catalog
+winter2013ImageDifference: Evaluating metrics and control sample
+winter2013ImageDifference: Growing 162 kernel candidate stars by 35 pixels
+winter2013ImageDifference: Selected 155 / 162 sources for KernelCandidacy
+
+# BIG DIFF:
+
+imageDifference: Selected 647 / 827 sources for Psf matching (162 for control sample)
+ vs
+winter2013ImageDifference: Selected 162 / 830 sources for Psf matching (162 for control sample)
+
+So something going wrong with control sample. One of Paul's wacky one-line fixes was wrong:
+
+   kernelSources = [k for i,k in enumerate(kernelSources) if not i % self.config.controlStepSize]
+
+should be
+
+   kernelSources = [k for i,k in enumerate(kernelSources) if i % self.config.controlStepSize]
+
+FIXED.
+
+RERAN
+
+###############
+
+New:
+6866601
+  False 69850 580 68630
+  True 17 0 17
+6866602
+  False 6 0 6
+  True 6 0 6
+6866603
+  False 3 0 3
+  True 3 0 3
+
+Orig:
+6866601
+  False 23 0 23
+  True 10 0 10
+6866602
+  False 8 0 8
+  True 7 0 7
+6866603
+  False 7 0 7
+  True 3 0 3
+
+
+Rerun of W13:
+6866601
+  False 19 0 19
+  True 10 0 10
+6866602
+  False 9 0 8
+  True 7 0 6
+6866603
+  False 7 0 7
+  True 3 0 3
+
+These basically vaidate the W14 sims, although the good seeing data
+clearly have some issues.  Get new sims running over the christmas break
+
+# Good seeing data:
+
+Look again at the AL sizes:         
+                          DegGauss NGauss SigGauss                                                  KernelSize
+
+AL W13 0 6866601          (3, 3, 3)   3   (1.0346439501149352, 1.6359157248384133, 3.0164795507064537)   21
+AL W13 0 6866602          (5, 2, 2)   3   (0.7, 1.4, 2.8)                                                21
+AL W13 0 6866603          (5, 2, 2)   3   (0.9640382144169239, 1.9280764288338479, 3.8561528576676958)   23
+AL W13 1 6866601          (5, 2, 2)   3   (0.7, 1.4, 2.8)                                                21
+AL W13 1 6866602          (5, 2, 2)   3   (1.05426653096716, 2.10853306193432, 4.21706612386864)         25
+AL W13 1 6866603          (5, 2, 2)   3   (1.7196911219080573, 3.4393822438161146, 6.878764487632229)    35
+
+AL W14 of W13 0 6866601   (3, 3, 3)   3   (1.0391950633819946, 1.6431116667450725, 3.029748211970562)    21
+AL W14 of W13 0 6866602   (5, 2, 2)   3   (0.7, 1.4, 2.8)                                                21
+AL W14 of W13 0 6866603   (5, 2, 2)   3   (0.9743323439412189, 1.9486646878824379, 3.8973293757648757)   23
+AL W14 of W13 1 6866601   (5, 2, 2)   3   (0.7, 1.4, 2.8)                                                21
+AL W14 of W13 1 6866602   (5, 2, 2)   3   (1.0558307509687426, 2.111661501937485, 4.22332300387497)      25
+AL W14 of W13 1 6866603   (5, 2, 2)   3   (1.7326271689296666, 3.4652543378593332, 6.9305086757186665)   35
+
+AL W14 0 6866601          (3, 3, 3)   3   (1.9583640625034533, 3.0964454626656313, 5.709563320525726)    33 [*] 
+AL W14 0 6866602          (5, 2, 2)   3   (0.7, 1.4, 2.8)                                                21
+AL W14 0 6866603          (5, 2, 2)   3   (0.8668032144801899, 1.7336064289603799, 3.4672128579207597)   21 [*]
+AL W14 1 6866601          (5, 2, 2)   3   (0.7, 1.4, 2.8)                                                21
+AL W14 1 6866602          (5, 2, 2)   3   (1.0077872240988166, 2.015574448197633, 4.031148896395266)     25
+AL W14 1 6866603          (5, 2, 2)   3   (1.577239573540838, 3.154479147081676, 6.308958294163352)      35
+
+Getting different gaussian sizes with the new data.  Leading to different size kernels...
+
+Track it down...
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs_W13 --id visit=6866601 raft=2,2 sensor=1,1 --output=/nfs/lsst/home/becker/Winter2014/outputs_W13_doPreConvolveFalse --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=88868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]"  --clobber-config
+
+(Pdb) print targetFwhmPix, referenceFwhmPix, basisDegGauss
+4.94702772684 3.53501294547 None
+(Pdb)  targetSigma    = targetFwhmPix / sigma2fwhm
+(Pdb) referenceSigma = referenceFwhmPix / sigma2fwhm
+(Pdb) kernelSigma = np.sqrt(targetSigma**2 - referenceSigma**2)
+(Pdb) print kernelSigma
+1.46964375259
+
+###
+
+(Pdb) print targetFwhmPix, referenceFwhmPix, basisDegGauss
+4.67415834003 3.34878368918 None
+(Pdb)     targetSigma    = targetFwhmPix / sigma2fwhm
+(Pdb)     referenceSigma = referenceFwhmPix / sigma2fwhm
+(Pdb) kernelSigma = np.sqrt(targetSigma**2 - referenceSigma**2)
+(Pdb) print kernelSigma
+1.38477250863
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs3 --id visit=6866601 raft=2,2 sensor=1,1 --output=/nfs/lsst/home/becker/Winter2014/outputs3_doPreConvolveFalse --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=88868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]"  --clobber-config
+
+###
+
+So maybe this is just a difference in PSF FWHM?
+
+ds9 /lsst/home/becker/sparse_diffim/production10_sparse/borderMask0_order5_doPreConvolveFalse_alardDegGauss5_alardNGauss3/deepDiff/v6866601-fi/R22/diffexp-S11.fits /nfs/lsst/home/becker/Winter2014/outputs3_doPreConvolveFalse/deepDiff/v6866601-fi/R22/diffexp-S11.fits  &
+
+ds9 /lsst/home/becker/sparse_diffim/production10_sparse/borderMask0_order5_doPreConvolveTrue_alardDegGauss5_alardNGauss3/deepDiff/v6866601-fi/R22/diffexp-S11.fits /nfs/lsst/home/becker/Winter2014/outputs3_doPreConvolveTrue/deepDiff/v6866601-fi/R22/diffexp-S11.fits &
+
+# Compare Psfs in sims3 to the actual W13 images
+python psfSims.py
+88868666 (2.9708217701797941, -0.90226511693166078, 0.5941643540359588) vs new (2.8070390495831492, 1.5361212420460129, 0.56140780991662986)
+6866601 (2.1225226439401093, -1.0052565694085889, 0.42450452878802186) vs new (2.0111389692939103, -1.3830145817656698, 0.4022277938587821)
+6866602 (2.9782904413582707, -0.88339653909964322, 0.59565808827165412) vs new (2.8288520874099796, 0.38638362896011058, 0.56577041748199597)
+6866603 (4.0522824154960375, -1.0496423137259874, 0.81045648309920759) vs new (3.7268387769974196, 0.58588650638106177, 0.74536775539948397)
+
+But this comes from IXX, etc.  Not clear how this maps to sigma/FWHM.  Here are FWHM from adaptive second moments
+
+#         FWHM               In arcsec                                                              Spec
+---------------------------------------------------------------------------------------------------------
+88868666 (4.952654636133401,  0.99053092722668024) vs new (4.6788783599351298, 0.93577567198702605)  0.88"
+6866601  (3.5371799214415871, 0.70743598428831744) vs new (3.3511901325143629, 0.67023802650287267)  0.6"
+6866602  (4.9645199105545794, 0.99290398211091591) vs new (4.7165206204667589, 0.94330412409335185)  0.88"
+6866603  (6.7467488466458434, 1.3493497693291687)  vs new (6.210880153196336,  1.2421760306392673)   1.2"
+
+
+OK, so everything looks OK.  I see 2 things at work here:
+
+ * The deconvolution parameters are extremely sensitive to the inputs (AL W14 0 6866601)
+ * The minimum gaussian size might be too small (AL W14 1 6866601) and the better seeing data hit against this.
+
+Try another run with smaller minimum sizes?
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py /nfs/lsst/home/becker/Winter2014/inputs3 --id visit=6866601^6866602^6866603 raft=2,2 sensor=1,1 --output=/nfs/lsst/home/becker/Winter2014/outputs3_doPreConvolveTrue_test --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=88868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" subtract.kernel.active.alardMinSig=0.6 -j 9 --clobber-config
+
+# Don't forget to copy _mapper in there...
+python winter2013_countDiaSources.py --id visit=6866601 raft=2,2 sensor=1,1
+ True 17 0 17
+# and
+python getMetadata.py 
+ AL W14 small 0 6866601   (5, 2, 2)   3   (0.6, 1.2, 2.4)   21
+# Still too small!
+
+# Down to 0.5 pixels
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py /nfs/lsst/home/becker/Winter2014/inputs3 --id visit=6866601^6866602^6866603 raft=2,2 sensor=1,1 --output=/nfs/lsst/home/becker/Winter2014/outputs3_doPreConvolveTrue_test --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=88868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" subtract.kernel.active.alardMinSig=0.5 -j 9 --clobber-config
+
+# TOO SMALL!
+ True 40 16 24
+ AL W14 small 0 6866601   (5, 2, 2)   3   (0.5, 1.0, 2.0)   21
+
+##################
+########## SIMS4
+##################
+
+Lets take these input trim files, and we'll add in the SEDs that we
+did the DCR analysis with.  The majority of objets will be G0V stars,
+with say 10% blue (A0V) and 10% red (M2.0V) stars.  SEDs are:
+
+A0V: kp01_9750.fits_g45_9830.gz
+G0V: km20_6000.fits_g30_6020.gz
+M2V: m2.0Full.dat
+
+I'll do a set of sims that are actually at 0 airmass 
+  Unrefracted_Altitude 90.0
+and then ones at airmass 1.06
+  Unrefracted_Altitude 69.7093541302
+and then ones at airmass 1.5
+  Unrefracted_Altitude 48.0
+
+Script makeNewTrims.py
+
+There are 22000 objects in each trim file
+We want 2200 A0V and 2200 M2V and 17600 G0V
+
+if (oid % 10) == 0:
+    star = A0V
+elif (oid % 10) == 5:
+    star = M2V
+else:
+    star = G0V
+
+python makeNewTrims.py sims3/randomStars.2.seeing.1.2.trim > sims4/randomStars.2.seeing.1.2.trim
+
+[becker@lsst5 ~/Winter2014]$ grep kp01_9750.fits_g45_9830.gz sims4/randomStars.2.seeing.1.2.trim | wc -l
+2200
+[becker@lsst5 ~/Winter2014]$ grep km20_6000.fits_g30_6020.gz sims4/randomStars.2.seeing.1.2.trim | wc -l
+17600
+[becker@lsst5 ~/Winter2014]$ grep m2.0Full.dat sims4/randomStars.2.seeing.1.2.trim | wc -l
+2200
+
+python makeNewTrims.py  sims3/randomStars.2.seeing.0.6.trim > sims4/randomStars.2.seeing.0.6.trim
+python makeNewTrims.py sims3/randomStars.2.seeing.0.88.trim > sims4/randomStars.2.seeing.0.88.trim
+python makeNewTrims.py sims3/randomStars.2.template.trim > sims4/randomStars.2.template.trim
+
+cp ../sims3/SOURCE_ME .
+cp ../sims3/SETUP .
+cp ../sims3/clean.params.beta .
+cp ../sims3/makeCommands.py .
+# Have to run this to make the output dirs
+python makeCommands.py 
+source SETUP 
+source SOURCE_ME
+
+#########
+Can't find SED file: /lsst/home/becker/LSST/DMS/phosim-3.3.2/data/SEDs/starSED/mlt/m2.0Full.dat
+
+Oops, should be .dat.gz
+
+Running.  
+
+In v3.3.2 eimages are    lsst_e_6866602_f3_R22_S00_E000.fits.gz 
+          amp images are lsst_a_6866601_f3_R22_S00_C01_E000.fits.gz
+
+mkdir inputs4
+cd sims4/
+foreach i (*.out)
+ cd $i
+ python ../../rename_images.py ../../inputs4 */*E000.fits.gz
+ cd ../
+ end
+cd ../inputs4
+
+setup obs_lsstSim -t v7_3  # NOTE THAT I HAVE TO RE-SET UP MY TICKET PACKAGES
+python $OBS_LSSTSIM_DIR/bin/genInputRegistry.py .
+
+setup -k -r ~/LSST/DMS/pipe_tasks/
+setup -k -r ~/LSST/DMS/ip_diffim/
+setup -k -r ~/LSST/DMS/obs_lsstSim/
+
+echo "lsst.obs.lsstSim.lsstSimMapper.LsstSimMapper" >> _mapper
+setup -k -r /lsst8/krughoff/diffim_data/astrometry_net_data
+
+$OBS_LSSTSIM_DIR/bin/processEimage.py . --id visit=6866601^6866602^6866603^88868666 -j 10
+
+#  RuntimeError: Unable to match sources with catalog.
+Duh have to make a new index file
+
+Information is in:
+  /lsst2/krughoff/astrometry_net_data/imsim-2012-06-20-0/
+  
+Start with a trim_to_ref.py script and go from there.
+
+# ALSO, I will probably need to adjust the magnitudes of the sources
+  sice I did not take into account their relative brightnesses in
+  I-band.  Do this while waiting for Simon to make astrometry.net
+  script.
+
+##################
+########## SIMS5
+##################
+
+From DCR.py, the flux in the i-band (bandpass 2 there)
+                                  2.5 log10(f/fG0V)
+FLUX 2 0 543443285879.0    A0V   -0.783  # make this much brighter
+FLUX 2 1 1.11848298486e+12 G0V     0.0
+FLUX 2 2 6.77216202646e+12 M2V    1.955  # make this much fainter
+
+python makeNewTrims.py sims3/randomStars.2.seeing.1.2.trim > sims5/randomStars.2.seeing.1.2.trim
+
+# Check fainter M
+[becker@lsst-dev ~/Winter2014]$ grep "object 15 " sims[3,5]/randomStars.2.seeing.1.2.trim
+sims3/randomStars.2.seeing.1.2.trim:object 15    80.030254   -9.5286406 19.690825 starSED/kurucz/km50_5000.fits_g20_5140.gz 0. 0. 0. 0. 0. 0. star none none
+sims5/randomStars.2.seeing.1.2.trim:object 15    80.030254   -9.5286406 21.64583 starSED/mlt/m2.0Full.dat.gz 0. 0. 0. 0. 0. 0. star none none
+
+# Check same G
+[becker@lsst-dev ~/Winter2014]$ grep "object 16 " sims[3,5]/randomStars.2.seeing.1.2.trim
+sims3/randomStars.2.seeing.1.2.trim:object 16     79.30348   -9.8977345 19.120024 starSED/kurucz/km50_5000.fits_g20_5140.gz 0. 0. 0. 0. 0. 0. star none none
+sims5/randomStars.2.seeing.1.2.trim:object 16     79.30348   -9.8977345 19.120024 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+
+# Check brighter A
+[becker@lsst-dev ~/Winter2014]$ grep "object 20 " sims[3,5]/randomStars.2.seeing.1.2.trim
+sims3/randomStars.2.seeing.1.2.trim:object 20    79.498173   -9.5676676 19.467401 starSED/kurucz/km50_5000.fits_g20_5140.gz 0. 0. 0. 0. 0. 0. star none none
+sims5/randomStars.2.seeing.1.2.trim:object 20    79.498173   -9.5676676 18.68440 starSED/kurucz/kp01_9750.fits_g45_9830.gz 0. 0. 0. 0. 0. 0. star none none
+
+# OK!
+
+python makeNewTrims.py sims3/randomStars.2.seeing.0.6.trim  > sims5/randomStars.2.seeing.0.6.trim
+python makeNewTrims.py sims3/randomStars.2.seeing.0.88.trim > sims5/randomStars.2.seeing.0.88.trim
+python makeNewTrims.py sims3/randomStars.2.template.trim    > sims5/randomStars.2.template.trim
+
+
