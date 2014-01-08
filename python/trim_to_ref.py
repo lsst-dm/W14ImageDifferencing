@@ -26,6 +26,32 @@ colors_vs_r["m2.0Full.dat.gz"]["i"] = -1.0173818086
 colors_vs_r["m2.0Full.dat.gz"]["z"] = -1.4889633446 
 colors_vs_r["m2.0Full.dat.gz"]["y"] = -1.6751067151
 
+print "# id,ra,dec,u,g,r,i,z,y,u_err,g_err,r_err,i_err,z_err,y_err,starnotgal,mura,mudec,parallax,variable"
+
+for line in open(sys.argv[1]).readlines():
+    if not line.startswith("object"):
+        continue
+
+    obj, oid, ra, decl, rmag, sed, a, b, c, d, e, f, star, g, h = line.split()
+    sedKey = sed.split("/")[-1]
+    umag = float(rmag) + colors_vs_r[sedKey]["u"]
+    gmag = float(rmag) + colors_vs_r[sedKey]["g"]
+    imag = float(rmag) + colors_vs_r[sedKey]["i"]
+    zmag = float(rmag) + colors_vs_r[sedKey]["z"]
+    ymag = float(rmag) + colors_vs_r[sedKey]["y"]
+
+    print ",".join(map(str, (oid, ra, decl, 
+                             umag, gmag, rmag, imag, zmag, ymag,
+                             0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 
+                             1, 0., 0., 0., 0)))
+
+
+
+
+
+# This version seems to get overwritten by fitscopy later on the
+# process; just make the correct output file in the first place
+sys.exit(1)
 print "# id,dbid,raJ2000,decJ2000,glat,glon,uDerived,gDerived,rDerived,iDerived,zDerived,yDerived,isStar,varClass,objClass,redshift,semiMajorBulge,semiMinorBulge,semiMajorDisk,semiMinorDisk,sedFilename,properMotionRa,properMotionDec,parallax,radialVelocity"
 
 for line in open(sys.argv[1]).readlines():
