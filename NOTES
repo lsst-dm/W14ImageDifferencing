@@ -805,13 +805,76 @@ Duh have to make a new index file
 
 Information is in:
   /lsst2/krughoff/astrometry_net_data/imsim-2012-06-20-0/
-  
+  /lsst2/krughoff/astrometry_net_data/imsim-2012-06-20-0/README_simon
+
 Start with a trim_to_ref.py script and go from there.
+python python/trim_to_ref.py randomStars.2.seeing.0.6.trim > randomStars.2.seeing.0.6.ref
+setup -r /lsst/home/krughoff/lsst/lsst_devel/Linux64/astrometry.net-0.38/astrometry
+text2fits.py randomStars.2.seeing.0.6.ref randomStars.2.seeing.0.6.fits
+fitscopy randomStars.2.seeing.0.6.fits"[col id;ra=raj2000;dec=decj2000;u=uderived;g=gderived;r=rderived;i=iderived;z=zderived;y=yderived;starnotgal=isstar;mura=propermotionra;mudec=propermotiondec;parallax;variable=varclass]" foo.fits
+setenv P 1206200
+build-index -i foo.fits -o index-${P}00.fits -I ${P}00 -P 0 -S r -n 100 -L 20 -E -j 0.4 -r 1
+build-index -1 index-${P}00.fits -o index-${P}01.fits -I ${P}01 -P 1 -S r -L 20 -E -M -j 0.4 
+build-index -1 index-${P}00.fits -o index-${P}02.fits -I ${P}02 -P 2 -S r -L 20 -E -M -j 0.4 
+build-index -1 index-${P}00.fits -o index-${P}03.fits -I ${P}03 -P 3 -S r -L 20 -E -M -j 0.4 
+build-index -1 index-${P}00.fits -o index-${P}04.fits -I ${P}04 -P 4 -S r -L 20 -E -M -j 0.4 
+ls index-1206200* | awk '{printf("modhead %s+7 REFCAT 'imsim-stars-2012-06-20_gals-2012-06-20'\n",$1)}' | sh     
+
+# Some of these steps seem unncessary; adjust trim_to_ref.py to avoid
+# having to run fitscopy
+python python/trim_to_ref.py /tmp/randomStars.2.seeing.0.6.trim > /tmp/randomStars.2.seeing.0.6.ref
+text2fits.py randomStars.2.seeing.0.6.ref randomStars.2.seeing.0.6.fits
+build-index -i randomStars.2.seeing.0.6.fits -o index-${P}00.fits -I ${P}00 -P 0 -S r -n 100 -L 20 -E -j 0.4 -r 1
+build-index -1 index-${P}00.fits -o index-${P}01.fits -I ${P}01 -P 1 -S r -L 20 -E -M -j 0.4 
+build-index -1 index-${P}00.fits -o index-${P}02.fits -I ${P}02 -P 2 -S r -L 20 -E -M -j 0.4 
+build-index -1 index-${P}00.fits -o index-${P}03.fits -I ${P}03 -P 3 -S r -L 20 -E -M -j 0.4 
+build-index -1 index-${P}00.fits -o index-${P}04.fits -I ${P}04 -P 4 -S r -L 20 -E -M -j 0.4 
+ls index-1206200* | awk '{printf("modhead %s+7 REFCAT 'randomStars.2.seeing.0.6'\n",$1)}' | sh     
+
+# And try it out...
+mkdir astrometry_net_data
+mkdir astrometry_net_data/ups
+touch astrometry_net_data/ups/astrometry_net_data.table 
+setup -k -r astrometry_net_data
+cd ../inputs4/
+$OBS_LSSTSIM_DIR/bin/processEimage.py . --id visit=6866601^6866602^6866603^88868666 -j 10
+
+# IOError: [Errno 2] No such file or directory: '/nfs/lsst/home/becker/Winter2014/astrometry_net_data/andConfig.py'
+cp /lsst8/krughoff/diffim_data/astrometry_net_data/andConfig.py  ../astrometry_net_data/
+
+# ALSO A NOTE: 1206200 is supposed to correspond to the date; change next time
+
+#processEimage.calibrate.astrometry WARNING: No CCD associated with exposure; assuming null distortion
+#processEimage.calibrate.astrometry: Null distortion correction
+#processEimage.calibrate.astrometry: Solving astrometry
+#processEimage.calibrate.astrometry WARNING: Unable to find any index files
+#processEimage.calibrate.astrometry WARNING: Did not get an astrometric solution from Astrometry.net
+# DUH
+mv ../index-12062000* ../astrometry_net_data/
+
+# Still same errors
+OK, this has to do with the andConfig.py script, which lists the index files.  Redo with correct dates.
+setenv P 1401080
+build-index -i randomStars.2.seeing.0.6.fits -o index-${P}00.fits -I ${P}00 -P 0 -S r -n 100 -L 20 -E -j 0.4 -r 1
+build-index -1 index-${P}00.fits -o index-${P}01.fits -I ${P}01 -P 1 -S r -L 20 -E -M -j 0.4 
+build-index -1 index-${P}00.fits -o index-${P}02.fits -I ${P}02 -P 2 -S r -L 20 -E -M -j 0.4 
+build-index -1 index-${P}00.fits -o index-${P}03.fits -I ${P}03 -P 3 -S r -L 20 -E -M -j 0.4 
+build-index -1 index-${P}00.fits -o index-${P}04.fits -I ${P}04 -P 4 -S r -L 20 -E -M -j 0.4 
+ls index-1401080* | awk '{printf("modhead %s+7 REFCAT 'randomStars.2.seeing.0.6'\n",$1)}' | sh     
+
+# 0: Message: Unable to read data for i_err from /nfs/lsst/home/becker/Winter2014/astrometry_net_data/index-140108000.fits
+Hmm, so I am missing some info...  I should just be able to put this in the original script, yes?
+
+There is info on this in $MEAS_ASTROM_DIR/python/lsst/meas/astrom/config.py
+
+Kinda works; fails but not for any obvious reason, hoping its that the
+SEDs are wrong.  Continue on this path down below for SIMS5.
+
 
 # ALSO, I will probably need to adjust the magnitudes of the sources
   sice I did not take into account their relative brightnesses in
   I-band.  Do this while waiting for Simon to make astrometry.net
-  script.
+  script. [I actually made the script above]
 
 ##################
 ########## SIMS5
@@ -847,3 +910,23 @@ python makeNewTrims.py sims3/randomStars.2.seeing.0.88.trim > sims5/randomStars.
 python makeNewTrims.py sims3/randomStars.2.template.trim    > sims5/randomStars.2.template.trim
 
 
+# Ran the sims, lets turn into input images and try the astrometry!
+mkdir inputs5
+cd sims5/
+foreach i (*.out)
+ cd $i
+ python ../../python/rename_images.py ../../inputs5 */*E000.fits.gz
+ cd ../ 
+ end
+cd ../inputs5
+setup pysqlite
+python $OBS_LSSTSIM_DIR/bin/genInputRegistry.py .
+echo "lsst.obs.lsstSim.lsstSimMapper.LsstSimMapper" >> _mapper
+$OBS_LSSTSIM_DIR/bin/processEimage.py . --id visit=6866601^6866602^6866603^88868666
+
+# BOOM!
+  processEimage.calibrate.astrometry: Got astrometric solution from Astrometry.net
+
+$OBS_LSSTSIM_DIR/bin/processEimage.py . --id visit=6866601^6866602^6866603^88868666 -j 10
+
+# Works!  First thigns first.  Compare the positions of objects in the images, vs. their colors.
