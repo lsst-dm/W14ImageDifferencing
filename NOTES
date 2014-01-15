@@ -929,4 +929,179 @@ $OBS_LSSTSIM_DIR/bin/processEimage.py . --id visit=6866601^6866602^6866603^88868
 
 $OBS_LSSTSIM_DIR/bin/processEimage.py . --id visit=6866601^6866602^6866603^88868666 -j 10
 
-# Works!  First thigns first.  Compare the positions of objects in the images, vs. their colors.
+# Works!  First thigns first.  Compare the positions of objects in the
+  images, vs. their colors.  While this happes, run these sims in
+  different filters.
+
+######### Astrometry
+
+When matching the sources to the reference catalog via:
+  astrometer.useKnownWcs(srcA, exposure=expA).matches 
+the refernce schema by default only has the magntiude of yoru expsure in it.  But I need all
+magnitudes to determine the source color.  I have hacked this together for now by 
+
+from lsst.meas.photocal.colorterms import Colorterm
+class MyColorTerm(object):
+    def get(self):
+        return True
+Colorterm._activeColorterms = {}
+Colorterm._activeColorterms["i"] = MyColorTerm()
+
+This allows the following to set allFluxes=True in
+
+  https://dev.lsstcorp.org/cgit/LSST/DMS/meas_astrom.git/tree/python/lsst/meas/astrom/astrom.py#n220
+
+I really should file a ticket to make this an argument to
+useKnownWcs!!!  Once I figure what is going on, I will. 
+
+Making this go, I find that *all* the source magnitudes are set to the
+same value, namely the magnitude in the r-band.  This comes into play at:
+
+https://dev.lsstcorp.org/cgit/LSST/DMS/meas_astrom.git/tree/python/lsst/meas/astrom/astrom.py#n805
+
+I have verified that the cat returned from solver.getCatalog has these
+numbers the same by default, meaning I have to dig down a level.
+Looks like solver comes from
+
+https://dev.lsstcorp.org/cgit/LSST/DMS/meas_astrom.git/tree/python/lsst/meas/astrom/astrom.py#n908
+
+I.e. from astrometry_net.  Great...  Getting deeper...
+
+http://trac.astrometry.net/browser/trunk/src/astrometry/blind/solver.c
+
+
+Grab the source code and roll my own:
+
+wget http://astrometry.net/downloads/OLD/astrometry.net-0.30.tar.gz
+./configure --prefix=$PWD/../0.30
+make
+make install INSTALL_DIR=$PWD/../0.30
+setup -k -r ~/LSST/DMS/astrometry.net/0.30/
+
+ # yields illegal instruction; perhaps I need to rebuild meas_astrom
+
+scons opt=3
+  Failed to load required dependencies: "astrometry_net"
+
+eups list | grep astrom
+astrometry_net        LOCAL:/lsst/home/becker/LSST/DMS/astrometry.net/0.30 	setup
+
+Maybe I need to call the dir astrometry_net?
+unsetup astrometry_net 
+mv astrometry.net/ astrometry_net/
+setup -k -r astrometry_net/0.30/
+cd $MEAS_ASTROM_DIR/
+scons opt=3
+ Failed to load required dependencies: "astrometry_net"
+ # WTF!?
+Weird...  I notice in /lsst/DC3/stacks/gcc445-RH6/28nov2011/Linux64/external/astrometry_net/0.30/ups/ there is also a astrometry_net.cfg
+Copy this over
+
+unsetup astrometry_net
+cp /lsst/DC3/stacks/gcc445-RH6/28nov2011/Linux64/external/astrometry_net/0.30/ups/astrometry_net.cfg ~/LSST/DMS/astrometry_net/0.30/ups/
+setup -k -r ~/LSST/DMS/astrometry_net/0.30/
+scons opt=3
+# WORKED!
+
+# Back to bedugging...  bedugging?  debugging...
+python python/compareDcrFromSims.py
+
+# WHAT IS THIS!?
+Illegal instruction
+
+And AH CRAP, this was pointed at the wrong astrometry_net data dir:
+
+[becker@lsst5 astrometry_net_data]$ echo $ASTROMETRY_NET_DATA_DIR/
+/lsst8/krughoff/diffim_data/astrometry_net_data/
+
+setup -k -r  /nfs/lsst/home/becker/Winter2014/astrometry_net_data
+
+and I get
+
+(Pdb) print cat[0].get("i"), cat[0].get("r"), cat[0].get("g")         
+1.77499915497e-08 1.61647059959e-08 1.21904116587e-08
+
+Sigh.  Well OK then.  Onwards...
+
+
+I filed ticket #3106 on making it easier to get all magnitudes out of
+the astrometry.net index files.  Can work-around for now.
+
+
+##################
+########## SIMS5gr
+##################
+Opsim_filter 3 # i-band
+Opsim_filter 2 # r-band
+Opsim_filter 1 # g-band
+
+sims5gr/
+foreach i (*.out)
+ cd $i
+ python ../../python/rename_images.py ../../inputs5 */*E000.fits.gz
+ cd ../ 
+ end
+cd ../inputs5
+python $OBS_LSSTSIM_DIR/bin/genInputRegistry.py .
+pysqlite2.dbapi2.IntegrityError: column visit is not unique
+
+ # OK, so rename the vists then...
+[becker@lsst5 eimage]$ mv v6866601-fg v4866601-fg
+[becker@lsst5 eimage]$ mv v6866602-fg v4866602-fg
+[becker@lsst5 eimage]$ mv v6866603-fg v4866603-fg
+[becker@lsst5 eimage]$ mv v88868666-fg v48868666-fg
+
+[becker@lsst5 eimage]$ mv v6866601-fr v5866601-fr
+[becker@lsst5 eimage]$ mv v6866602-fr v5866602-fr
+[becker@lsst5 eimage]$ mv v6866603-fr v4866603-fr
+[becker@lsst5 eimage]$ mv v4866603-fr v5866603-fr
+[becker@lsst5 eimage]$ mv v88868666-fr v58868666-fr
+
+And while I'm at it...
+[becker@lsst5 eimage]$ mv v88868666-fi v68868666-fi
+
+But ack it looks in raw/ not eimage...  Redo above commands in raw/
+
+  Warning: Unrecognized file: ./raw/v48868666-fg/E000/R22/S10/imsim_88868666_R22_S10_C04_E000.fits.gz
+
+Double damn.  Have to rename the .fits files too...
+
+foreach i (4866601 4866602 4866603)
+    foreach j (`find raw/v$i* eimage/v$i* -name "*fits*"`)
+       set jj = `echo $j | sed 's/_6/_4/'`
+       mv $j $jj
+    end
+end
+
+foreach i (48868666)
+    foreach j (`find raw/v$i* eimage/v$i* -name "*fits*"`)
+       set jj = `echo $j | sed 's/_8/_4/'`
+       mv $j $jj
+    end
+end
+
+foreach i (5866601 5866602 5866603)
+    foreach j (`find raw/v$i* eimage/v$i* -name "*fits*"`)
+       set jj = `echo $j | sed 's/_6/_5/'`
+       mv $j $jj
+    end
+end
+
+foreach i (58868666)
+    foreach j (`find raw/v$i* eimage/v$i* -name "*fits*"`)
+       set jj = `echo $j | sed 's/_8/_5/'`
+       mv $j $jj
+    end
+end
+
+foreach i (68868666)
+    foreach j (`find raw/v$i* eimage/v$i* -name "*fits*"`)
+       set jj = `echo $j | sed 's/_8/_6/'`
+       mv $j $jj
+    end
+end
+
+
+$OBS_LSSTSIM_DIR/bin/processEimage.py . --id visit=4866601^4866602^4866603^48868666^5866601^5866602^5866603^58868666^6866601^6866602^6866603^68868666 -j 10
+
+
