@@ -1205,3 +1205,110 @@ direction/magnitude of things is encouraging.  I can see if falling
 and rising at the right redshifts.  But I haven't been able to do
 enough to say that it is a fully accurate representation of the sky.
 I'd really need u-band data for that.
+
+
+# Looking at the script to generate the sim metadata: Its in
+
+  example_utils/observationMetadataUtils.py  
+
+We have:
+
+  def getRotSkyPos(azRad, decRad, latRad, rotTelRad):
+  def getRotTelPos(azRad, decRad, latRad, rotSkyRad):
+  def makeObsParamsAzAltTel(azRad, altRad, mjd, band, rotTelRad=0., longRad=-1.2320792, latRad=-0.517781017, **kwargs):
+  def makeObsParamsAzAltSky(azRad, altRad, mjd, band, rotSkyRad=math.pi, longRad=-1.2320792, latRad=-0.517781017, **kwargs):
+  def makeObsParamsRaDecTel(raRad, decRad, mjd, band, rotTelRad=0., longRad=-1.2320792, latRad=-0.517781017, **kwargs):
+  def makeObsParamsRaDecSky(raRad, decRad, mjd, band, rotSkyRad=math.pi, longRad=-1.2320792, latRad=-0.517781017, **kwargs):
+
+I think what I want to do is set raRad, decRad and band, iterate over MJD say every half hour, and set rotSkyPos to 
+
+  Opsim_rotskypos 251.068956606 
+
+This should ensure that the stars end up in the same position on the
+chip, and the script will report back the appropriate Opsim_rottelpos
+along which I should expect DCR.  Note that the previous phoSim values
+for the necessary attributes are:
+
+ Opsim_expmjd 51130.2617188 
+ Unrefracted_RA 79.6892650466 
+ Unrefracted_Dec -9.70229566883 
+
+Put this script in python/generateTrimFilesDcr.py
+
+Somehow I am getting a segfault on:
+
+  import lsst.sims.catalogs.measures.example_utils as utils
+
+Somehow this seems to be a numpy/scipy problem:
+
+ #0  0x00007f8216f4e9a0 in PyArray_API () from /local/acbecker/winter2012/Linux64/external/numpy/1.6.2+1/lib/python/numpy/core/multiarray.so
+ #1  0x00007f8211ea605b in _import_array () at /local/acbecker/winter2012/Linux64/external/numpy/1.6.2+1/lib/python/numpy/core/include/numpy/__multiarray_api.h:1571
+ #2  initspecfun () at build/src.linux-x86_64-2.7/scipy/special/specfunmodule.c:5820
+ #3  0x00007f821e5ff395 in _PyImport_LoadDynamicModule (name=0x7ffffdb5e140 "scipy.special.specfun", 
+     pathname=0x7ffffdb5d070 "/local/acbecker/winter2012/Linux64/external/scipy/0.10.1+1/lib/python/scipy/special/specfun.so", fp=<value optimized out>)
+     at ./Python/importdl.c:53
+
+We have seen this before.  You need to put "import scipy" as the very
+first line of the script to avoid symbol collision.  Done.
+
+I find for this field:
+    # Max altitude is at: 51130.2728299 (1.2223472022241457, dtype('float64'))
+    # 51130.2728299 70.0353357871
+
+So this field doesn't even go through zenith...  Complication.  I need
+to put dec at the latitude of the telescope, yes?  Yes.
+
+  decRad    = -0.517781017 
+
+works.
+
+  51130.2728299 89.8994905241
+
+Need to make sure that I don't hit any peculiarities of phoSim that
+kick in near zenith.  According to Simon this is not an issue.  So
+we'll just do this.  The dec of the stars needs to be centered at
+-0.517781017 * 180. / np.pi = -29.6666669861 degrees, from
+-9.70229566883, so I should subtract -19.96437131727 from all the
+decs in the new trim files.
+
+Lets select times where the field is at 30 degrees and 50 degrees from
+Zenith.  1.15 and 1.55 airmasses, respectively.
+
+51130.0783855 30.1503015577
+51130.1443577 50.0835971622
+51130.2728299 89.8994905241
+51130.4006077 50.1000418597
+51130.4665799 30.166183362
+
+Will have to rewrite trim file headers, along with the object lines'
+Decs.  Simon does not believe that the order of header fields matters.
+Will find out.  Also, removing 'Opsim_azimuth' and 'Opsim_altitude'
+from the trim file, seem to be unnecessarily redundant with
+"Unrefracted_Altitude", "Unrefracted_Azimuth"
+
+
+NOTE: This page
+
+  https://dev.lsstcorp.org/trac/wiki/IS_instance_catalog
+
+is the most up-to-date on what phoSim requires
+
+
+Lets also rename the obshistIds.  They will be 
+
+ A00B00C:
+ A = g,r,i 1,2,3
+ B = mjd   0..4
+ C = seeing 0=template; 1,2,3 for seeing
+
+python python/generateTrimFilesDcr.py sims5/randomStars.2.seeing.0.6.trim
+python python/generateTrimFilesDcr.py sims5/randomStars.2.seeing.0.88.trim
+python python/generateTrimFilesDcr.py sims5/randomStars.2.seeing.1.2.trim
+python python/generateTrimFilesDcr.py sims5/randomStars.2.template.trim
+
+mkdir sims6
+mv *trim sims6/
+
+> diff 1000000.trim 2000000.trim
+Opsim_obshistid 1000000					      |	Opsim_obshistid 2000000
+Opsim_filter 1						      |	Opsim_filter 2
