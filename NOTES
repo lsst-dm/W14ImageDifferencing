@@ -1206,6 +1206,9 @@ and rising at the right redshifts.  But I haven't been able to do
 enough to say that it is a fully accurate representation of the sky.
 I'd really need u-band data for that.
 
+##################
+########## SIMS6
+##################
 
 # Looking at the script to generate the sim metadata: Its in
 
@@ -1312,3 +1315,120 @@ mv *trim sims6/
 > diff 1000000.trim 2000000.trim
 Opsim_obshistid 1000000					      |	Opsim_obshistid 2000000
 Opsim_filter 1						      |	Opsim_filter 2
+
+
+# on ncsa-dev
+cd sims6
+cp ../sims5/clean.params.beta .
+cp ../sims5/makeCommands.py .
+
+edited makeCommands.py to use the "-p" option for phosim.  Running it now.
+
+
+OK, comparing these sims to previous sims the stars are generally in
+the same place and orientation.  One worry is that the M-stars are
+fainter in the g-band, and the A-stars are fainter in the i-band.
+Going to be tough to figure out DCR with this in the way.  Might have
+to try and do a magnitude correction to each trimfile to make them
+approximately the same brightness in each.  This would then require a
+separate astrometry_net file for each passband.  Hmm...
+
+Also, according to Simon, the magnitude in the trim-files is an
+effective magnitude in a thin passband at 500nm, so something around
+g-band.  I thought it was the integrated r-band mag but it is not.
+
+Anyways, I clearly need to tweak the magnitudes in the input trim
+files.  I then need to create the astrometry.net index from the main
+master trim file that I am using as inputs to the derived trim file.
+
+##################
+########## SIMS7
+##################
+
+Edited generateTrimFilesDcr.py to include per-passband magnitude offset.
+
+python ../python/generateTrimFilesDcr.py ../sims5/randomStars.2.seeing.0.6.trim
+python ../python/generateTrimFilesDcr.py ../sims5/randomStars.2.seeing.0.88.trim
+python ../python/generateTrimFilesDcr.py ../sims5/randomStars.2.seeing.1.2.trim
+python ../python/generateTrimFilesDcr.py ../sims5/randomStars.2.template.trim
+
+# g-band:
+UWacb238:grep object 1000001.trim | head
+object 0    79.509107   -29.6669514173 19.2991330594 starSED/kurucz/kp01_9750.fits_g45_9830.gz 0. 0. 0. 0. 0. 0. star none none
+object 1    79.173911   -29.8841081173 20.5443320176 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 2    79.402141    -29.2055233173 20.6118560176 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 3     80.18331   -29.4803621173 19.8435050176 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 4    80.237691   -29.1792504173 20.3501060176 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 5    79.583418   -29.6499921173 21.0187110127 starSED/mlt/m2.0Full.dat.gz 0. 0. 0. 0. 0. 0. star none none
+object 6    79.606731   -29.8872526173 19.5650780176 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 7    79.978131   -29.5046809173 20.1912090176 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 8     79.92972   -30.1349893173 19.4975330176 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 9    79.842407   -29.9741643173 19.8628970176 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+UWacb239:grep object ../sims6/1000001.trim | head
+object 0    79.509107   -29.6669514173 19.05993 starSED/kurucz/kp01_9750.fits_g45_9830.gz 0. 0. 0. 0. 0. 0. star none none
+object 1    79.173911   -29.8841081173 20.850707 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 2    79.402141    -29.2055233173 20.918231 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 3     80.18331   -29.4803621173 20.14988 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 4    80.237691   -29.1792504173 20.656481 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 5    79.583418   -29.6499921173 22.37292 starSED/mlt/m2.0Full.dat.gz 0. 0. 0. 0. 0. 0. star none none
+object 6    79.606731   -29.8872526173 19.871453 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 7    79.978131   -29.5046809173 20.497584 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 8     79.92972   -30.1349893173 19.803908 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 9    79.842407   -29.9741643173 20.169272 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+
+# r-band:
+UWacb240:grep object 2000001.trim | head
+object 0    79.509107   -29.6669514173 19.05993 starSED/kurucz/kp01_9750.fits_g45_9830.gz 0. 0. 0. 0. 0. 0. star none none
+object 1    79.173911   -29.8841081173 20.850707 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 2    79.402141    -29.2055233173 20.918231 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 3     80.18331   -29.4803621173 20.14988 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 4    80.237691   -29.1792504173 20.656481 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 5    79.583418   -29.6499921173 22.37292 starSED/mlt/m2.0Full.dat.gz 0. 0. 0. 0. 0. 0. star none none
+object 6    79.606731   -29.8872526173 19.871453 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 7    79.978131   -29.5046809173 20.497584 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 8     79.92972   -30.1349893173 19.803908 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 9    79.842407   -29.9741643173 20.169272 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+UWacb241:grep object ../sims6/2000001.trim | head
+object 0    79.509107   -29.6669514173 19.05993 starSED/kurucz/kp01_9750.fits_g45_9830.gz 0. 0. 0. 0. 0. 0. star none none
+object 1    79.173911   -29.8841081173 20.850707 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 2    79.402141    -29.2055233173 20.918231 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 3     80.18331   -29.4803621173 20.14988 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 4    80.237691   -29.1792504173 20.656481 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 5    79.583418   -29.6499921173 22.37292 starSED/mlt/m2.0Full.dat.gz 0. 0. 0. 0. 0. 0. star none none
+object 6    79.606731   -29.8872526173 19.871453 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 7    79.978131   -29.5046809173 20.497584 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 8     79.92972   -30.1349893173 19.803908 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 9    79.842407   -29.9741643173 20.169272 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+
+# i-band:
+UWacb243:grep object 3000001.trim | head
+object 0    79.509107   -29.6669514173 18.8262897545 starSED/kurucz/kp01_9750.fits_g45_9830.gz 0. 0. 0. 0. 0. 0. star none none
+object 1    79.173911   -29.8841081173 20.952281784 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 2    79.402141    -29.2055233173 21.019805784 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 3     80.18331   -29.4803621173 20.251454784 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 4    80.237691   -29.1792504173 20.758055784 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 5    79.583418   -29.6499921173 23.3903018086 starSED/mlt/m2.0Full.dat.gz 0. 0. 0. 0. 0. 0. star none none
+object 6    79.606731   -29.8872526173 19.973027784 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 7    79.978131   -29.5046809173 20.599158784 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 8     79.92972   -30.1349893173 19.905482784 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 9    79.842407   -29.9741643173 20.270846784 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+UWacb244:grep object ../sims6/3000001.trim | head
+object 0    79.509107   -29.6669514173 19.05993 starSED/kurucz/kp01_9750.fits_g45_9830.gz 0. 0. 0. 0. 0. 0. star none none
+object 1    79.173911   -29.8841081173 20.850707 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 2    79.402141    -29.2055233173 20.918231 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 3     80.18331   -29.4803621173 20.14988 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 4    80.237691   -29.1792504173 20.656481 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 5    79.583418   -29.6499921173 22.37292 starSED/mlt/m2.0Full.dat.gz 0. 0. 0. 0. 0. 0. star none none
+object 6    79.606731   -29.8872526173 19.871453 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 7    79.978131   -29.5046809173 20.497584 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 8     79.92972   -30.1349893173 19.803908 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+object 9    79.842407   -29.9741643173 20.169272 starSED/kurucz/km20_6000.fits_g30_6020.gz 0. 0. 0. 0. 0. 0. star none none
+
+So the A-star is gotten fainter by 19.2991330594-19.05993 = 0.24 mags
+and the M-star is rendered brighter by 1.35 mags, in the g-band.  In
+the i-band, the A-star is 0.233 brighter and the M-star is 1.01 mags
+fainter.  So things look to be going in the correct direction.
+
+Somewhat worried that the stars are going to be generally fainter in
+the g-band or i-band compared to r-band, based on the color of
+km20_6000.  Assume its not an issue for now.  
