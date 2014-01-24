@@ -1432,3 +1432,60 @@ fainter.  So things look to be going in the correct direction.
 Somewhat worried that the stars are going to be generally fainter in
 the g-band or i-band compared to r-band, based on the color of
 km20_6000.  Assume its not an issue for now.  
+
+# Back at NCSA:
+python makeCommands.py > SOURCE_ME
+
+Lets run a single sensor in g,r,i to make sure the stars look correct.
+
+python $PHOSIM_DIR/phosim.py $PWD/1001001.trim -w $PWD/1001001.work -o $PWD/1001001.out -c $PWD/clean.params.beta -s R22_S00 &
+python $PHOSIM_DIR/phosim.py $PWD/2001001.trim -w $PWD/2001001.work -o $PWD/2001001.out -c $PWD/clean.params.beta -s R22_S00 &
+python $PHOSIM_DIR/phosim.py $PWD/3001001.trim -w $PWD/3001001.work -o $PWD/3001001.out -c $PWD/clean.params.beta -s R22_S00 &
+
+The stars relative brightness look consistent across the 3 images,
+certainly more so compared to the sim6 results:
+
+  ds9 /lsst/home/becker/Winter2014/sims7/*.out/lsst_e_*_R22_S00_E000.fits.gz
+
+ vs.
+  
+  ds9 /lsst/home/becker/Winter2014/sims6/*.out/lsst_e_*_R22_S00_E000.fits.gz
+
+So lets move forward with this.
+
+One issue is the compute time.  The templates take 1-2 days I believe
+per CCD.  We have 3 passbands, 5 airmasses, which is 15 templates.  We
+then have 3 seeings, which is 135 science visits
+
+Lets put together 2 jobs that run the templates all CCDs as
+a single job.  Then we'll have a third doing all the CCDs from a visit
+at once using "-p".  This will give us 9 * 3 = 27 jobs running.  We
+have 32 at our disposal.
+
+Script 1 has half the templates, with 
+  -s "R22_S00|R22_S01|R22_S02|R22_S10|R22_S11|R22_S12|R22_S20|R22_S21|R22_S22" -p 9
+
+Script 2 has half the templates, with 
+  -s "R22_S00|R22_S01|R22_S02|R22_S10|R22_S11|R22_S12|R22_S20|R22_S21|R22_S22" -p 9
+
+Script 3 has all the science images, with 
+  -s "R22_S00|R22_S01|R22_S02|R22_S10|R22_S11|R22_S12|R22_S20|R22_S21|R22_S22" -p 9
+
+# Here are templtes numbers left:
+grep "000.work" SOURCE_ME | grep -v \# | wc -l
+14
+
+grep "000.work" SOURCE_ME | grep -v \# | head -7 > SOURCE_ME_A
+grep "000.work" SOURCE_ME | grep -v \# | tail -7 > SOURCE_ME_B
+ 
+# Here are the science images left
+grep -v "000.work" SOURCE_ME | grep -v \# | wc -l
+37
+
+grep -v "000.work" SOURCE_ME | grep -v \#  > SOURCE_ME_C
+
+# Go for it!!!
+source SOURCE_ME_A &; source SOURCE_ME_B &; source SOURCE_ME_C &
+[1] 10396
+[2] 10397
+[3] 10398
