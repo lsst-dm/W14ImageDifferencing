@@ -1283,6 +1283,20 @@ Zenith.  1.15 and 1.55 airmasses, respectively.
 51130.4006077 50.1000418597
 51130.4665799 30.166183362
 
+#### NOTE this is actually not zenith distance, but altitude.  Shoot,
+    may have to regenerate.  Yes, need to:
+[becker@lsst5 sims7]$ imhead *.out/lsst_e_*_R22_S22_E000.fits.gz -K AIRMASS
+1000002.out/lsst_e_1000002_f1_R22_S22_E000.fits.gz: 1.99056519240762 
+1001001.out/lsst_e_1001001_f1_R22_S22_E000.fits.gz: 1.30380316360095 
+1001002.out/lsst_e_1001002_f1_R22_S22_E000.fits.gz: 1.30380316360095 
+1003003.out/lsst_e_1003003_f1_R22_S22_E000.fits.gz: 1.30349037366445 
+2001000.out/lsst_e_2001000_f2_R22_S22_E000.fits.gz: 1.30380316360095 
+2001002.out/lsst_e_2001002_f2_R22_S22_E000.fits.gz: 1.30380316360095 
+2002002.out/lsst_e_2002002_f2_R22_S22_E000.fits.gz: 1.00000112099011 
+3000002.out/lsst_e_3000002_f3_R22_S22_E000.fits.gz: 1.99056519240762 
+3002003.out/lsst_e_3002003_f3_R22_S22_E000.fits.gz: 1.00000112099011 
+
+
 Will have to rewrite trim file headers, along with the object lines'
 Decs.  Simon does not believe that the order of header fields matters.
 Will find out.  Also, removing 'Opsim_azimuth' and 'Opsim_altitude'
@@ -1489,3 +1503,21 @@ source SOURCE_ME_A &; source SOURCE_ME_B &; source SOURCE_ME_C &
 [1] 10396
 [2] 10397
 [3] 10398
+
+##################
+########## SIMS8
+##################
+
+Making sure I put these at the correct zenith distance.  If I want ZD
+of 30 and 50, I want altitude of 60 and 40.
+
+51130.1117188 40.1354639235
+51130.1763021 59.9391390204
+51130.2728299 89.8994905241
+51130.3686632 59.9557484613
+51130.4332466 40.1516734543
+
+python ../python/generateTrimFilesDcr.py ../sims5/randomStars.2.seeing.0.6.trim
+python ../python/generateTrimFilesDcr.py ../sims5/randomStars.2.seeing.0.88.trim
+python ../python/generateTrimFilesDcr.py ../sims5/randomStars.2.seeing.1.2.trim
+python ../python/generateTrimFilesDcr.py ../sims5/randomStars.2.template.trim

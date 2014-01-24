@@ -39,7 +39,17 @@ raRad     = 79.6892650466 * np.pi / 180
 decRad    = -0.517781017                  # Putting the star field through zenith
 rotSkyRad = 251.068956606 * np.pi / 180   # Put stars in same orientation on the chip
 mjd0      = 51130.2617188                 # Original MJD from trim files
-mjds      = [51130.0783855, 51130.1443577, 51130.2728299, 51130.4006077, 51130.4665799]
+#mjds      = [51130.0783855, 51130.1443577, 51130.2728299, 51130.4006077, 51130.4665799] # these put things at airmass 1.3, 2.0
+mjds      = [51130.1117188, 51130.1763021, 51130.2728299, 51130.3686632, 51130.4332466]
+
+if 0:
+    for minute in np.arange(-360, 360, 1.0):
+        mjd    = mjd0 + minute / 24. / 60.
+        params = utils.makeObsParamsRaDecSky(raRad, decRad, mjd, "i", rotSkyRad=rotSkyRad)
+        print mjd, params["Unrefracted_Altitude"][0] * 180 / np.pi
+    sys.exit(1)
+
+
 
 utilsKeys = ['Opsim_azimuth', 'Opsim_moondec', 'Opsim_rottelpos', 'Opsim_moonalt', 'Opsim_altitude', 'Opsim_rotskypos', 'Opsim_moonra', 'Opsim_sunalt', 'Unrefracted_RA', 'Opsim_dist2moon', 'Opsim_filter', 'Unrefracted_Dec', "Opsim_obshistid", "Opsim_expmjd", "Unrefracted_Altitude", "Unrefracted_Azimuth"]
 
@@ -62,6 +72,7 @@ for line in open(trimfile).readlines():
     decl   = fields[3]
     newlines.append(re.sub(decl, str(float(decl)+ddecl), line))
     #print line,
+
 
 
 for imjd, mjd in enumerate(mjds):
@@ -90,8 +101,3 @@ for imjd, mjd in enumerate(mjds):
         #print obshistid, params
 
 
-if 0:
-    for minute in np.arange(-360, 360, 1.0):
-        mjd    = mjd0 + minute / 24. / 60.
-        params = utils.makeObsParamsRaDecSky(raRad, decRad, mjd, "i", rotSkyRad=rotSkyRad)
-        print mjd, params["Opsim_altitude"][0] * 180 / np.pi
