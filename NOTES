@@ -1685,3 +1685,137 @@ winter2013ImageDifference: Selected 555 / 866 sources for Psf matching (139 for 
 # So great, we get rid of the other sources, but we *still* need to
   find a way to assess them.  Add them to the control sample, etc.
   Think on this over lunch.
+
+Probably the best way forward is to ask for dcrCatalog (and perhaps
+variablesCatalog) in the code.  For now make them part of the control
+sample.  Address in #3128.  Will be on pipe_tasks.  And hmm...  I have
+an afw work-around in there.  Do I bite the bullet and go full rebuild
+or just stash?  Will stash for now.  Diff below.
+
+diff --git a/python/lsst/pipe/tasks/processImage.py b/python/lsst/pipe/tasks/processImage.py
+index 88ed86b..ec2921b 100644
+--- a/python/lsst/pipe/tasks/processImage.py
++++ b/python/lsst/pipe/tasks/processImage.py
+@@ -196,8 +196,8 @@ class ProcessImageTask(pipeBase.CmdLineTask):
+             self.propagateCalibFlags(calib.sources, sources)
+ 
+         if sources is not None and self.config.doWriteSources:
+-            sourceWriteFlags = (0 if self.config.doWriteHeavyFootprintsInSources
+-                                else afwTable.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
++            sourceWriteFlags = 0# (0 if self.config.doWriteHeavyFootprintsInSources
++                                #else afwTable.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
+             if enableWriteSources:
+                 dataRef.put(sources, self.dataPrefix + 'src', flags=sourceWriteFlags)
+
+# Adding 2 new options to imageDifference:
+
+self.config.doSelectDcrCatalog:
+self.config.doSelectVariableCatalog:
+
+# Lets try this:
+# Normal
+winter2013ImageDifference: Selected 555 / 866 sources for Psf matching (139 for control sample)
+
+# With doSelectDcrCatalog=True
+winter2013ImageDifference: Selected 555 / 866 sources for Psf matching (290 for control sample)
+
+# BOOM!  Re-run them all...
+
+
+#g
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=4866601^4866602^4866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=48868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True  --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse/imageDifferenceWinter2013.out4
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=4866601^4866602^4866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveTrue --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=48868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True  --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveTrue/imageDifferenceWinter2013.out4
+
+#r
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=5866601^5866602^5866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=58868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True  --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse/imageDifferenceWinter2013.out5
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=5866601^5866602^5866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveTrue --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=58868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True  --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveTrue/imageDifferenceWinter2013.out5
+
+#i
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=6866601^6866602^6866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=68868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True  --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse/imageDifferenceWinter2013.out6
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=6866601^6866602^6866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveTrue --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=68868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True  --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveTrue/imageDifferenceWinter2013.out6
+
+# make sure they are all regenerated:
+ls -latr outputs5_doPreConvolve*/deepDiff/*/*/metadata-*boost  | wc -l
+162
+
+# and we should have 3 filters times 3 visits times 2 prefilter options times 9 sensors = 162
+worked!
+
+So just to reiterate, I have run the code to *only* use the Gstars to
+create the image subtraction kernel.  And the A/Mstars are being used
+as part of the control sample.  One minor issue is that I am only
+using 555 stars vs. 647 for fitting since the pot of candidates for
+fitting the kernel is smaller (I've left out the A/Mstars).  
+
+# AH, BUG.  I did not use imageDifferenceConfigGstar.py.  I can check this by
+grep control outputs5_doPreConvolveFalse/imageDifferenceWinter2013.out | grep Sel
+ winter2013ImageDifference: Selected 665 / 938 sources for Psf matching (240 for control sample)
+ winter2013ImageDifference: Selected 652 / 934 sources for Psf matching (255 for control sample)
+ winter2013ImageDifference: Selected 574 / 817 sources for Psf matching (218 for control sample)
+
+I should be getting far fewer sources...  Par for course.  Run and then re-run and then re-run....
+
+Just to make sure; 
+
+  rm -rf outputs5_doPreConvolveFalse outputs5_doPreConvolveTrue
+
+# And double check:
+winter2013ImageDifference: Selected 588 / 938 sources for Psf matching (317 for control sample)
+winter2013ImageDifference: Selected 548 / 894 sources for Psf matching (313 for control sample)
+winter2013ImageDifference: Selected 564 / 913 sources for Psf matching (325 for control sample)
+
+# I could use a smaller fraction of the sources for the control
+  sample, but go with this for now...
+
+# Copy to darkstar
+tar cf - outputs5_doPreConvolve*/deepDiff/*/*/diaSrc*fits | ssh acbecker@darkstar.astro.washington.edu "(cd LSST/Winter2014; tar xvfBp -)"
+tar cf - outputs5_doPreConvolve*/deepDiff/*/*/kernelSrc*fits | ssh acbecker@darkstar.astro.washington.edu "(cd LSST/Winter2014; tar xvfBp -)" 
+
+python python/countDiaSources.py --id visit=6866601 raft=2,2 sensor=1,1
+  outputs5_doPreConvolveFalse No mapper provided and no _mapper available
+
+echo "lsst.obs.lsstSim.lsstSimMapper.LsstSimMapper" >> outputs5_doPreConvolveTrue/_mapper
+echo "lsst.obs.lsstSim.lsstSimMapper.LsstSimMapper" >> outputs5_doPreConvolveFalse/_mapper
+
+python python/countDiaSources.py --id visit=6866601 raft=2,2 sensor=1,1
+  outputs5_doPreConvolveFalse : No module named lsstSim.lsstSimMapper
+
+setup obs_lsstSim -t v7_3
+
+python python/countDiaSources.py --id visit=6866601 raft=2,2 sensor=1,1
+  outputs5_doPreConvolveFalse : libboost_regex.so.1.47.0: cannot open shared object file: No such file or directory
+
+echo $BOOST_DIR/
+  /local/acbecker/winter2012/Linux64/external/boost/1.51.0+4/
+
+eups list boost
+   1.47.0+3   	current
+   1.47.0+6   	Summer2012 Summer2012_prod v5_2 S12a v5_1
+   1.51.0+2   
+   1.51.0+3   	v6_2 v7_1 v7_2 v6_1 v6_3
+   1.51.0+4   	Summer2013 v7_3_1 v7_3 beta stable setup
+
+# Uhh...  What wants 1.47?  Somethign bolloxed.  Try NCSA.
+# OK then...  Works.
+
+[becker@lsst-dev ~/Winter2014]$ python python/countDiaSources.py --id visit=6866601 raft=2,2 sensor=1,1
+: Config override file does not exist: '/lsst/home/becker/LSST/DMS/obs_lsstSim/config/getTaskData.py'
+: Config override file does not exist: '/lsst/home/becker/LSST/DMS/obs_lsstSim/config/lsstSim/getTaskData.py'
+: input=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse
+: calib=None
+: output=None
+CameraMapper: Loading registry registry from /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse/_parent/registry.sqlite3
+outputs5_doPreConvolveFalse : OK
+: Config override file does not exist: '/lsst/home/becker/LSST/DMS/obs_lsstSim/config/getTaskData.py'
+: Config override file does not exist: '/lsst/home/becker/LSST/DMS/obs_lsstSim/config/lsstSim/getTaskData.py'
+: input=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveTrue
+: calib=None
+: output=None
+CameraMapper: Loading registry registry from /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveTrue/_parent/registry.sqlite3
+outputs5_doPreConvolveTrue : OK
+python/countDiaSources.py:89: RuntimeWarning: invalid value encountered in greater
+  (visit > 0) & np.isfinite(x1) & np.isfinite(y1) & (x1>0.) & (y1>0.) & (srcMatchId > 0)
+python/countDiaSources.py:91: RuntimeWarning: invalid value encountered in greater
+  (visit > 0) & np.isfinite(x1) & np.isfinite(y1) & (x1>0.) & (y1>0.) & (srcMatchId == 0)
+False 39867 501 39024
+True 18 0 18
