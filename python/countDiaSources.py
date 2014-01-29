@@ -9,6 +9,14 @@ import lsst.pipe.base as pipeBase
 from lsst.pipe.tasks.getRepositoryData import GetRepositoryDataTask
 from lsst.pipe.tasks.repositoryIterator import RepositoryIterator, SourceData
 
+import warnings
+warnings.simplefilter("ignore", RuntimeWarning)
+
+import lsst.pex.logging as pexLog
+pexLog.Trace_setVerbosity("CameraMapper", -100) # No logging info please
+pexLog.Trace_setVerbosity("", -100) # No logging info please
+
+
 MaxRepos = 1e5
 
 class GetSourcesTask(GetRepositoryDataTask):
@@ -105,9 +113,6 @@ repoIter = RepositoryIterator(
     doPreConvolve = [False, True],
 )
 
-startTime = time.time()
-iterStartTime = startTime
-
 diaSrcData = SourceData(
     datasetType = "deepDiff_diaSrc",
     sourceKeyTuple = (
@@ -145,32 +150,31 @@ diaSrcData = SourceData(
 
 if __name__ == "__main__":
     for ind, repoInfo in enumerate(repoIter):
-        if MaxRepos and ind >= MaxRepos:
-            break
-
         outDir = repoInfo.name
-        print outDir, ":",
-        if not os.path.isdir(outDir):
-            continue
-
-        task_args = [outDir] + sys.argv[1:]
-        try:
-            fullResults = GetSourcesTask.parseAndRun(task_args, doReturnResults=True)
-        except Exception, e:
-            print e
-            continue
-        else:
-            print "OK"
-        taskResult = fullResults.resultList[0].result
-
-        numDiaSources = diaSrcData.addSourceMetrics(repoInfo = repoInfo, 
-                                                    idKeyTuple = taskResult.idKeyTuple,
-                                                    idValList = taskResult.idValList,
-                                                    sourceTableList = taskResult.sourceDict["deepDiff_diaSrc"])
+        for A in (4, 5, 6):
+            for C in (1, 2, 3):
+                visit = "%d86660%d" % (A, C)
+                raft  = "2,2"
+                for sx in (0, 1, 2):
+                    for sy in (0, 1, 2):
+                        sensor = "%d,%d" % (sx, sy)
+                        task_args = [repoInfo.name, "--id", "visit=%s"%(visit), "raft=%s"%(raft), "sensor=%s"%(sensor)]
+                        print outDir, visit, raft, sensor, ":",
+                        try:
+                            fullResults = GetSourcesTask.parseAndRun(task_args, doReturnResults=True)
+                        except Exception, e:
+                            print e
+                            continue
+                        else:
+                            print "OK", 
+                        taskResult = fullResults.resultList[0].result
+                        numDiaSources = diaSrcData.addSourceMetrics(repoInfo = repoInfo, 
+                                                                    idKeyTuple = taskResult.idKeyTuple,
+                                                                    idValList = taskResult.idValList,
+                                                                    sourceTableList = taskResult.sourceDict["deepDiff_diaSrc"])
+                        print numDiaSources
 
     diaSrcData.finalize()
-    duration = time.time() - startTime
-
     sourcesM = []
     sourcesO = []
 
