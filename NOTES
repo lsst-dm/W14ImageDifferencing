@@ -1521,3 +1521,167 @@ python ../python/generateTrimFilesDcr.py ../sims5/randomStars.2.seeing.0.6.trim
 python ../python/generateTrimFilesDcr.py ../sims5/randomStars.2.seeing.0.88.trim
 python ../python/generateTrimFilesDcr.py ../sims5/randomStars.2.seeing.1.2.trim
 python ../python/generateTrimFilesDcr.py ../sims5/randomStars.2.template.trim
+
+python makeCommands.py > SOURCE_ME_ALL
+grep "000.work" SOURCE_ME_ALL | head -8 > SOURCE_ME_A
+grep "000.work" SOURCE_ME_ALL | tail -7 > SOURCE_ME_B
+grep -v "000.work" SOURCE_ME_ALL > SOURCE_ME_C
+
+# Go for it (again)!!!
+source SOURCE_ME_A &; source SOURCE_ME_B &; source SOURCE_ME_C &
+[1] 4510
+[2] 4511
+[3] 4512
+
+
+###########
+#### While v8 are running, I can run image subtraction on the v5 data,
+     which serve as my second test data set
+
+#g
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=4866601^4866602^4866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=48868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]"  --clobber-config -j 3
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=4866601^4866602^4866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveTrue --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=48868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]"  --clobber-config -j 3
+
+#r
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=5866601^5866602^5866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=58868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]"  --clobber-config -j 3
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=5866601^5866602^5866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveTrue --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=58868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]"  --clobber-config -j 3
+
+#i
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=6866601^6866602^6866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=68868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]"  --clobber-config -j 3
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=6866601^6866602^6866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveTrue --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=68868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]"  --clobber-config -j 3
+
+
+########## WARNING: 
+lsst.ip.diffim.DiaCatalogSourceSelector WARNING: Cannot cut on color info; fields 'g' and 'r' do not exist
+
+I need to fix this since I'll be cutting on source color.  This
+requires code development.  Good chance to merge #2822 back to master
+now that Pauls' review is back, and time to check out new tickets for
+W14 dev.  "Out of scopes" for #2822 filed as #3125.
+
+#### MERGE OF 2822 BACK TO MASTER
+To merge #2822 back to master:
+
+cd /nfs/lsst/home/becker/LSST/DMS/ip_diffim
+git pull
+git checkout master
+git pull
+git merge --no-ff tickets/2822
+git push
+
+cd /nfs/lsst/home/becker/LSST/DMS/obs_lsstSim/
+...
+cd /nfs/lsst/home/becker/LSST/DMS/pipe_tasks/
+...
+
+# And of course I need to rebuild
+setup obs_lsstSim -t v7_3
+
+cd /nfs/lsst/home/becker/LSST/DMS/obs_lsstSim/
+setup -k -r .
+scons opt=3
+
+cd /nfs/lsst/home/becker/LSST/DMS/ip_diffim/
+setup -k -r .
+scons opt=3
+# Note the dipole issue remains here, but I don't have updated
+  versions of meas_XXXX to test this.  If buildbot complains I fix.
+
+cd /nfs/lsst/home/becker/LSST/DMS/pipe_tasks
+setup -k -r .
+scons opt=3
+
+# Now lets have a look at the DiaCatalogSourceSelector issue.  I
+probably need to use the results of #3106 which are to allow easier
+extraction of magnitudes from the astrometry.net files.  This requires
+I also work with master of meas_astrom
+
+cd /nfs/lsst/home/becker/LSST/DMS/meas_astrom/
+git pull
+setup -k -r .
+scons opt=3
+
+# This might be enough than, since A) the allFluxes option has been
+  moved to the config, and B) is True by default.  Run one by hand.
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=6866602 raft=2,2 sensor=1,1 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveTrue --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=68868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]"  --clobber-config 
+
+# Running on lsst5, there is a *HUGE* lag in getting this to run.  Disks again...?
+
+# Also, lets give some thought to the catalog selection.  We have in
+  the config:
+
+    grMin = pexConfig.Field(
+        doc = "Minimum g-r color for selection (inclusive)",
+        dtype = float,
+        default = 0.0
+    )
+    grMax = pexConfig.Field(
+        doc = "Maximum g-r color for selection (inclusive)",
+        dtype = float,
+        default = 3.0
+    )
+
+ Assuming we want to have the bulk of the stars (G stars) used to fit
+ the kernel, which have g-r of 0.3.  The A stars have g-r of -0.2 and
+ the M stars of 1.3.  So we want say grMin = 0.0 and grMax = 0.5.
+ NOW, we *do* want them for the control sample though!  Will have to
+ think about how to do this...
+
+[becker@lsst5 ~/Winter2014]$ $PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=6866602 raft=2,2 sensor=1,1 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveTrue --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=68868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" --clobber-config
+: Config override file does not exist: '/nfs/lsst/home/becker/LSST/DMS/obs_lsstSim/config/winter2013ImageDifference.py'
+: Config override file does not exist: '/nfs/lsst/home/becker/LSST/DMS/obs_lsstSim/config/lsstSim/winter2013ImageDifference.py'
+: input=/nfs/lsst/home/becker/Winter2014/inputs5
+: calib=None
+: output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveTrue
+CameraMapper: Loading registry registry from /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveTrue/_parent/registry.sqlite3
+winter2013ImageDifference: Processing {'filter': 'i', 'raft': '2,2', 'sensor': '1,1', 'visit': 6866602}
+winter2013ImageDifference WARNING: USING WINTER2013 : DEEP CALEXP AS TEMPLATE
+winter2013ImageDifference: Source selection via src product
+winter2013ImageDifference: Selected 614 / 866 sources for Psf matching (154 for control sample)
+winter2013ImageDifference: Registering images
+winter2013ImageDifference.register: Matching within 1.0 arcsec: 825 matches
+winter2013ImageDifference.register: Registration WCS: final WCS RMS=0.024354 pixels from 810 matches
+winter2013ImageDifference: Subtracting images
+winter2013ImageDifference.subtract: Template Wcs : 1.389584,-0.166862 -> 1.392098,-0.171813
+winter2013ImageDifference.subtract: Science Wcs : 1.389584,-0.166862 -> 1.392098,-0.171813
+winter2013ImageDifference.subtract: Growing 614 kernel candidate stars by 25 pixels
+winter2013ImageDifference.subtract: Selected 600 / 614 sources for KernelCandidacy
+winter2013ImageDifference.subtract: Matching Psf FWHM 4.67 -> 6.66 pix
+winter2013ImageDifference.subtract: Final spatial kernel sum 0.050
+winter2013ImageDifference.subtract: Spatial model condition number 3.931e+09
+winter2013ImageDifference.subtract: Doing stats of kernel candidates used in the spatial fit.
+winter2013ImageDifference.subtract: 600 candidates total, 0 rejected, 595 used
+winter2013ImageDifference.subtract: Spatial kernel model well constrained; 595 candidates, 21 terms, 33 bases
+winter2013ImageDifference.subtract: Spatial background model appears well constrained; 595 candidates, 3 terms
+winter2013ImageDifference: Running diaSource detection
+winter2013ImageDifference.detection: Detected 0 positive sources to 5 sigma.
+winter2013ImageDifference.detection: Detected 6 negative sources to 5 sigma
+winter2013ImageDifference: Merging detections into 6 sources
+winter2013ImageDifference: Running diaSource measurement
+winter2013ImageDifference.dipoleMeasurement: Measuring 6 sources
+winter2013ImageDifference.dipoleMeasurement: Classifying 6 sources
+winter2013ImageDifference: Matched 0 / 6 diaSources to sources
+winter2013ImageDifference WARNING: No diaSource matches with reference catalog
+winter2013ImageDifference: Evaluating metrics and control sample
+winter2013ImageDifference: Growing 154 kernel candidate stars by 25 pixels
+winter2013ImageDifference: Selected 147 / 154 sources for KernelCandidacy
+
+# To enact changes, we need to modify.  Put in 
+
+root.sourceSelector['diacatalog'].grMax=0.5
+root.sourceSelector['diacatalog'].grMin=0.0
+
+# New config file
+cp imageDifferenceConfig.py imageDifferenceConfigGstar.py
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=6866602 raft=2,2 sensor=1,1 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveTrue --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=68868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" --clobber-config
+
+# Big difference is:
+...
+winter2013ImageDifference: Selected 555 / 866 sources for Psf matching (139 for control sample)
+...
+
+# So great, we get rid of the other sources, but we *still* need to
+  find a way to assess them.  Add them to the control sample, etc.
+  Think on this over lunch.
