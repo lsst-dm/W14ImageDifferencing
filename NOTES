@@ -1819,3 +1819,341 @@ python/countDiaSources.py:91: RuntimeWarning: invalid value encountered in great
   (visit > 0) & np.isfinite(x1) & np.isfinite(y1) & (x1>0.) & (y1>0.) & (srcMatchId == 0)
 False 39867 501 39024
 True 18 0 18
+
+# USEFUL!
+To turn off logging above, say:
+
+import lsst.pex.logging as pexLog
+pexLog.Trace_setVerbosity("CameraMapper", -100) # No logging info please
+pexLog.Trace_setVerbosity("", -100) # No logging info please
+
+And the numpy warnings:
+import warnings
+warnings.simplefilter("ignore", RuntimeWarning)
+
+
+# RESULTS (initial)
+outputs5_doPreConvolveFalse 4866601 2,2 0,0 : OK 8
+outputs5_doPreConvolveFalse 4866601 2,2 0,1 : OK 0
+outputs5_doPreConvolveFalse 4866601 2,2 0,2 : OK 2
+outputs5_doPreConvolveFalse 4866601 2,2 1,0 : OK 2
+outputs5_doPreConvolveFalse 4866601 2,2 1,1 : OK 3
+outputs5_doPreConvolveFalse 4866601 2,2 1,2 : OK 1
+outputs5_doPreConvolveFalse 4866601 2,2 2,0 : OK 1
+outputs5_doPreConvolveFalse 4866601 2,2 2,1 : OK 1
+outputs5_doPreConvolveFalse 4866601 2,2 2,2 : OK 2
+outputs5_doPreConvolveFalse 4866602 2,2 0,0 : OK 6
+outputs5_doPreConvolveFalse 4866602 2,2 0,1 : OK 6
+outputs5_doPreConvolveFalse 4866602 2,2 0,2 : OK 7
+outputs5_doPreConvolveFalse 4866602 2,2 1,0 : OK 7
+outputs5_doPreConvolveFalse 4866602 2,2 1,1 : OK 5
+outputs5_doPreConvolveFalse 4866602 2,2 1,2 : OK 6
+outputs5_doPreConvolveFalse 4866602 2,2 2,0 : OK 3
+outputs5_doPreConvolveFalse 4866602 2,2 2,1 : OK 6
+outputs5_doPreConvolveFalse 4866602 2,2 2,2 : OK 8
+outputs5_doPreConvolveFalse 4866603 2,2 0,0 : OK 2
+outputs5_doPreConvolveFalse 4866603 2,2 0,1 : OK 5
+outputs5_doPreConvolveFalse 4866603 2,2 0,2 : OK 4
+outputs5_doPreConvolveFalse 4866603 2,2 1,0 : OK 1
+outputs5_doPreConvolveFalse 4866603 2,2 1,1 : OK 4
+outputs5_doPreConvolveFalse 4866603 2,2 1,2 : OK 3
+outputs5_doPreConvolveFalse 4866603 2,2 2,0 : OK 7
+outputs5_doPreConvolveFalse 4866603 2,2 2,1 : OK 4
+outputs5_doPreConvolveFalse 4866603 2,2 2,2 : OK 4
+outputs5_doPreConvolveFalse 5866601 2,2 0,0 : OK 52257
+outputs5_doPreConvolveFalse 5866601 2,2 0,1 : OK 61495
+outputs5_doPreConvolveFalse 5866601 2,2 0,2 : OK 52737
+outputs5_doPreConvolveFalse 5866601 2,2 1,0 : OK 44653
+outputs5_doPreConvolveFalse 5866601 2,2 1,1 : OK 48721
+outputs5_doPreConvolveFalse 5866601 2,2 1,2 : OK 62262
+outputs5_doPreConvolveFalse 5866601 2,2 2,0 : OK 58765
+outputs5_doPreConvolveFalse 5866601 2,2 2,1 : OK 59605
+outputs5_doPreConvolveFalse 5866601 2,2 2,2 : OK 58483
+outputs5_doPreConvolveFalse 5866602 2,2 0,0 : OK 4
+outputs5_doPreConvolveFalse 5866602 2,2 0,1 : OK 9
+outputs5_doPreConvolveFalse 5866602 2,2 0,2 : OK 6
+outputs5_doPreConvolveFalse 5866602 2,2 1,0 : OK 9
+outputs5_doPreConvolveFalse 5866602 2,2 1,1 : OK 9
+outputs5_doPreConvolveFalse 5866602 2,2 1,2 : OK 7
+outputs5_doPreConvolveFalse 5866602 2,2 2,0 : OK 8
+outputs5_doPreConvolveFalse 5866602 2,2 2,1 : OK 4
+outputs5_doPreConvolveFalse 5866602 2,2 2,2 : OK 4
+outputs5_doPreConvolveFalse 5866603 2,2 0,0 : OK 5
+outputs5_doPreConvolveFalse 5866603 2,2 0,1 : OK 2
+outputs5_doPreConvolveFalse 5866603 2,2 0,2 : OK 2
+outputs5_doPreConvolveFalse 5866603 2,2 1,0 : OK 5
+outputs5_doPreConvolveFalse 5866603 2,2 1,1 : OK 6
+outputs5_doPreConvolveFalse 5866603 2,2 1,2 : OK 6
+outputs5_doPreConvolveFalse 5866603 2,2 2,0 : OK 1
+outputs5_doPreConvolveFalse 5866603 2,2 2,1 : OK 6
+outputs5_doPreConvolveFalse 5866603 2,2 2,2 : OK 4
+outputs5_doPreConvolveFalse 6866601 2,2 0,0 : OK 49330
+outputs5_doPreConvolveFalse 6866601 2,2 0,1 : OK 51140
+outputs5_doPreConvolveFalse 6866601 2,2 0,2 : OK 48952
+outputs5_doPreConvolveFalse 6866601 2,2 1,0 : OK 33119
+outputs5_doPreConvolveFalse 6866601 2,2 1,1 : OK 39867
+outputs5_doPreConvolveFalse 6866601 2,2 1,2 : OK 53586
+outputs5_doPreConvolveFalse 6866601 2,2 2,0 : OK 49164
+outputs5_doPreConvolveFalse 6866601 2,2 2,1 : OK 51474
+outputs5_doPreConvolveFalse 6866601 2,2 2,2 : OK 44422
+outputs5_doPreConvolveFalse 6866602 2,2 0,0 : OK 6
+outputs5_doPreConvolveFalse 6866602 2,2 0,1 : OK 8
+outputs5_doPreConvolveFalse 6866602 2,2 0,2 : OK 7
+outputs5_doPreConvolveFalse 6866602 2,2 1,0 : OK 5
+outputs5_doPreConvolveFalse 6866602 2,2 1,1 : OK 7
+outputs5_doPreConvolveFalse 6866602 2,2 1,2 : OK 3
+outputs5_doPreConvolveFalse 6866602 2,2 2,0 : OK 7
+outputs5_doPreConvolveFalse 6866602 2,2 2,1 : OK 6
+outputs5_doPreConvolveFalse 6866602 2,2 2,2 : OK 2
+outputs5_doPreConvolveFalse 6866603 2,2 0,0 : OK 1
+outputs5_doPreConvolveFalse 6866603 2,2 0,1 : OK 4
+outputs5_doPreConvolveFalse 6866603 2,2 0,2 : OK 3
+outputs5_doPreConvolveFalse 6866603 2,2 1,0 : OK 5
+outputs5_doPreConvolveFalse 6866603 2,2 1,1 : OK 3
+outputs5_doPreConvolveFalse 6866603 2,2 1,2 : OK 5
+outputs5_doPreConvolveFalse 6866603 2,2 2,0 : OK 3
+outputs5_doPreConvolveFalse 6866603 2,2 2,1 : OK 5
+outputs5_doPreConvolveFalse 6866603 2,2 2,2 : OK 2
+outputs5_doPreConvolveTrue 4866601 2,2 0,0 : OK 16
+outputs5_doPreConvolveTrue 4866601 2,2 0,1 : OK 11
+outputs5_doPreConvolveTrue 4866601 2,2 0,2 : OK 18
+outputs5_doPreConvolveTrue 4866601 2,2 1,0 : OK 14
+outputs5_doPreConvolveTrue 4866601 2,2 1,1 : OK 14
+outputs5_doPreConvolveTrue 4866601 2,2 1,2 : OK 9
+outputs5_doPreConvolveTrue 4866601 2,2 2,0 : OK 13
+outputs5_doPreConvolveTrue 4866601 2,2 2,1 : OK 15
+outputs5_doPreConvolveTrue 4866601 2,2 2,2 : OK 9
+outputs5_doPreConvolveTrue 4866602 2,2 0,0 : OK 9
+outputs5_doPreConvolveTrue 4866602 2,2 0,1 : OK 4
+outputs5_doPreConvolveTrue 4866602 2,2 0,2 : OK 10
+outputs5_doPreConvolveTrue 4866602 2,2 1,0 : OK 4
+outputs5_doPreConvolveTrue 4866602 2,2 1,1 : OK 4
+outputs5_doPreConvolveTrue 4866602 2,2 1,2 : OK 4
+outputs5_doPreConvolveTrue 4866602 2,2 2,0 : OK 4
+outputs5_doPreConvolveTrue 4866602 2,2 2,1 : OK 7
+outputs5_doPreConvolveTrue 4866602 2,2 2,2 : OK 2
+outputs5_doPreConvolveTrue 4866603 2,2 0,0 : OK 1
+outputs5_doPreConvolveTrue 4866603 2,2 0,1 : OK 4
+outputs5_doPreConvolveTrue 4866603 2,2 0,2 : OK 3
+outputs5_doPreConvolveTrue 4866603 2,2 1,0 : OK 1
+outputs5_doPreConvolveTrue 4866603 2,2 1,1 : OK 3
+outputs5_doPreConvolveTrue 4866603 2,2 1,2 : OK 2
+outputs5_doPreConvolveTrue 4866603 2,2 2,0 : OK 6
+outputs5_doPreConvolveTrue 4866603 2,2 2,1 : OK 4
+outputs5_doPreConvolveTrue 4866603 2,2 2,2 : OK 3
+outputs5_doPreConvolveTrue 5866601 2,2 0,0 : OK 8
+outputs5_doPreConvolveTrue 5866601 2,2 0,1 : OK 9
+outputs5_doPreConvolveTrue 5866601 2,2 0,2 : OK 13
+outputs5_doPreConvolveTrue 5866601 2,2 1,0 : OK 6
+outputs5_doPreConvolveTrue 5866601 2,2 1,1 : OK 5
+outputs5_doPreConvolveTrue 5866601 2,2 1,2 : OK 10
+outputs5_doPreConvolveTrue 5866601 2,2 2,0 : OK 11
+outputs5_doPreConvolveTrue 5866601 2,2 2,1 : OK 7
+outputs5_doPreConvolveTrue 5866601 2,2 2,2 : OK 3
+outputs5_doPreConvolveTrue 5866602 2,2 0,0 : OK 6
+outputs5_doPreConvolveTrue 5866602 2,2 0,1 : OK 5
+outputs5_doPreConvolveTrue 5866602 2,2 0,2 : OK 5
+outputs5_doPreConvolveTrue 5866602 2,2 1,0 : OK 6
+outputs5_doPreConvolveTrue 5866602 2,2 1,1 : OK 5
+outputs5_doPreConvolveTrue 5866602 2,2 1,2 : OK 4
+outputs5_doPreConvolveTrue 5866602 2,2 2,0 : OK 7
+outputs5_doPreConvolveTrue 5866602 2,2 2,1 : OK 6
+outputs5_doPreConvolveTrue 5866602 2,2 2,2 : OK 5
+outputs5_doPreConvolveTrue 5866603 2,2 0,0 : OK 4
+outputs5_doPreConvolveTrue 5866603 2,2 0,1 : OK 1
+outputs5_doPreConvolveTrue 5866603 2,2 0,2 : OK 3
+outputs5_doPreConvolveTrue 5866603 2,2 1,0 : OK 7
+outputs5_doPreConvolveTrue 5866603 2,2 1,1 : OK 4
+outputs5_doPreConvolveTrue 5866603 2,2 1,2 : OK 3
+outputs5_doPreConvolveTrue 5866603 2,2 2,0 : OK 1
+outputs5_doPreConvolveTrue 5866603 2,2 2,1 : OK 2
+outputs5_doPreConvolveTrue 5866603 2,2 2,2 : OK 3
+outputs5_doPreConvolveTrue 6866601 2,2 0,0 : OK 12
+outputs5_doPreConvolveTrue 6866601 2,2 0,1 : OK 8
+outputs5_doPreConvolveTrue 6866601 2,2 0,2 : OK 10
+outputs5_doPreConvolveTrue 6866601 2,2 1,0 : OK 5
+outputs5_doPreConvolveTrue 6866601 2,2 1,1 : OK 18
+outputs5_doPreConvolveTrue 6866601 2,2 1,2 : OK 8
+outputs5_doPreConvolveTrue 6866601 2,2 2,0 : OK 12
+outputs5_doPreConvolveTrue 6866601 2,2 2,1 : OK 9
+outputs5_doPreConvolveTrue 6866601 2,2 2,2 : OK 11
+outputs5_doPreConvolveTrue 6866602 2,2 0,0 : OK 6
+outputs5_doPreConvolveTrue 6866602 2,2 0,1 : OK 6
+outputs5_doPreConvolveTrue 6866602 2,2 0,2 : OK 3
+outputs5_doPreConvolveTrue 6866602 2,2 1,0 : OK 5
+outputs5_doPreConvolveTrue 6866602 2,2 1,1 : OK 6
+outputs5_doPreConvolveTrue 6866602 2,2 1,2 : OK 2
+outputs5_doPreConvolveTrue 6866602 2,2 2,0 : OK 6
+outputs5_doPreConvolveTrue 6866602 2,2 2,1 : OK 6
+outputs5_doPreConvolveTrue 6866602 2,2 2,2 : OK 1
+outputs5_doPreConvolveTrue 6866603 2,2 0,0 : OK 1
+outputs5_doPreConvolveTrue 6866603 2,2 0,1 : OK 1
+outputs5_doPreConvolveTrue 6866603 2,2 0,2 : OK 3
+outputs5_doPreConvolveTrue 6866603 2,2 1,0 : OK 2
+outputs5_doPreConvolveTrue 6866603 2,2 1,1 : OK 2
+outputs5_doPreConvolveTrue 6866603 2,2 1,2 : OK 1
+outputs5_doPreConvolveTrue 6866603 2,2 2,0 : OK 3
+outputs5_doPreConvolveTrue 6866603 2,2 2,1 : OK 2
+outputs5_doPreConvolveTrue 6866603 2,2 2,2 : OK 0
+False 7 0 6
+False 0 0 0
+False 1 0 0
+False 2 0 2
+False 3 0 3
+False 1 0 1
+False 0 0 0
+False 0 0 0
+False 2 0 2
+False 5 0 5
+False 6 0 6
+False 7 0 6
+False 7 0 7
+False 5 0 4
+False 6 0 6
+False 3 0 3
+False 6 0 5
+False 8 0 8
+False 2 0 2
+False 5 0 5
+False 4 0 4
+False 1 0 1
+False 4 0 4
+False 3 0 3
+False 7 0 5
+False 4 0 4
+False 4 0 4
+False 52257 431 51407
+False 61495 443 60508
+False 52737 464 51827
+False 44653 569 43718
+False 48721 455 47853
+False 62262 477 61214
+False 58765 436 57826
+False 59605 607 58503
+False 58483 442 57549
+False 4 0 4
+False 9 0 9
+False 6 0 6
+False 9 0 9
+False 9 0 9
+False 7 0 7
+False 7 0 7
+False 4 0 4
+False 4 0 4
+False 5 0 5
+False 2 0 2
+False 2 0 2
+False 5 0 5
+False 6 0 6
+False 6 0 6
+False 1 0 1
+False 6 0 6
+False 4 0 4
+False 49330 505 48387
+False 51140 572 50116
+False 48952 503 48050
+False 33119 464 32386
+False 39867 501 39024
+False 53586 511 52606
+False 49164 453 48300
+False 51474 550 50511
+False 44422 491 43576
+False 6 0 6
+False 8 0 7
+False 7 0 7
+False 5 0 5
+False 7 0 7
+False 3 0 3
+False 6 0 6
+False 5 0 5
+False 2 0 2
+False 1 0 1
+False 4 0 4
+False 3 0 3
+False 5 0 5
+False 3 0 3
+False 5 0 5
+False 3 0 3
+False 5 0 5
+False 2 0 2
+True 15 0 15
+True 11 0 11
+True 17 0 16
+True 14 0 14
+True 14 0 14
+True 9 0 9
+True 11 4 7
+True 14 0 14
+True 9 0 9
+True 7 0 6
+True 4 0 4
+True 10 0 9
+True 4 0 4
+True 4 0 3
+True 4 0 4
+True 3 0 3
+True 5 0 5
+True 2 0 2
+True 1 0 1
+True 4 0 4
+True 3 0 3
+True 1 0 1
+True 3 0 3
+True 2 0 2
+True 5 0 5
+True 4 0 4
+True 3 0 3
+True 7 0 7
+True 9 0 9
+True 12 0 12
+True 6 0 6
+True 5 0 5
+True 10 0 9
+True 10 0 10
+True 7 0 7
+True 3 0 3
+True 4 0 4
+True 5 0 5
+True 5 0 5
+True 6 0 6
+True 5 0 5
+True 4 0 4
+True 5 0 5
+True 5 0 5
+True 5 0 5
+True 4 0 4
+True 1 0 1
+True 3 0 3
+True 6 0 6
+True 4 0 4
+True 3 0 3
+True 1 0 1
+True 2 0 2
+True 3 0 2
+True 12 0 12
+True 8 0 8
+True 10 0 9
+True 5 0 5
+True 18 0 18
+True 8 0 8
+True 11 0 11
+True 9 0 9
+True 11 0 11
+True 5 0 5
+True 6 0 6
+True 3 0 3
+True 5 0 5
+True 6 0 6
+True 2 0 2
+True 5 0 5
+True 4 0 4
+True 1 0 1
+True 1 0 0
+True 1 0 1
+True 3 0 3
+True 2 0 2
+True 2 0 2
+True 1 0 1
+True 3 0 3
+True 2 0 2
+True 0 0 0
