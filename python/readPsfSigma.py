@@ -16,6 +16,7 @@ if __name__ == "__main__":
                                               (5866601, 5866602, 5866603, 58868666),
                                               (6866601, 6866602, 6866603, 68868666))):
             for visit in visits:
+                sigmas = []
                 for sx in range(3):
                     for sy in range(3):
                         sensor   = "%d,%d" % (sx, sy)
@@ -25,4 +26,6 @@ if __name__ == "__main__":
                         width, height = psf.computeKernelImage().getDimensions()
                         psfAttr = measAlg.PsfAttributes(psf, width//2, height//2)
                         psfSigma = psfAttr.computeGaussianWidth(psfAttr.ADAPTIVE_MOMENT) # gaussian sigma in pixels
-                        print filt, visit, sx, sy, "%.2f" % (psfSigma)
+                        sigmas.append(psfSigma)
+                        
+                print filt, visit, "%.2f" % (np.mean(sigmas))
