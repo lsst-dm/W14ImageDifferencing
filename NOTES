@@ -2157,3 +2157,133 @@ True 1 0 1
 True 3 0 3
 True 2 0 2
 True 0 0 0
+
+# Have a look at FWHM of Psf using python/getMetadata.py
+# Also, need to grab metadata:
+
+tar cf - outputs5_doPreConvolve*/deepDiff/*/*/metadata*boost | ssh acbecker@darkstar.astro.washington.edu "(cd LSST/Winter2014; tar xvfBp -)"
+
+Error: RuntimeError: No registry for lookup
+Soln : scp outputs5_doPreConvolveTrue/_parent/registry.sqlite3 acbecker@darkstar.astro.washington.edu:/astro/store/shared-scratch1/acbecker/LSST/Winter2014/outputs5_doPreConvolveTrue/
+       scp outputs5_doPreConvolveFalse/_parent/registry.sqlite3 acbecker@darkstar.astro.washington.edu:/astro/store/shared-scratch1/acbecker/LSST/Winter2014/outputs5_doPreConvolveFalse/
+
+
+# TO get the FWHM I think I need the .fits files, unfortunately...  Just run this at NCSA then.
+
+Script python/readRepository.py creates the figures:
+  figures/outputs5_doPreConvolveFalse_fp.png
+  figures/outputs5_doPreConvolveTrue_fp.png
+
+Strangely, the prefilter=False g-band data did not get a massive
+number of false positives like the r,i-band.
+
+  ds9 outputs5_doPreConvolveFalse/deepDiff/v*1-f*/R22/diffexp-S11.fits
+
+Shows that its not particularly deconvolved at all...  Should check
+the PSF FWHM of the templates?  Because the FWHM of the science images
+look basically the same across passbands.  Call python/readFwhm.py.
+
+g 4866601 1.54
+g 4866602 2.15
+g 4866603 2.83
+g 48868666 2.15
+
+r 5866601 1.50
+r 5866602 2.05
+r 5866603 2.71
+r 58868666 2.05
+
+i 6866601 1.42
+i 6866602 2.00
+i 6866603 2.63
+i 68868666 1.98
+
+# Hmm, nothing obvious sticks out.  Perhaps somehow a better basis set
+  got chosen for the g-band deconvolution?  Will have to look into
+  this...
+
+The kernel sizes for the deconvolution are def different:
+
+ g 4866601 0 0 (3, 3, 3) 3 (1.061952119373826, 1.679093731632156, 3.096095861348896) 21
+ r 5866601 0 0 (3, 3, 3) 3 (1.966236059888755, 3.108892183401854, 5.732513939560749) 33
+ i 6866601 0 0 (3, 3, 3) 3 (1.950371507896025, 3.083808124224259, 5.686261219809308) 33
+
+
+So the algorithm perhaps is poor.  Wonder if I can fix r,i by fixing the basis functions:
+
+# Test1
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=5866601 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse_test1 --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=58868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=False subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[3,3,3]" subtract.kernel.active.alardSigGauss="[1.06,1.68,3.19]" doSelectDcrCatalog=True --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse_test1/imageDifferenceWinter2013.out5
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=6866601 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse_test1 --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=68868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=False subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[3,3,3]" subtract.kernel.active.alardSigGauss="[1.06,1.68,3.19]" doSelectDcrCatalog=True --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse_test1/imageDifferenceWinter2013.out6
+
+# WORKED!
+[becker@lsst-dev ~/Winter2014]$ python python/examineDeconvolution.py
+# /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse_test1
+g 5866601 0 0 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+g 5866601 0 1 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+g 5866601 0 2 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+g 5866601 1 0 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+g 5866601 1 1 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+g 5866601 1 2 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+g 5866601 2 0 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+g 5866601 2 1 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+g 5866601 2 2 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+r 6866601 0 0 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+r 6866601 0 1 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+r 6866601 0 2 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+r 6866601 1 0 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+r 6866601 1 1 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+r 6866601 1 2 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+r 6866601 2 0 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+r 6866601 2 1 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+r 6866601 2 2 (3, 3, 3) 3 (1.06, 1.68, 3.19) 21
+
+# Counting the nubmers of false positives
+
+# /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse_test1
+r 5866601 0 0 1.50 8.61 1 0 0
+r 5866601 0 1 1.51 8.50 0 0 0
+r 5866601 0 2 1.50 8.57 0 0 0
+r 5866601 1 0 1.50 8.53 0 0 0
+r 5866601 1 1 1.50 8.58 0 0 0
+r 5866601 1 2 1.50 8.58 0 0 0
+r 5866601 2 0 1.50 8.57 1 0 0
+r 5866601 2 1 1.50 8.58 0 0 0
+r 5866601 2 2 1.50 8.58 0 0 0
+
+i 6866601 0 0 1.42 9.56 1 0 0
+i 6866601 0 1 1.43 9.40 0 0 0
+i 6866601 0 2 1.42 9.52 1 0 0
+i 6866601 1 0 1.43 9.43 0 0 0
+i 6866601 1 1 1.42 9.54 1 0 0
+i 6866601 1 2 1.42 9.51 0 0 0
+i 6866601 2 0 1.42 9.50 1 0 0
+i 6866601 2 1 1.42 9.52 0 0 0
+i 6866601 2 2 1.43 9.49 0 0 0
+
+# VS:
+# /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse
+
+r 5866601 0 0 1.50 8.61 52257 431 51407
+r 5866601 0 1 1.51 8.50 61495 443 60508
+r 5866601 0 2 1.50 8.57 52737 464 51827
+r 5866601 1 0 1.50 8.53 44653 569 43718
+r 5866601 1 1 1.50 8.58 48721 455 47853
+r 5866601 1 2 1.50 8.58 62262 477 61214
+r 5866601 2 0 1.50 8.57 58765 436 57826
+r 5866601 2 1 1.50 8.58 59605 607 58503
+r 5866601 2 2 1.50 8.58 58483 442 57549
+
+i 6866601 0 0 1.42 9.56 49330 505 48387
+i 6866601 0 1 1.43 9.40 51140 572 50116
+i 6866601 0 2 1.42 9.52 48952 503 48050
+i 6866601 1 0 1.43 9.43 33119 464 32386
+i 6866601 1 1 1.42 9.54 39867 501 39024
+i 6866601 1 2 1.42 9.51 53586 511 52606
+i 6866601 2 0 1.42 9.50 49164 453 48300
+i 6866601 2 1 1.42 9.52 51474 550 50511
+i 6866601 2 2 1.43 9.49 44422 491 43576
+
+# HUGE DIFFERENCE!  So the kernel config is really quite important
+  here, and the default for deconv is poor.  It is surprising that we
+  are getting no false positives though, we may have inflated the
+  variance by deconvolving.  Have a look at these numbers.
