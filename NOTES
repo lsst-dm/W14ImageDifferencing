@@ -1533,6 +1533,52 @@ source SOURCE_ME_A &; source SOURCE_ME_B &; source SOURCE_ME_C &
 [2] 4511
 [3] 4512
 
+Lets prep these for analysis:
+
+mkdir inputs8
+cd sims8/
+foreach i (*.out)
+ cd $i
+ python ../../python/rename_images.py ../../inputs8 *E000.fits.gz
+ cd ../ 
+ end
+cd inputs8/
+python $OBS_LSSTSIM_DIR/bin/genInputRegistry.py .
+cp ../inputs5/_mapper .
+$OBS_LSSTSIM_DIR/bin/processEimage.py . -j 10
+  # Hmm, you have to tell it visits...
+$OBS_LSSTSIM_DIR/bin/processEimage.py . --id visit=1000000^1001000^1002000^1003000^1004000^2000000^2001000^2002000^2003000^2004000^3000000^3001000^3002000^3003000^3004000^1000001^1001001^1002001^1003001^1004001^2000001^2001001^2002001^2003001^2004001^3000001^3001001^3002001^3003001^3004001^1000002^1001002^1002002^1003002^1004002^2000002^2001002^2002002^2003002^2004002^3000002^3001002^3002002^3003002^3004002^1000003^1001003^1002003^1003003^1004003^2000003^2001003^2002003^2003003^2004003^3000003^3001003^3002003^3003003^3004003 -j 20
+  # RuntimeError: Unable to match sources with catalog.
+
+# Ruh roh, astrometry issues time...
+echo $ASTROMETRY_NET_DATA_DIR/
+/nfs/lsst/home/becker/Winter2014/astrometry_net_data/
+
+I suppose this makes sense, I had to rotate the field to go through
+zenith.  Fine, lets try and fix this then...  Which trim file shall we
+use?  It really should not matter.  I hope...  Use r-band at zenith,
+template image.
+
+mkdir astrometry_net_data8
+python python/trim_to_ref.py sims8/2002000.trim > astrometry_net_data8/2002000.ref
+cd astrometry_net_data8
+
+eups list astrometry_net
+   0.30       	Summer2012 Summer2012_prod v7_3 current beta v7_1 v7_2 stable v5_2 v5_1 v6_1 v6_3 v6_2 setup
+setup -r /lsst/home/krughoff/lsst/lsst_devel/Linux64/astrometry.net-0.38/astrometry
+text2fits.py 2002000.ref 2002000.fits
+setenv P 1402120
+build-index -i 2002000.fits -o index-${P}00.fits -I ${P}00 -P 0 -S r -n 100 -L 20 -E -j 0.4 -r 1
+build-index -1 index-${P}00.fits -o index-${P}01.fits -I ${P}01 -P 1 -S r -L 20 -E -M -j 0.4 
+build-index -1 index-${P}00.fits -o index-${P}02.fits -I ${P}02 -P 2 -S r -L 20 -E -M -j 0.4 
+build-index -1 index-${P}00.fits -o index-${P}03.fits -I ${P}03 -P 3 -S r -L 20 -E -M -j 0.4 
+build-index -1 index-${P}00.fits -o index-${P}04.fits -I ${P}04 -P 4 -S r -L 20 -E -M -j 0.4 
+ls index-1402120* | awk '{printf("modhead %s+7 REFCAT '2002000'\n",$1)}' | sh     
+setup astrometry_net 0.30  
+cp -r /nfs/lsst/home/becker/Winter2014/astrometry_net_data/ups .
+setup -k -r .
+
+# WOrks!  After a bit of rejiggering of andConfig.py
 
 ###########
 #### While v8 are running, I can run image subtraction on the v5 data,
@@ -2287,3 +2333,241 @@ i 6866601 2 2 1.43 9.49 44422 491 43576
   here, and the default for deconv is poor.  It is surprising that we
   are getting no false positives though, we may have inflated the
   variance by deconvolving.  Have a look at these numbers.
+
+Ah, we were running up against the minSigma term, which doesn't get
+used in the deconvolution case.  We were hitting a value of 0.68 for
+r,i-band and the limit was 0.7.  Knock this down to 0.5 for g,i and
+re-run:
+
+# Test2
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=5866601 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse_test2 --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=58868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[3,3,3]" subtract.kernel.active.alardSigGauss="[1.06,1.68,3.19]" doSelectDcrCatalog=True subtract.kernel.active.alardMinSig=0.5 --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse_test2/imageDifferenceWinter2013.out5
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=6866601 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse_test2 --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=68868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[3,3,3]" subtract.kernel.active.alardSigGauss="[1.06,1.68,3.19]" doSelectDcrCatalog=True subtract.kernel.active.alardMinSig=0.5 --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse_test2/imageDifferenceWinter2013.out6
+
+OK, these look decent, and few false positives.
+
+r 5866601 0 0 1.50 8.61 3 0 0
+r 5866601 0 1 1.51 8.50 2 0 2
+r 5866601 0 2 1.50 8.57 1 0 0
+r 5866601 1 0 1.50 8.53 3 0 2
+r 5866601 1 1 1.50 8.58 2 0 1
+r 5866601 1 2 1.50 8.58 1 0 1
+r 5866601 2 0 1.50 8.57 2 0 1
+r 5866601 2 1 1.50 8.58 0 0 0
+r 5866601 2 2 1.50 8.58 2 0 1
+i 6866601 0 0 1.42 9.56 1 0 0
+i 6866601 0 1 1.43 9.40 0 0 0
+i 6866601 0 2 1.42 9.52 2 0 2
+i 6866601 1 0 1.43 9.43 0 0 0
+i 6866601 1 1 1.42 9.54 1 0 1
+i 6866601 1 2 1.42 9.51 0 0 0
+i 6866601 2 0 1.42 9.50 3 0 1
+i 6866601 2 1 1.42 9.52 1 0 1
+i 6866601 2 2 1.43 9.49 1 0 1
+
+Still way below expectations, so I need to check the variance.
+Perhaps we can't fix this aspect of the problem.
+
+# Made some minor changes to make sure the min sig value is different during deconvolution:
+# Test3
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=5866601 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse_test3 --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=58868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[3,3,3]" subtract.kernel.active.alardSigGauss="[1.06,1.68,3.19]" doSelectDcrCatalog=True --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse_test3/imageDifferenceWinter2013.out5
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=6866601 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse_test3 --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=68868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[3,3,3]" subtract.kernel.active.alardSigGauss="[1.06,1.68,3.19]" doSelectDcrCatalog=True --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse_test3/imageDifferenceWinter2013.out6
+
+# Worked.
+r 5866601 0 0 1.50 8.61 3 0 0
+r 5866601 0 1 1.51 8.50 2 0 2
+r 5866601 0 2 1.50 8.57 1 0 0
+r 5866601 1 0 1.50 8.53 3 0 2
+r 5866601 1 1 1.50 8.58 2 0 1
+r 5866601 1 2 1.50 8.58 1 0 1
+r 5866601 2 0 1.50 8.57 2 0 1
+r 5866601 2 1 1.50 8.58 0 0 0
+r 5866601 2 2 1.50 8.58 2 0 1
+i 6866601 0 0 1.42 9.56 1 0 0
+i 6866601 0 1 1.43 9.40 0 0 0
+i 6866601 0 2 1.42 9.52 2 0 2
+i 6866601 1 0 1.43 9.43 0 0 0
+i 6866601 1 1 1.42 9.54 1 0 1
+i 6866601 1 2 1.42 9.51 0 0 0
+i 6866601 2 0 1.42 9.50 3 0 1
+i 6866601 2 1 1.42 9.52 1 0 1
+i 6866601 2 2 1.43 9.49 1 0 1
+
+# Re run all data to make sure this works, and then move on.
+
+#g
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=4866601^4866602^4866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5b_doPreConvolveFalse --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=48868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True  --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5b_doPreConvolveFalse/imageDifferenceWinter2013.out4
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=4866601^4866602^4866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5b_doPreConvolveTrue --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=48868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True  --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5b_doPreConvolveTrue/imageDifferenceWinter2013.out4
+
+#r
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=5866601^5866602^5866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5b_doPreConvolveFalse --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=58868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True  --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5b_doPreConvolveFalse/imageDifferenceWinter2013.out5
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=5866601^5866602^5866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5b_doPreConvolveTrue --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=58868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True  --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5b_doPreConvolveTrue/imageDifferenceWinter2013.out5
+
+#i
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=6866601^6866602^6866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5b_doPreConvolveFalse --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=68868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True  --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5b_doPreConvolveFalse/imageDifferenceWinter2013.out6
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=6866601^6866602^6866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5b_doPreConvolveTrue --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=68868666 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True  --clobber-config -j 9 >& /nfs/lsst/home/becker/Winter2014/outputs5b_doPreConvolveTrue/imageDifferenceWinter2013.out6
+
+
+# /nfs/lsst/home/becker/Winter2014/outputs5b_doPreConvolveTrue
+g 4866601 0 0 1.53 8.18 16 0 3
+g 4866601 0 1 1.55 8.05 11 0 0
+g 4866601 0 2 1.54 8.14 18 0 4
+g 4866601 1 0 1.54 8.10 14 0 2
+g 4866601 1 1 1.54 8.11 14 0 2
+g 4866601 1 2 1.54 8.17 9 0 1
+g 4866601 2 0 1.54 8.16 13 2 0
+g 4866601 2 1 1.53 8.21 15 0 2
+g 4866601 2 2 1.54 8.15 9 0 2
+g 4866602 0 0 2.13 4.23 9 0 3
+g 4866602 0 1 2.16 4.12 4 0 0
+g 4866602 0 2 2.15 4.18 10 0 3
+g 4866602 1 0 2.15 4.16 4 0 2
+g 4866602 1 1 2.15 4.16 4 0 1
+g 4866602 1 2 2.15 4.17 4 0 0
+g 4866602 2 0 2.15 4.16 4 0 1
+g 4866602 2 1 2.15 4.17 7 0 3
+g 4866602 2 2 2.15 4.18 2 0 1
+g 4866603 0 0 2.81 2.44 1 0 0
+g 4866603 0 1 2.82 2.42 4 0 0
+g 4866603 0 2 2.82 2.42 3 0 1
+g 4866603 1 0 2.82 2.42 1 0 1
+g 4866603 1 1 2.83 2.40 3 0 1
+g 4866603 1 2 2.83 2.40 2 0 0
+g 4866603 2 0 2.84 2.39 6 0 1
+g 4866603 2 1 2.84 2.39 4 0 3
+g 4866603 2 2 2.85 2.38 3 0 0
+r 5866601 0 0 1.50 8.61 8 0 0
+r 5866601 0 1 1.51 8.50 9 0 4
+r 5866601 0 2 1.50 8.57 13 0 2
+r 5866601 1 0 1.50 8.53 6 0 1
+r 5866601 1 1 1.50 8.58 5 0 3
+r 5866601 1 2 1.50 8.58 10 0 1
+r 5866601 2 0 1.50 8.57 11 0 4
+r 5866601 2 1 1.50 8.58 7 0 0
+r 5866601 2 2 1.50 8.58 3 0 1
+r 5866602 0 0 2.04 4.64 6 0 0
+r 5866602 0 1 2.07 4.50 5 0 2
+r 5866602 0 2 2.05 4.58 5 0 0
+r 5866602 1 0 2.06 4.56 6 0 3
+r 5866602 1 1 2.05 4.57 5 0 1
+r 5866602 1 2 2.05 4.58 4 0 2
+r 5866602 2 0 2.06 4.55 7 0 1
+r 5866602 2 1 2.06 4.56 6 0 1
+r 5866602 2 2 2.05 4.58 5 0 1
+r 5866603 0 0 2.69 2.66 4 0 2
+r 5866603 0 1 2.70 2.65 1 0 0
+r 5866603 0 2 2.70 2.65 3 0 2
+r 5866603 1 0 2.70 2.65 7 0 3
+r 5866603 1 1 2.71 2.62 4 0 0
+r 5866603 1 2 2.72 2.60 3 0 1
+r 5866603 2 0 2.72 2.61 1 0 0
+r 5866603 2 1 2.72 2.60 2 0 1
+r 5866603 2 2 2.72 2.60 3 0 0
+i 6866601 0 0 1.42 9.56 12 0 1
+i 6866601 0 1 1.43 9.40 8 0 0
+i 6866601 0 2 1.42 9.52 10 0 2
+i 6866601 1 0 1.43 9.43 5 0 1
+i 6866601 1 1 1.42 9.54 18 0 2
+i 6866601 1 2 1.42 9.51 8 0 3
+i 6866601 2 0 1.42 9.50 12 0 3
+i 6866601 2 1 1.42 9.52 9 0 1
+i 6866601 2 2 1.43 9.49 11 0 1
+i 6866602 0 0 1.99 4.86 6 0 0
+i 6866602 0 1 2.02 4.74 6 0 0
+i 6866602 0 2 2.00 4.81 3 0 1
+i 6866602 1 0 2.00 4.81 5 0 1
+i 6866602 1 1 2.00 4.80 6 0 0
+i 6866602 1 2 2.00 4.80 2 0 0
+i 6866602 2 0 2.01 4.78 6 0 2
+i 6866602 2 1 2.00 4.81 6 0 0
+i 6866602 2 2 2.00 4.80 1 0 0
+i 6866603 0 0 2.62 2.82 1 0 0
+i 6866603 0 1 2.63 2.79 1 0 0
+i 6866603 0 2 2.63 2.80 3 0 3
+i 6866603 1 0 2.62 2.80 2 0 0
+i 6866603 1 1 2.64 2.77 2 0 0
+i 6866603 1 2 2.65 2.75 1 0 0
+i 6866603 2 0 2.64 2.76 3 0 0
+i 6866603 2 1 2.65 2.75 2 0 1
+i 6866603 2 2 2.65 2.75 0 0 0
+# /nfs/lsst/home/becker/Winter2014/outputs5b_doPreConvolveFalse
+g 4866601 0 0 1.53 8.18 8 0 1
+g 4866601 0 1 1.55 8.05 0 0 0
+g 4866601 0 2 1.54 8.14 2 0 0
+g 4866601 1 0 1.54 8.10 2 0 1
+g 4866601 1 1 1.54 8.11 3 0 1
+g 4866601 1 2 1.54 8.17 1 0 0
+g 4866601 2 0 1.54 8.16 1 0 0
+g 4866601 2 1 1.53 8.21 1 0 0
+g 4866601 2 2 1.54 8.15 2 0 2
+g 4866602 0 0 2.13 4.23 12 0 1
+g 4866602 0 1 2.16 4.12 6 0 1
+g 4866602 0 2 2.15 4.18 7 0 3
+g 4866602 1 0 2.15 4.16 7 0 4
+g 4866602 1 1 2.15 4.16 9 0 1
+g 4866602 1 2 2.15 4.17 11 0 0
+g 4866602 2 0 2.15 4.16 3 0 2
+g 4866602 2 1 2.15 4.17 8 0 2
+g 4866602 2 2 2.15 4.18 6 0 1
+g 4866603 0 0 2.81 2.44 2 0 0
+g 4866603 0 1 2.82 2.42 5 0 0
+g 4866603 0 2 2.82 2.42 4 0 1
+g 4866603 1 0 2.82 2.42 1 0 1
+g 4866603 1 1 2.83 2.40 4 0 1
+g 4866603 1 2 2.83 2.40 3 0 1
+g 4866603 2 0 2.84 2.39 7 0 1
+g 4866603 2 1 2.84 2.39 4 0 3
+g 4866603 2 2 2.85 2.38 4 0 0
+r 5866601 0 0 1.50 8.61 3 0 0
+r 5866601 0 1 1.51 8.50 2 0 2
+r 5866601 0 2 1.50 8.57 1 0 0
+r 5866601 1 0 1.50 8.53 3 0 2
+r 5866601 1 1 1.50 8.58 2 0 1
+r 5866601 1 2 1.50 8.58 1 0 1
+r 5866601 2 0 1.50 8.57 2 0 1
+r 5866601 2 1 1.50 8.58 0 0 0
+r 5866601 2 2 1.50 8.58 2 0 1
+r 5866602 0 0 2.04 4.64 4 0 1
+r 5866602 0 1 2.07 4.50 9 0 6
+r 5866602 0 2 2.05 4.58 6 0 1
+r 5866602 1 0 2.06 4.56 9 0 5
+r 5866602 1 1 2.05 4.57 9 0 6
+r 5866602 1 2 2.05 4.58 5 0 2
+r 5866602 2 0 2.06 4.55 8 0 3
+r 5866602 2 1 2.06 4.56 9 0 1
+r 5866602 2 2 2.05 4.58 5 0 1
+r 5866603 0 0 2.69 2.66 5 0 2
+r 5866603 0 1 2.70 2.65 2 0 1
+r 5866603 0 2 2.70 2.65 2 0 1
+r 5866603 1 0 2.70 2.65 5 0 3
+r 5866603 1 1 2.71 2.62 6 0 0
+r 5866603 1 2 2.72 2.60 6 0 1
+r 5866603 2 0 2.72 2.61 1 0 0
+r 5866603 2 1 2.72 2.60 6 0 0
+r 5866603 2 2 2.72 2.60 4 0 0
+i 6866601 0 0 1.42 9.56 1 0 0
+i 6866601 0 1 1.43 9.40 0 0 0
+i 6866601 0 2 1.42 9.52 2 0 2
+i 6866601 1 0 1.43 9.43 0 0 0
+i 6866601 1 1 1.42 9.54 1 0 1
+i 6866601 1 2 1.42 9.51 0 0 0
+i 6866601 2 0 1.42 9.50 3 0 1
+i 6866601 2 1 1.42 9.52 1 0 1
+i 6866601 2 2 1.43 9.49 1 0 1
+i 6866602 0 0 1.99 4.86 6 0 2
+i 6866602 0 1 2.02 4.74 8 0 2
+i 6866602 0 2 2.00 4.81 7 0 4
+i 6866602 1 0 2.00 4.81 5 0 2
+i 6866602 1 1 2.00 4.80 7 0 2
+i 6866602 1 2 2.00 4.80 3 0 1
+i 6866602 2 0 2.01 4.78 7 0 2
+i 6866602 2 1 2.00 4.81 6 0 2
+i 6866602 2 2 2.00 4.80 2 0 1
+i 6866603 0 0 2.62 2.82 1 0 1
+i 6866603 0 1 2.63 2.79 4 0 0
+i 6866603 0 2 2.63 2.80 3 0 3
+i 6866603 1 0 2.62 2.80 5 0 1
+i 6866603 1 1 2.64 2.77 3 0 0
+i 6866603 1 2 2.65 2.75 5 0 1
+i 6866603 2 0 2.64 2.76 3 0 0
+i 6866603 2 1 2.65 2.75 5 0 2
+i 6866603 2 2 2.65 2.75 2 0 0
