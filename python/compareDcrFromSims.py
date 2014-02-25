@@ -47,6 +47,12 @@ if __name__ == "__main__":
                     
                     expA = butlerA.get(datasetType="calexp", dataId=dataIdA)
                     expB = butlerB.get(datasetType="calexp", dataId=dataIdB)
+
+                    # Calculate the DCR angle from calexp headers
+                    metadataA = expA.getMetadata()
+                    metadataB = expB.getMetadata()
+                    rotA = metadataA.get("SPIDANG") # Angle of Spider (rotTelPos); degrees
+                    rotB = metadataB.get("SPIDANG")
         
                     srcA = butlerA.get(datasetType="src", dataId=dataIdA)
                     srcB = butlerB.get(datasetType="src", dataId=dataIdB)
@@ -79,6 +85,10 @@ if __name__ == "__main__":
     
                     fig = plt.figure()
                     sp  = fig.add_subplot(111)
+                    offsets = {}
+                    offsets["A"] = []
+                    offsets["G"] = []
+                    offsets["M"] = []
                     for key, value in refMatches.iteritems():
                         gRef   = -2.5 * np.log10(value.ref.get("g"))
                         rRef   = -2.5 * np.log10(value.ref.get("r"))
@@ -97,7 +107,6 @@ if __name__ == "__main__":
                         rB     = value.srcB.getCoord()[0]
                         dB     = value.srcB.getCoord()[1]
 
-                        import pdb; pdb.set_trace()
                         dx, dy = (xA - xB), (yA - yB)
                         dist   = np.sqrt(dx**2 + dy**2)
                         theta  = np.arctan2(dy, dx)
@@ -105,7 +114,52 @@ if __name__ == "__main__":
                         elif sType == "G": color="g"
                         elif sType == "M": color="r"
                         else: color="k"
-    
-                        sp.quiver(xA, yA, dx, dy, scale=0.1, angles='xy', color=color, pivot='middle', width=0.5, headwidth=1, headlength=2, units="xy")
+                        sp.quiver(xA, yA, dx, dy, scale=0.025, angles='xy', color=color, pivot='middle', width=5.0, headwidth=2, headlength=2, units="xy")
+                        offsets[sType].append((dx, dy))
+
+                    fig = plt.figure()
+                    sp1 = fig.add_subplot(131)
+                    sp2 = fig.add_subplot(132, sharex=sp1, sharey=sp1)
+                    sp3 = fig.add_subplot(133, sharex=sp1, sharey=sp1)
+
+                    dxs = np.array([x[0] for x in offsets["A"]])
+                    dys = np.array([x[1] for x in offsets["A"]])
+                    theta = np.arctan2(dys, dxs)
+                    tidx  = np.argsort(theta)[len(theta)//2]
+                    dist  = np.sqrt(dxs**2 + dys**2) 
+                    didx  = np.argsort(dist)[len(dist)//2]
+                    sp1.quiver(np.zeros(len(dxs)), np.zeros(len(dxs)), dxs, dys, pivot="tail", alpha=0.05, color="k",
+                               angles="xy", units="xy", scale=1, scale_units="xy")
+                    sp1.quiver(0, 0, dist[didx] * np.cos(theta[tidx]), dist[didx] * np.sin(theta[tidx]),
+                               pivot="tail", color="b",
+                               angles="xy", units="xy", scale=1, scale_units="xy")
+
+                    dxs = np.array([x[0] for x in offsets["G"]])
+                    dys = np.array([x[1] for x in offsets["G"]])
+                    theta = np.arctan2(dys, dxs)
+                    tidx  = np.argsort(theta)[len(theta)//2]
+                    dist  = np.sqrt(dxs**2 + dys**2) 
+                    didx  = np.argsort(dist)[len(dist)//2]
+                    sp2.quiver(np.zeros(len(dxs)), np.zeros(len(dxs)), dxs, dys, pivot="tail", alpha=0.05, color="k",
+                               angles="xy", units="xy", scale=1, scale_units="xy")
+                    sp2.quiver(0, 0, dist[didx] * np.cos(theta[tidx]), dist[didx] * np.sin(theta[tidx]),
+                               pivot="tail", color="g",
+                               angles="xy", units="xy", scale=1, scale_units="xy")
+
+                    dxs = np.array([x[0] for x in offsets["M"]])
+                    dys = np.array([x[1] for x in offsets["M"]])
+                    theta = np.arctan2(dys, dxs)
+                    tidx  = np.argsort(theta)[len(theta)//2]
+                    dist  = np.sqrt(dxs**2 + dys**2) 
+                    didx  = np.argsort(dist)[len(dist)//2]
+                    sp3.quiver(np.zeros(len(dxs)), np.zeros(len(dxs)), dxs, dys, pivot="tail", alpha=0.05, color="k",
+                               angles="xy", units="xy", scale=1, scale_units="xy")
+                    sp3.quiver(0, 0, dist[didx] * np.cos(theta[tidx]), dist[didx] * np.sin(theta[tidx]),
+                               pivot="tail", color="r",
+                               angles="xy", units="xy", scale=1, scale_units="xy")
+
+                    
+                    sp1.set_xlim(-4, 0.1)
+                    sp1.set_ylim(-4, 0.1)
                     plt.show()
     
