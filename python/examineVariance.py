@@ -8,15 +8,19 @@ import lsst.pex.logging as pexLog
 pexLog.Trace_setVerbosity("CameraMapper", -100) # No logging info please
 
 def convolveMi(mi, psf):
-    # From detection.py
-    shape = psf.computeShape()
-    sigma = shape.getDeterminantRadius()
-    kWidth = (int(sigma * 7 + 0.5) / 2) * 2 + 1 # make sure it is odd
-    gaussFunc = afwMath.GaussianFunction1D(sigma)
-    gaussKernel = afwMath.SeparableKernel(kWidth, kWidth, gaussFunc, gaussFunc)
+    if 0:
+        # From detection.py
+        shape = psf.computeShape()
+        sigma = shape.getDeterminantRadius()
+        kWidth = (int(sigma * 7 + 0.5) / 2) * 2 + 1 # make sure it is odd
+        gaussFunc = afwMath.GaussianFunction1D(sigma)
+        kernel = afwMath.SeparableKernel(kWidth, kWidth, gaussFunc, gaussFunc)
+    else:
+        # Do this the exact same way as imageDifference.py prefilters
+        kernel = psf.getLocalKernel() # This does this for the average position
 
     cmi = mi.Factory(mi.getBBox(afwImage.PARENT))
-    afwMath.convolve(cmi, mi, gaussKernel, afwMath.ConvolutionControl())
+    afwMath.convolve(cmi, mi, kernel, afwMath.ConvolutionControl())
     return cmi
 
 def miStats(mi):
@@ -52,20 +56,25 @@ if __name__ == "__main__":
                     cdiffMiF  = convolveMi(diffExpF.getMaskedImage(), psfF)
 
                     # First look at the empirical variance in the image, vs. median variance of Variance plane
-                    medimT, medvaT, medvaIqrT = miStats(diffExpT.getMaskedImage())
-                    medimF, medvaF, medvaIqrF = miStats(diffExpF.getMaskedImage())
+                    medimT, medvaT, iqrvaT = miStats(diffExpT.getMaskedImage())
+                    medimF, medvaF, iqrvaF = miStats(diffExpF.getMaskedImage())
                     
-                    # Then look at difference of: standard difference image filtered with Psf vs. pre-filtered difference image
-                    cdiffMiF -= diffExpT.getMaskedImage()
-                    medimD, medvaD, medvaIqrD = miStats(cdiffMiF)
+                    # Then look at this in the standard diffim,
+                    # filtered by its Psf.  I need to make sure the
+                    # filtering is done in the exact same way as in
+                    # prefiltering                    
+                    medimC, medvaC, iqrvaC = miStats(cdiffMiF)
 
-                    # Orginal noise properties of calexp:
-                    medimO, medvaO, medvaIqrO = miStats(calExp.getMaskedImage())
+                    # Orginal noise properties of calexp.  These get
+                    # renormalized when filtering by Psf, which ends
+                    # up being a multiplication by somethign other
+                    # than 1
+                    medimO, medvaO, iqrvaO = miStats(calExp.getMaskedImage())
 
-                    print visit, sx, sy, "%.3f %.3f %.3f:" % (medvaO, medvaIqrO, medvaIqrO/medvaO), 
-                    print "T %.3f %.3f %.3f %.3f :" % (medimT, medvaT, medvaIqrT, medvaIqrT/medvaT),
-                    print "F %.3f %.3f %.3f %.3f :" % (medimF, medvaF, medvaIqrF, medvaIqrF/medvaF), 
-                    print "D %.3f %.3f %.3f %.3f"   % (medimD, medvaD, medvaIqrD, medvaIqrD/medvaD)
+                    print visit, sx, sy, "%.3f %.3f %.3f:" % (medvaO, iqrvaO, iqrvaO/medvaO), 
+                    print "T %.3f %.3f %.3f %.3f :" % (medimT, medvaT, iqrvaT, iqrvaT/medvaT),
+                    print "F %.3f %.3f %.3f %.3f :" % (medimF, medvaF, iqrvaF, iqrvaF/medvaF), 
+                    print "C %.3f %.3f %.3f %.3f : %.3f %.3f"   % (medimC, medvaC, iqrvaC, iqrvaC/medvaC, iqrvaC/iqrvaT, medvaC/medvaT)
                     #import pdb; pdb.set_trace()
 
                         
