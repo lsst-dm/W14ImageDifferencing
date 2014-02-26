@@ -7,6 +7,7 @@ import lsst.meas.astrom as measAstrom
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
+import matplotlib.pyplot as plt
 
 def getDcrAmp(zenith, filterName, gr):
     # Derived from DCR.py
@@ -150,13 +151,62 @@ for filterName, filterId in zip(("g", "r", "i"), (1, 2, 3)):
                 ds9.ds9Cmd(cmd, silent=False)
                 cmd      = "regions command {line %f %f %f %f # color=cyan width=3}" % (xyc[0], xyc[1], xy2[0], xy2[1])  # positive Alt
                 ds9.ds9Cmd(cmd, silent=False)
-    
-            # Angle of DCR!
-            dx     = xyc[0] - xy2[0]
-            dy     = xyc[1] - xy2[1]
-            print "ANGLE TO ZENITH", dx, dy
+
+        # Make figures for all obs (skip zenith)
+    for suffixI, airmassIdI, mjdI in zip(("A", "B", "D", "E"), (0, 1, 3, 4), (51130.11171, 51130.176302, 51130.368663, 51130.43324)):
+        obsDate  = dafBase.DateTime(mjdI, dafBase.DateTime.MJD, dafBase.DateTime.TAI)
+        epoch    = obsDate.get(dafBase.DateTime.EPOCH)
+
+        visit   = int("%d00%d002" % (filterId, airmassIdI))
+        mapper  = Mapper(root=os.path.join(indir, "outputs8%s%s_doPreConvolveFalse" % (suffixT, suffixI)), calibRoot = None, outputRoot = None)            
+        butler  = dafPersist.ButlerFactory(mapper = mapper).create() 
+        dataId  = {"filter": filterName, "visit": visit, "raft": "2,2", "sensor": "1,1"}
+        diffim  = butler.get(datasetType="deepDiff_differenceExp", dataId=dataId)
+
+        ra       = 79.6892650466
+        decl     = -29.6666669861
+        wcs      = diffim.getWcs()
+        center   = afwCoord.makeCoord(afwCoord.FK5, ra*afwGeom.degrees, decl*afwGeom.degrees, epoch)
+        xyc      = wcs.skyToPixel(center)
+        raoff    = afwCoord.makeCoord(afwCoord.FK5, (ra+0.003)*afwGeom.degrees, decl*afwGeom.degrees, epoch)
+        xydra    = wcs.skyToPixel(raoff)
+        decoff   = afwCoord.makeCoord(afwCoord.FK5, ra*afwGeom.degrees, (decl+0.003)*afwGeom.degrees, epoch)
+        xyddec   = wcs.skyToPixel(decoff)
         
-    import pdb; pdb.set_trace()
+        centeraa = center.toTopocentric(lsst, obsDate) # az, alt
+        azoff    = afwCoord.TopocentricCoord((centeraa.getAzimuth().asDegrees() + 0.003)*afwGeom.degrees,
+                                             centeraa.getAltitude().asDegrees()*afwGeom.degrees, epoch, lsst)
+        altoff   = afwCoord.TopocentricCoord(centeraa.getAzimuth().asDegrees()*afwGeom.degrees,
+                                             (centeraa.getAltitude().asDegrees() + 0.003)*afwGeom.degrees, epoch, lsst)
+        
+        off1   = azoff.toFk5(epoch)
+        xy1    = wcs.skyToPixel(off1)
+        off2   = altoff.toFk5(epoch)
+        xy2    = wcs.skyToPixel(off2)
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111, polar=True) 
+        ax.set_theta_zero_location('N')
+        ax.set_theta_direction(-1)
+        plt.setp(ax.get_yticklabels(), visible=False)
+        plt.plot((0,0), (0,1), "k-", linewidth=3)
+        plt.plot((0,90*np.pi/180), (0,1), "k-", linewidth=3)
+        # Make angles clockwise (times -1) and from y-axis not x-axis (add 90 deg)
+        angleRa  = -np.arctan2(xydra[1]-xyc[1], xydra[0]-xyc[0]) + 0.5 * np.pi
+        angleDec = -np.arctan2(xyddec[1]-xyc[1], xyddec[0]-xyc[0]) + 0.5 * np.pi  
+        angleAz  = -np.arctan2(xy1[1]-xyc[1], xy1[0]-xyc[0]) + 0.5 * np.pi  
+        angleAlt = -np.arctan2(xy2[1]-xyc[1], xy2[0]-xyc[0]) + 0.5 * np.pi  
+
+        print "ANGLES %s %.3f %.3f %.3f %.3f" % (suffixI, angleRa*180/np.pi, angleDec*180/np.pi, angleAz*180/np.pi, angleAlt*180/np.pi)
+        for coord, color, text in zip((angleRa,angleDec,angleAz,angleAlt),("red", "red", "blue", "blue"),("Ra (E)", "Dec(N)", "Az", "Alt")):
+            ax.annotate("", xytext=(0.0,0.0), xy=(coord,0.7), arrowprops=dict(facecolor=color, width=4, headwidth=10))
+            ax.text(coord, 0.8, text, color=color, fontsize=18, weight="bold", horizontalalignment="center", verticalalignment="center")
+
+        ax.set_xticklabels(("Y", "$45^\circ$", "X", "$135^\circ$", "$180^\circ$", "$225^\circ$", "$270^\circ$", "$315^\circ$"), weight="bold", fontsize=20)
+
+        
+    #import pdb; pdb.set_trace()
+    #plt.show()
     
     
     
