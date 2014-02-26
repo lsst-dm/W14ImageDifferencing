@@ -1133,7 +1133,7 @@ git pull
 
 Definitions:
 
-  rotSkyPos = (rotTelPost - parallactic angle + 180) % 360
+  rotSkyPos = (rotTelPos - parallactic angle + 180) % 360
 
 For rotSkyPos = 180, North is negative y-direction, South is positive
 y-direction.  So rotSkyPos = 0, North is "up" and South is "down" in a
@@ -1312,6 +1312,8 @@ is the most up-to-date on what phoSim requires
 
 
 Lets also rename the obshistIds.  They will be 
+
+ XXXXXXXXXXXXXX
 
  A00B00C:
  A = g,r,i 1,2,3
@@ -1578,11 +1580,21 @@ setup astrometry_net 0.30
 cp -r /nfs/lsst/home/becker/Winter2014/astrometry_net_data/ups .
 setup -k -r .
 
-# WOrks!  After a bit of rejiggering of andConfig.py
+# WOrks!  After a bit of rejiggering of andConfig.py  
 
-###########
-#### While v8 are running, I can run image subtraction on the v5 data,
-     which serve as my second test data set
+Make the commands with python/makeV8Commands.py.  Have a bunch of directories like:
+
+  outputs8EB_doPreConvolveFalse
+
+  Where EB are idx1,idx2 and idx1 is the mjd of the template A-E
+  and idx2 is the mjd of the science image A-E.
+
+Make sure when you run this you set up the v8 astrometry directory!
+setup -k -r astrometry_net_data8/
+
+##################
+########## SIMS5 analysis
+##################
 
 #g
 $PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs5 --id visit=4866601^4866602^4866603 --output=/nfs/lsst/home/becker/Winter2014/outputs5_doPreConvolveFalse --configfile imageDifferenceConfig.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=48868666 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]"  --clobber-config -j 3
@@ -2571,3 +2583,238 @@ i 6866603 1 2 2.65 2.75 5 0 1
 i 6866603 2 0 2.64 2.76 3 0 0
 i 6866603 2 1 2.65 2.75 5 0 2
 i 6866603 2 2 2.65 2.75 2 0 0
+
+# OK, so things basically are working here.  Lets look at variance, as
+I expect that this is causing the small numbers of false positives in
+the deconvolution.  python/examineVariance.py
+
+Some numbers:
+Visit  sx sy V      W       W/V      X      V     W     W/V       X     V       W       W/V       X     V     W     W/V     Y     Z
+-----------------------------------------------------------------------------------------------------------------------------------------
+4866601 0 0 105.000 106.185 1.011: T -0.023 4.053 4.094 1.010 : F 0.689 173.815 175.767 1.011 : C 0.781 4.199 3.016 0.718 : 0.737 1.036
+
+
+V   = the propogated variance (median of variance plane)
+W   = the empirical variance (0.741 IQR of image plane)
+X   = the median of the image plane
+W/V = how much the variance plane underestimates the true variance
+Y   = ratio of the empirical varince in C to the empirical variance in T
+Z   = ratio of the median variance in C to the median variance in T
+
+I do this for the image first, then preconvolve=T, preconvolve=F, and
+then I go ahead and convolve the normal difference image by its Psf,
+called C, and look at those results as well.
+
+# First, look at the v5 results with the misconfigured deconvolution:
+5866601 0 0 136.000 135.582 0.997: T -0.002 5.461 5.511 1.009 : F -5.861 142.373 144.731 1.017 : C -5.526 3.693 4.530 1.226 : 0.822 0.676
+5866601 0 1 137.000 137.285 1.002: T  0.015 5.446 5.490 1.008 : F -6.158 142.495 144.739 1.016 : C -5.728 3.723 4.576 1.229 : 0.833 0.684
+5866601 0 2 136.000 136.471 1.003: T -0.034 5.494 5.522 1.005 : F -5.916 142.297 144.147 1.013 : C -5.850 3.741 3.974 1.062 : 0.720 0.681
+5866601 1 0 137.000 135.987 0.993: T -0.022 5.418 5.446 1.005 : F -5.658 142.409 144.890 1.017 : C -5.468 3.709 4.023 1.085 : 0.739 0.685
+5866601 1 1 137.000 137.258 1.002: T -0.076 5.509 5.566 1.010 : F -5.785 142.345 144.486 1.015 : C -5.695 3.725 4.082 1.096 : 0.733 0.676
+5866601 1 2 137.000 135.846 0.992: T -0.005 5.480 5.522 1.008 : F -6.216 142.346 144.333 1.014 : C -5.758 3.744 4.527 1.209 : 0.820 0.683
+5866601 2 0 136.000 135.948 1.000: T  0.002 5.473 5.494 1.004 : F -6.104 142.389 143.845 1.010 : C -5.974 3.697 4.385 1.186 : 0.798 0.675
+5866601 2 1 136.000 135.913 0.999: T -0.072 5.477 5.518 1.008 : F -6.103 142.275 144.329 1.014 : C -5.851 3.716 4.378 1.178 : 0.793 0.679
+5866601 2 2 137.000 136.543 0.997: T -0.064 5.463 5.505 1.008 : F -6.061 142.409 144.632 1.016 : C -5.598 3.709 5.274 1.422 : 0.958 0.679
+6866601 0 0 130.000 130.145 1.001: T -0.030 5.856 5.875 1.003 : F -5.764 136.340 138.423 1.015 : C -5.645 3.866 4.386 1.135 : 0.747 0.660
+6866601 0 1 130.000 129.595 0.997: T -0.042 5.838 5.878 1.007 : F -5.826 136.366 138.205 1.013 : C -5.748 3.847 4.192 1.090 : 0.713 0.659
+6866601 0 2 130.000 130.794 1.006: T -0.066 5.882 5.909 1.005 : F -5.779 136.319 138.234 1.014 : C -5.804 3.877 3.941 1.017 : 0.667 0.659
+6866601 1 0 130.000 128.877 0.991: T -0.020 5.822 5.862 1.007 : F -5.284 136.387 138.878 1.018 : C -5.225 3.864 4.160 1.077 : 0.710 0.664
+6866601 1 1 130.000 129.000 0.992: T -0.077 5.912 5.934 1.004 : F -5.544 136.282 138.147 1.014 : C -5.583 3.888 3.995 1.028 : 0.673 0.658
+6866601 1 2 130.000 129.133 0.993: T -0.028 5.880 5.908 1.005 : F -5.903 136.297 138.123 1.013 : C -5.939 3.865 4.130 1.069 : 0.699 0.657
+6866601 2 0 130.000 131.401 1.011: T -0.027 5.861 5.897 1.006 : F -5.804 136.305 137.398 1.008 : C -5.823 3.868 3.968 1.026 : 0.673 0.660
+6866601 2 1 130.000 128.903 0.992: T -0.044 5.868 5.916 1.008 : F -5.827 136.268 138.376 1.015 : C -5.732 3.877 4.064 1.048 : 0.687 0.661
+6866601 2 2 130.000 130.610 1.005: T -0.032 5.843 5.877 1.006 : F -5.625 136.336 138.336 1.015 : C -5.511 3.865 4.059 1.050 : 0.691 0.662
+
+                                   Precovolution                Deconvolution                    Deconvolution Convolved      DC/P
+4866601 0 0 105.000 106.185 1.011: T -0.023 4.053 4.094 1.010 : F  0.689 173.815 175.767 1.011 : C  0.781 4.199 3.016 0.718 : 0.737 1.036
+4866601 0 1 105.000 105.197 1.002: T -0.058 4.051 4.076 1.006 : F  0.578 175.584 177.336 1.010 : C  0.665 4.256 3.006 0.706 : 0.738 1.050
+4866601 0 2 105.000 105.841 1.008: T -0.087 4.067 4.091 1.006 : F  0.515 175.637 178.238 1.015 : C  0.601 4.294 3.022 0.704 : 0.739 1.056
+4866601 1 0 105.000 105.217 1.002: T -0.051 4.027 4.066 1.010 : F  0.740 172.129 173.939 1.011 : C  0.833 4.183 3.023 0.723 : 0.744 1.039
+4866601 1 1 105.000 104.227 0.993: T -0.094 4.105 4.128 1.006 : F  0.471 178.726 180.636 1.011 : C  0.558 4.409 3.063 0.695 : 0.742 1.074
+4866601 1 2 105.000 105.476 1.005: T -0.004 4.096 4.130 1.008 : F  0.709 175.174 177.036 1.011 : C  0.797 4.343 3.083 0.710 : 0.747 1.060
+4866601 2 0 105.000 105.914 1.009: T -0.081 4.090 4.122 1.008 : F  0.507 177.031 178.889 1.010 : C  0.594 4.373 3.056 0.699 : 0.741 1.069
+4866601 2 1 105.000 104.571 0.996: T -0.013 4.104 4.148 1.011 : F  0.525 176.736 179.186 1.014 : C  0.612 4.385 3.088 0.704 : 0.744 1.069
+4866601 2 2 105.000 104.548 0.996: T -0.089 4.073 4.102 1.007 : F  0.584 174.431 176.152 1.010 : C  0.677 4.252 3.015 0.709 : 0.735 1.044
+4866602 0 0 105.000 105.718 1.007: T -0.038 1.907 1.926 1.010 : F -0.369 107.375 108.202 1.008 : C -0.206 1.424 1.483 1.041 : 0.770 0.747
+4866602 0 1 105.000 105.037 1.000: T -0.068 1.885 1.900 1.008 : F -0.080 107.509 108.044 1.005 : C  0.080 1.406 1.465 1.042 : 0.771 0.746
+4866602 0 2 105.000 106.082 1.010: T -0.049 1.893 1.913 1.010 : F -0.009 106.978 107.975 1.009 : C  0.153 1.419 1.481 1.043 : 0.774 0.750
+4866602 1 0 105.000 105.032 1.000: T -0.000 1.873 1.890 1.009 : F -0.050 107.389 108.016 1.006 : C  0.110 1.403 1.468 1.046 : 0.777 0.749
+4866602 1 1 105.000 104.739 0.998: T -0.022 1.918 1.941 1.012 : F -0.394 107.671 108.351 1.006 : C -0.234 1.438 1.503 1.045 : 0.774 0.750
+4866602 1 2 105.000 105.213 1.002: T -0.027 1.913 1.932 1.010 : F -0.406 107.600 108.188 1.005 : C -0.243 1.430 1.492 1.043 : 0.772 0.748
+4866602 2 0 105.000 105.428 1.004: T -0.028 1.898 1.917 1.010 : F  0.025 107.496 108.025 1.005 : C  0.186 1.422 1.483 1.043 : 0.774 0.749
+4866602 2 1 105.000 104.496 0.995: T  0.070 1.916 1.939 1.012 : F -0.306 107.630 108.345 1.007 : C -0.145 1.433 1.495 1.043 : 0.771 0.748
+4866602 2 2 105.000 105.688 1.007: T -0.012 1.923 1.933 1.005 : F -0.342 107.686 108.106 1.004 : C -0.184 1.438 1.493 1.038 : 0.772 0.748
+4866603 0 0 105.000 105.874 1.008: T -0.028 1.097 1.115 1.016 : F -0.186 105.344 106.503 1.011 : C -0.025 0.866 0.910 1.052 : 0.816 0.789
+4866603 0 1 105.000 105.233 1.002: T -0.029 1.093 1.102 1.008 : F -0.195 106.192 106.775 1.005 : C -0.029 0.864 0.901 1.043 : 0.817 0.790
+4866603 0 2 105.000 105.529 1.005: T -0.000 1.085 1.097 1.011 : F -0.168 106.166 106.603 1.004 : C -0.004 0.860 0.900 1.047 : 0.821 0.792
+4866603 1 0 105.000 105.334 1.003: T -0.005 1.085 1.106 1.019 : F -0.182 106.184 106.776 1.006 : C -0.017 0.860 0.906 1.054 : 0.819 0.792
+4866603 1 1 105.000 103.306 0.984: T -0.004 1.075 1.089 1.013 : F -0.181 106.181 106.895 1.007 : C -0.016 0.850 0.887 1.044 : 0.815 0.791
+4866603 1 2 105.000 104.632 0.996: T -0.021 1.064 1.086 1.021 : F -0.168 106.175 106.896 1.007 : C -0.001 0.851 0.896 1.052 : 0.825 0.800
+4866603 2 0 105.000 105.070 1.001: T -0.029 1.074 1.085 1.011 : F -0.175 106.161 106.594 1.004 : C -0.012 0.856 0.892 1.043 : 0.822 0.797
+4866603 2 1 105.000 104.769 0.998: T  0.036 1.074 1.095 1.019 : F -0.152 106.165 106.766 1.006 : C  0.014 0.857 0.898 1.049 : 0.821 0.798
+4866603 2 2 105.000 106.062 1.010: T -0.014 1.064 1.081 1.016 : F -0.206 106.153 106.603 1.004 : C -0.037 0.841 0.881 1.048 : 0.815 0.791
+5866601 0 0 136.000 135.582 0.997: T -0.002 5.461 5.511 1.009 : F  1.498 204.161 206.195 1.010 : C  1.606 5.297 4.146 0.783 : 0.752 0.970
+5866601 0 1 137.000 137.285 1.002: T  0.015 5.446 5.490 1.008 : F  1.607 207.050 209.103 1.010 : C  1.710 5.375 4.148 0.772 : 0.756 0.987
+5866601 0 2 136.000 136.471 1.003: T -0.034 5.494 5.522 1.005 : F  1.308 209.883 212.148 1.011 : C  1.412 5.518 4.163 0.754 : 0.754 1.004
+5866601 1 0 137.000 135.987 0.993: T -0.022 5.418 5.446 1.005 : F  1.518 203.435 205.266 1.009 : C  1.626 5.298 4.134 0.780 : 0.759 0.978
+5866601 1 1 137.000 137.258 1.002: T -0.076 5.509 5.566 1.010 : F  1.263 210.229 212.212 1.009 : C  1.367 5.488 4.180 0.762 : 0.751 0.996
+5866601 1 2 137.000 135.846 0.992: T -0.005 5.480 5.522 1.008 : F  1.409 209.295 211.191 1.009 : C  1.510 5.485 4.168 0.760 : 0.755 1.001
+5866601 2 0 136.000 135.948 1.000: T  0.002 5.473 5.494 1.004 : F  1.528 208.501 210.061 1.007 : C  1.631 5.414 4.104 0.758 : 0.747 0.989
+5866601 2 1 136.000 135.913 0.999: T -0.072 5.477 5.518 1.008 : F  1.295 209.813 212.267 1.012 : C  1.393 5.473 4.146 0.758 : 0.751 0.999
+5866601 2 2 137.000 136.543 0.997: T -0.064 5.463 5.505 1.008 : F  1.437 207.840 209.652 1.009 : C  1.534 5.400 4.123 0.763 : 0.749 0.988
+5866602 0 0 136.000 136.041 1.000: T  0.000 2.707 2.717 1.004 : F  0.047 139.057 139.842 1.006 : C  0.208 2.024 2.093 1.034 : 0.770 0.748
+5866602 0 1 137.000 136.822 0.999: T  0.071 2.679 2.700 1.008 : F  0.111 139.091 139.812 1.005 : C  0.271 2.011 2.093 1.041 : 0.775 0.750
+5866602 0 2 136.000 135.705 0.998: T  0.012 2.691 2.724 1.012 : F  0.014 139.049 139.746 1.005 : C  0.175 2.022 2.112 1.045 : 0.775 0.751
+5866602 1 0 137.000 136.322 0.995: T  0.034 2.663 2.688 1.009 : F  0.066 139.011 139.861 1.006 : C  0.225 2.000 2.089 1.044 : 0.777 0.751
+5866602 1 1 137.000 137.618 1.005: T -0.009 2.714 2.747 1.012 : F  0.062 139.226 140.072 1.006 : C  0.221 2.039 2.132 1.046 : 0.776 0.751
+5866602 1 2 137.000 137.176 1.001: T -0.018 2.715 2.743 1.011 : F -0.267 139.336 140.199 1.006 : C -0.106 2.033 2.116 1.041 : 0.771 0.749
+5866602 2 0 136.000 136.028 1.000: T  0.014 2.694 2.720 1.010 : F  0.082 139.064 139.806 1.005 : C  0.241 2.026 2.119 1.046 : 0.779 0.752
+5866602 2 1 136.000 135.432 0.996: T  0.003 2.714 2.748 1.012 : F -0.272 139.257 140.076 1.006 : C -0.113 2.041 2.128 1.043 : 0.774 0.752
+5866602 2 2 137.000 136.912 0.999: T -0.072 2.730 2.746 1.006 : F -0.339 139.417 140.058 1.005 : C -0.175 2.046 2.121 1.036 : 0.772 0.750
+5866603 0 0 136.000 134.462 0.989: T -0.014 1.555 1.569 1.009 : F -0.190 137.277 137.847 1.004 : C -0.022 1.224 1.280 1.046 : 0.816 0.787
+5866603 0 1 137.000 136.454 0.996: T  0.012 1.547 1.560 1.008 : F -0.135 137.293 138.050 1.006 : C  0.034 1.209 1.260 1.042 : 0.808 0.782
+5866603 0 2 136.000 135.507 0.996: T -0.010 1.538 1.553 1.010 : F -0.120 137.256 137.972 1.005 : C  0.046 1.215 1.267 1.043 : 0.816 0.790
+5866603 1 0 137.000 136.641 0.997: T -0.021 1.538 1.551 1.008 : F -0.134 137.290 138.424 1.008 : C  0.029 1.208 1.262 1.044 : 0.813 0.785
+5866603 1 1 137.000 135.880 0.992: T -0.045 1.528 1.552 1.015 : F -0.216 137.290 138.395 1.008 : C -0.044 1.203 1.260 1.047 : 0.812 0.787
+5866603 1 2 137.000 137.190 1.001: T -0.022 1.515 1.532 1.011 : F -0.261 137.278 138.242 1.007 : C -0.098 1.197 1.251 1.045 : 0.817 0.790
+5866603 2 0 136.000 136.242 1.002: T  0.028 1.519 1.536 1.011 : F -0.153 137.248 138.096 1.006 : C  0.009 1.207 1.262 1.046 : 0.822 0.794
+5866603 2 1 136.000 135.730 0.998: T  0.013 1.515 1.538 1.015 : F -0.253 137.231 138.168 1.007 : C -0.089 1.203 1.257 1.045 : 0.817 0.794
+5866603 2 2 136.000 136.170 1.001: T -0.035 1.512 1.520 1.006 : F -0.260 137.235 137.977 1.005 : C -0.094 1.197 1.240 1.036 : 0.816 0.792
+6866601 0 0 130.000 130.145 1.001: T -0.030 5.856 5.875 1.003 : F  1.406 205.833 207.684 1.009 : C  1.510 5.840 4.343 0.744 : 0.739 0.997
+6866601 0 1 130.000 129.595 0.997: T -0.042 5.838 5.878 1.007 : F  1.440 205.997 207.440 1.007 : C  1.541 5.817 4.335 0.745 : 0.737 0.996
+6866601 0 2 130.000 130.794 1.006: T -0.066 5.882 5.909 1.005 : F  1.311 209.790 212.171 1.011 : C  1.402 5.973 4.358 0.730 : 0.737 1.015
+6866601 1 0 130.000 128.877 0.991: T -0.020 5.822 5.862 1.007 : F  1.488 202.661 204.064 1.007 : C  1.589 5.759 4.363 0.758 : 0.744 0.989
+6866601 1 1 130.000 129.000 0.992: T -0.077 5.912 5.934 1.004 : F  1.211 208.238 210.052 1.009 : C  1.311 5.940 4.374 0.736 : 0.737 1.005
+6866601 1 2 130.000 129.133 0.993: T -0.028 5.880 5.908 1.005 : F  1.382 208.034 210.060 1.010 : C  1.481 5.899 4.355 0.738 : 0.737 1.003
+6866601 2 0 130.000 131.401 1.011: T -0.027 5.861 5.897 1.006 : F  1.368 208.455 210.284 1.009 : C  1.463 5.938 4.352 0.733 : 0.738 1.013
+6866601 2 1 130.000 128.903 0.992: T -0.044 5.868 5.916 1.008 : F  1.354 207.862 210.199 1.011 : C  1.448 5.921 4.384 0.740 : 0.741 1.009
+6866601 2 2 130.000 130.610 1.005: T -0.032 5.843 5.877 1.006 : F  1.381 203.756 205.233 1.007 : C  1.482 5.807 4.355 0.750 : 0.741 0.994
+6866602 0 0 130.000 130.739 1.006: T -0.065 2.723 2.747 1.009 : F -0.015 132.537 133.283 1.006 : C  0.147 2.036 2.121 1.042 : 0.772 0.748
+6866602 0 1 130.000 128.827 0.991: T -0.017 2.685 2.701 1.006 : F  0.014 132.777 133.140 1.003 : C  0.176 2.006 2.085 1.040 : 0.772 0.747
+6866602 0 2 130.000 130.844 1.006: T -0.039 2.702 2.725 1.009 : F -0.029 132.291 133.240 1.007 : C  0.132 2.028 2.114 1.042 : 0.776 0.751
+6866602 1 0 130.000 128.997 0.992: T -0.027 2.678 2.698 1.007 : F  0.025 132.729 133.256 1.004 : C  0.187 2.014 2.096 1.041 : 0.777 0.752
+6866602 1 1 130.000 128.747 0.990: T -0.044 2.726 2.747 1.008 : F -0.053 132.874 133.299 1.003 : C  0.106 2.040 2.121 1.040 : 0.772 0.748
+6866602 1 2 130.000 130.649 1.005: T -0.018 2.716 2.736 1.007 : F  0.006 132.820 133.364 1.004 : C  0.164 2.024 2.107 1.041 : 0.770 0.745
+6866602 2 0 130.000 131.050 1.008: T  0.011 2.696 2.718 1.008 : F -0.036 132.162 133.154 1.008 : C  0.124 2.010 2.092 1.041 : 0.770 0.746
+6866602 2 1 130.000 128.814 0.991: T -0.030 2.725 2.753 1.011 : F -0.048 132.903 133.363 1.003 : C  0.114 2.042 2.129 1.042 : 0.773 0.750
+6866602 2 2 130.000 129.886 0.999: T -0.043 2.727 2.748 1.008 : F -0.044 132.643 133.163 1.004 : C  0.116 2.041 2.124 1.041 : 0.773 0.748
+6866603 0 0 130.000 130.606 1.005: T -0.005 1.570 1.589 1.012 : F -0.166 130.574 131.497 1.007 : C -0.001 1.236 1.293 1.046 : 0.814 0.787
+6866603 0 1 130.000 128.721 0.990: T -0.041 1.564 1.572 1.005 : F -0.253 131.264 131.673 1.003 : C -0.094 1.236 1.283 1.038 : 0.816 0.791
+6866603 0 2 130.000 131.641 1.013: T  0.041 1.551 1.565 1.009 : F -0.123 130.475 131.648 1.009 : C  0.043 1.228 1.278 1.041 : 0.816 0.791
+6866603 1 0 130.000 128.607 0.989: T -0.025 1.555 1.563 1.005 : F -0.170 131.265 131.828 1.004 : C -0.007 1.231 1.279 1.038 : 0.818 0.792
+6866603 1 1 130.000 129.296 0.995: T -0.029 1.543 1.561 1.012 : F -0.215 131.240 131.731 1.004 : C -0.053 1.221 1.273 1.043 : 0.815 0.791
+6866603 1 2 130.000 128.584 0.989: T -0.009 1.528 1.537 1.006 : F -0.188 131.231 131.679 1.003 : C -0.024 1.216 1.260 1.036 : 0.820 0.796
+6866603 2 0 130.000 129.457 0.996: T  0.004 1.532 1.546 1.009 : F -0.168 131.215 131.668 1.003 : C -0.010 1.216 1.264 1.039 : 0.818 0.794
+6866603 2 1 130.000 129.187 0.994: T -0.006 1.533 1.558 1.016 : F -0.260 131.229 131.873 1.005 : C -0.090 1.221 1.277 1.046 : 0.820 0.796
+6866603 2 2 130.000 130.043 1.000: T  0.021 1.516 1.531 1.010 : F -0.137 130.566 131.562 1.008 : C  0.029 1.195 1.242 1.040 : 0.811 0.788
+
+##################
+########## SIMS8 analysis
+##################
+
+output directories are called : outputs8XY
+ X = template airmass ABCDE
+ Y = science image airmass ABCDE
+
+A quick check shows that we are indeed getting lots of false positives
+for the off-diagonal diffs.  Will need to quantify and then start to
+think about workarounds.
+
+Need to wrap my head around the DCR some more.
+
+imhead inputs8/calexp/v100?001-fg/R22/S11.fits -e 0 -K AZIMUTH,ZENITH,AIRMASS,ROTANG,SPIDANG
+ inputs8/calexp/v1000001-fg/R22/S11.fits[0]:           105.3   49.86  1.551   251.06 145.71 
+ inputs8/calexp/v1001001-fg/R22/S11.fits[0]:           98.79   30.06  1.155   251.06 152.27 
+ inputs8/calexp/v1002001-fg/R22/S11.fits[0]:           269.9   0.100  1.000   251.06 341.09 
+ inputs8/calexp/v1003001-fg/R22/S11.fits[0]:           261.2   30.04  1.155   251.06 349.86 
+ inputs8/calexp/v1004001-fg/R22/S11.fits[0]:           254.6   49.84  1.550   251.06 356.41
+
+OK, so the ZENITH and AIRMASS terms seem as-designed.  Good for me.
+
+The ROTANG = rotskypos = 251 degrees.  I really should have made this
+0 for sanity's sake, but I used the value in the W13 sims.  So be it.
+I think this means that in a North-up coordinate system, the pole is
+251 degrees counterclockwise from "up", so 20 degrees below the
+x-axis.
+
+The AZIMUTH seem to wrap around at 90 <-> 270.  I think I understand
+this as a change in convention when you pass through the meridian.  As
+Simon says: "you will necessarily have a discontinuity at 270--90
+since in one case you are measuring azimuth to the East and in the
+other you are measuring [...] to the West."
+
+For SPIDANG, which is supposed to represent the rotTelPos and thus the
+angle that DCR should take along the y-axis.  Now this is where it
+gets funky.  At airmass 1.5, after passing through zenith, we have DCR
+basically along the y-axis (360 degrees).  I can at least imagine
+that.  What does bother me though is the discontinuity at 160 <-> 340.
+Not a discontinuity, really.  I need to write a script to plot this
+up... plotDcr.py.
+
+###########3
+
+OK, after wrestling through this for an entire week, I think I have
+figured this out.  First off, the orientation of the skypos/telpos was
+opposite the analysis above.  I guess its counterclockwise in teh
+camera coordinate system, so clockwise in the image coordinate system.
+Basically, I need to rotate all the vectors clockwise to deal with
+this.  See script dcrSchematic.py to outline how all of this should
+look.  The lines A, B, D, E, point to zenith in each of the 4 epochs.
+P points to pole.  The angle PB and PD are the same, as you expect, as
+are PA and PE.  For completeness, these angles are (skip C since its
+right at zenith and az is changing wildly)
+
+P: 251.068956606
+A: 145.713981089
+B: 152.270840596
+D: 349.861933453
+E: 356.418112888
+
+Next up, look at the directions to zenith implied by the Wcs.  I do
+this in scriptcompareDcrFromSims.py .  Basically, I find the Ra,Dec of
+the center of the image, and find the Ra,Dec axes by taking small
+setps along each dimension.  This matches up nicely with the N,E
+schematic in the upper right hand corner of ds9 when I Wcs->Wcs it.
+
+Next up, go to topocentric coordintes using 
+  lsst = afwCoord.Observatory(-70.7494167 * afwGeom.degrees, -30.2446389 * afwGeom.degrees, 2662)
+and 
+  obsDate  = dafBase.DateTime(mjdI, dafBase.DateTime.MJD, dafBase.DateTime.TAI)
+  epoch    = obsDate.get(dafBase.DateTime.EPOCH)
+
+AND NOTE! I need to use this epoch for all the positions on the image;
+I was not using this initially and was getting non-orthagonal looking
+coordinate systems.
+
+Anyways, go to topocentric coords (Az, Alt) and then do the same
+thing, taking small steps along each axis to figure out its
+orientation.  Convert back to Fk5 and the sky2xy.  
+
+NOTE NOTE: seriously need to keep epoch straight, e.g. 
+  off2   = altoff.toFk5(epoch)
+
+Use it everywhere.
+
+Anyways, I find the dx and dy offsets when moving 0.003 degrees in
+altitude, to get the vector pointing along increasing altutude.  
+
+For image A, this is dx = 30.9911671363 pixels, dy = -44.1538055818
+pixels, or np.arctan(30.9911671363/-44.1538055818) * 180 / np.pi =
+-35.0646785559.  So this is the angle counterclockwise from y-axis.
+Or 90-35.0646785559 = 54.9353214441 degrees downward from the x-axis,
+and 144.9353214441 from "up".  Compare to rotTelPos = 145.713981089.
+
+Or duh, use dy/dx : np.arctan(44.1538055818/30.9911671363) * 180 /
+np.pi + 90 = 144.93532144495424.  Same diff.
+
+For image D, this is dx = 2.72619957337, dy = -53.8747993858.
+np.arctan(-2.72619957337/53.8747993858) * 180 / np.pi is
+2.8968388475727358 degrees counterclockwise from vertical.  Or
+357.1031611524273 clockwise.  Compare to 356.418112888.
+
+OK, so this is basically makging sense.  
+
+ALSO, A VERY IMPORTANT POINT: refraction is in the direction of
+zenith.  That is, things seem higher in the atmosphere than they are
+(e.g. you can see the sun after it has set).  So I need to make the
+DCR vectors in the direction of increasing altitude, not decreasing.
