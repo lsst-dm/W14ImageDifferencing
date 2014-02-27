@@ -29,7 +29,7 @@ if __name__ == "__main__":
     indir = "/nfs/lsst/home/becker/Winter2014"
     for doPreConvolve in (True, False):
 
-        fig = plt.figure()
+        fig = plt.figure(figsize=(9.95, 9.56), dpi=100)
         for visitId in (1, 2, 3):
             figx  = visitId
 
@@ -48,16 +48,16 @@ if __name__ == "__main__":
                         mapper  = Mapper(root=os.path.join(indir, "outputs8%s%s_doPreConvolve%s" % (suffixT, suffixI, doPreConvolve)), calibRoot = None, outputRoot = None)
                         butler  = dafPersist.ButlerFactory(mapper = mapper).create()
 
-                        nTotal = 0
+                        nTotal = []
                         for sx in range(3):
                             for sy in range(3):
                                 sensor    = "%d,%d" % (sx, sy)
                                 dataId    = {"visit": visit, "raft": "2,2", "sensor": sensor}
                                 src       = butler.get(datasetType="deepDiff_diaSrc", dataId = dataId)
                                 sourceM, sourceO = countSources(src)
-                                nTotal += (sourceM + sourceO)
-                        fps[airmassIdT,airmassIdI] = nTotal / 9.0
-                        print airmassIdT, airmassIdI, nTotal
+                                nTotal.append(sourceM + sourceO)
+                        fps[airmassIdT,airmassIdI] = np.median(nTotal)
+                        print filterName, suffixT, suffixI, nTotal
 
                 print filterName, visitId, fps
                 sp.pcolor(fps, cmap=plt.cm.Greys, shading="faceted", vmin=0, vmax=300)
