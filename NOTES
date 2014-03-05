@@ -2818,3 +2818,888 @@ ALSO, A VERY IMPORTANT POINT: refraction is in the direction of
 zenith.  That is, things seem higher in the atmosphere than they are
 (e.g. you can see the sun after it has set).  So I need to make the
 DCR vectors in the direction of increasing altitude, not decreasing.
+
+The MJDs of all 5 obs:
+sims8/1000000.trim:Opsim_expmjd 51130.111719
+sims8/1001000.trim:Opsim_expmjd 51130.176302
+sims8/1002000.trim:Opsim_expmjd 51130.272830
+sims8/1003000.trim:Opsim_expmjd 51130.368663
+sims8/1004000.trim:Opsim_expmjd 51130.433247
+
+From compareDcrFromSims.py, the axis angles should be (lets see if
+there is any band dependnece to this; basically this should tell us
+about the Wcs fitting)
+
+# g
+         Ra      Decl    Az     Alt
+ANGLES A -18.929 251.067 54.939 144.935
+ANGLES B -18.932 251.070 61.094 151.088
+ANGLES D -18.930 251.069 260.970 -9.031
+ANGLES E -18.932 251.072 267.104 -2.897
+
+# r
+         Ra      Decl    Az     Alt
+ANGLES A -18.929 251.067 54.939 144.935
+ANGLES B -18.932 251.071 61.095 151.089
+ANGLES D -18.930 251.069 260.970 -9.031
+ANGLES E -18.932 251.072 267.104 -2.896
+
+# Doublechecking visidId {'filter': 'r', 'raft': '2,2', 'sensor': '1,1', 'visit': 2004002}
+
+# i
+         Ra      Decl    Az     Alt
+ANGLES A -18.929 251.068 54.939 144.936
+ANGLES B -18.932 251.070 61.094 151.089
+ANGLES D -18.930 251.069 260.970 -9.031
+ANGLES E -18.932 251.071 267.103 -2.897
+[
+# Compare to rotTelPos
+A: 145.713981089
+B: 152.270840596
+D: 349.861933453 = -10.138066547
+E: 356.418112888 = -3.581887112
+
+# Now to compare the actual dipole angles!!!!!  This should be
+# interesting...  Hopefully they all got processed instead of skipped
+# because there were too many
+
+First lets count the dipoles
+prefilter=True
+g A A [1, 0, 6, 1, 2, 1, 0, 3, 0]
+g A B [214, 222, 202, 242, 142, 223, 200, 234, 215]
+g A C [277, 321, 268, 324, 261, 302, 259, 335, 263]
+g A D [204, 245, 222, 258, 200, 211, 222, 247, 225]
+g A E [207, 219, 216, 229, 196, 198, 202, 218, 203]
+g B A [130, 115, 132, 236, 115, 128, 124, 200, 117]
+g B B [0, 3, 3, 0, 0, 0, 3, 4, 1]
+g B C [199, 201, 217, 224, 163, 200, 201, 214, 201]
+g B D [200, 217, 214, 230, 187, 191, 198, 215, 208]
+g B E [204, 219, 212, 226, 185, 201, 205, 215, 201]
+g C A [202, 229, 221, 237, 202, 202, 207, 231, 202]
+g C B [155, 206, 211, 225, 143, 154, 151, 195, 196]
+g C C [4, 2, 6, 2, 3, 5, 6, 10, 3]
+g C D [159, 201, 163, 213, 154, 158, 143, 166, 195]
+g C E [207, 220, 215, 230, 197, 202, 200, 215, 201]
+g D A [202, 211, 212, 226, 188, 199, 199, 220, 200]
+g D B [201, 210, 214, 231, 187, 202, 205, 219, 204]
+g D C [169, 209, 207, 222, 155, 205, 168, 216, 158]
+g D D [2, 2, 2, 2, 5, 3, 0, 4, 0]
+g D E [130, 118, 127, 206, 128, 127, 130, 128, 121]
+g E A [191, 214, 210, 226, 186, 190, 198, 222, 199]
+g E B [215, 234, 222, 233, 204, 211, 208, 233, 224]
+g E C [264, 277, 299, 261, 224, 237, 286, 280, 239]
+g E D [154, 206, 208, 227, 145, 154, 150, 213, 146]
+g E E [1, 1, 0, 1, 2, 0, 3, 3, 2]
+g 1 [[   1.  215.  277.  222.  207.]
+ [ 128.    1.  201.  208.  205.]
+ [ 207.  195.    4.  163.  207.]
+ [ 202.  205.  205.    2.  128.]
+ [ 199.  222.  264.  154.    1.]]
+r A A [2, 2, 5, 1, 1, 2, 1, 0, 1]
+r A B [13, 9, 12, 8, 7, 13, 12, 10, 10]
+r A C [63, 65, 61, 71, 57, 64, 75, 66, 61]
+r A D [113, 93, 99, 135, 95, 104, 107, 106, 94]
+r A E [121, 113, 125, 141, 109, 127, 115, 125, 115]
+r B A [3, 11, 9, 8, 4, 4, 6, 5, 3]
+r B B [3, 1, 4, 1, 0, 2, 3, 2, 3]
+r B C [9, 12, 14, 7, 7, 11, 7, 10, 7]
+r B D [58, 45, 59, 62, 48, 50, 59, 53, 51]
+r B E [90, 71, 89, 104, 75, 86, 86, 82, 74]
+r C A [31, 40, 46, 47, 29, 39, 49, 34, 31]
+r C B [7, 11, 13, 9, 5, 8, 8, 4, 7]
+r C C [3, 1, 3, 2, 1, 4, 2, 1, 2]
+r C D [6, 5, 8, 6, 8, 10, 2, 5, 5]
+r C E [31, 29, 28, 40, 33, 34, 28, 34, 26]
+r D A [94, 86, 99, 104, 77, 97, 80, 78, 82]
+r D B [51, 49, 62, 59, 47, 52, 64, 48, 43]
+r D C [7, 6, 10, 10, 6, 7, 16, 7, 3]
+r D D [0, 1, 1, 4, 0, 1, 1, 2, 1]
+r D E [2, 3, 2, 2, 4, 5, 1, 4, 1]
+r E A [129, 117, 135, 147, 116, 128, 116, 119, 114]
+r E B [105, 93, 112, 121, 97, 100, 94, 96, 87]
+r E C [60, 61, 74, 58, 46, 64, 61, 54, 47]
+r E D [12, 11, 6, 7, 3, 6, 5, 7, 3]
+r E E [2, 4, 0, 2, 1, 0, 0, 1, 0]
+r 1 [[   1.   10.   64.  104.  121.]
+ [   5.    2.    9.   53.   86.]
+ [  39.    8.    2.    6.   31.]
+ [  86.   51.    7.    1.    2.]
+ [ 119.   97.   60.    6.    1.]]
+i A A [3, 2, 3, 1, 1, 0, 1, 6, 1]
+i A B [1, 4, 7, 3, 5, 2, 5, 6, 1]
+i A C [7, 12, 5, 7, 8, 7, 7, 9, 7]
+i A D [5, 10, 11, 12, 10, 12, 5, 7, 8]
+i A E [13, 8, 11, 19, 11, 16, 19, 25, 13]
+i B A [0, 1, 3, 2, 0, 0, 1, 5, 0]
+i B B [1, 2, 1, 0, 5, 1, 4, 1, 1]
+i B C [1, 1, 0, 2, 6, 4, 3, 3, 1]
+i B D [2, 3, 2, 3, 2, 2, 4, 5, 2]
+i B E [2, 3, 5, 9, 5, 7, 2, 11, 4]
+i C A [3, 3, 5, 3, 1, 1, 1, 3, 0]
+i C B [1, 4, 2, 1, 2, 2, 4, 2, 1]
+i C C [0, 3, 2, 2, 3, 1, 2, 1, 1]
+i C D [2, 1, 2, 1, 4, 2, 2, 2, 1]
+i C E [4, 1, 3, 4, 3, 1, 1, 2, 0]
+i D A [4, 6, 9, 5, 6, 5, 6, 6, 3]
+i D B [3, 2, 5, 3, 2, 2, 5, 1, 2]
+i D C [2, 2, 2, 1, 1, 2, 3, 2, 2]
+i D D [3, 2, 2, 0, 1, 2, 3, 3, 1]
+i D E [2, 0, 1, 4, 3, 0, 2, 1, 0]
+i E A [11, 19, 16, 14, 10, 12, 18, 11, 16]
+i E B [9, 9, 10, 9, 7, 9, 7, 8, 4]
+i E C [8, 12, 5, 8, 5, 3, 8, 3, 8]
+i E D [7, 4, 2, 3, 2, 1, 3, 5, 3]
+i E E [4, 0, 1, 3, 1, 1, 0, 5, 0]
+i 1 [[  1.   4.   7.  10.  13.]
+ [  1.   1.   2.   2.   5.]
+ [  3.   2.   2.   2.   2.]
+ [  6.   2.   2.   2.   1.]
+ [ 14.   9.   8.   3.   1.]]
+g A A [2, 0, 1, 2, 2, 2, 2, 7, 2]
+g A B [114, 114, 193, 225, 116, 119, 105, 119, 108]
+g A C [207, 225, 219, 236, 184, 186, 211, 224, 209]
+g A D [196, 211, 210, 225, 186, 190, 197, 220, 204]
+g A E [188, 205, 206, 218, 183, 188, 187, 201, 195]
+g B A [67, 62, 73, 96, 65, 71, 77, 74, 62]
+g B B [2, 1, 1, 3, 3, 5, 3, 0, 0]
+g B C [132, 115, 131, 203, 113, 124, 128, 121, 122]
+g B D [206, 229, 230, 238, 205, 206, 210, 229, 218]
+g B E [210, 228, 233, 238, 205, 209, 204, 223, 209]
+g C A [234, 248, 230, 267, 224, 239, 229, 248, 238]
+g C B [112, 98, 112, 210, 96, 111, 100, 107, 89]
+g C C [1, 1, 0, 4, 0, 0, 8, 0, 0]
+g C D [110, 97, 107, 197, 94, 106, 102, 102, 97]
+g C E [221, 227, 232, 255, 219, 219, 223, 248, 229]
+g D A [217, 241, 233, 246, 212, 215, 206, 245, 225]
+g D B [207, 233, 233, 240, 202, 208, 211, 228, 213]
+g D C [135, 114, 123, 201, 125, 130, 119, 126, 121]
+g D D [1, 1, 2, 1, 2, 2, 2, 1, 1]
+g D E [77, 71, 72, 97, 67, 79, 74, 71, 66]
+g E A [192, 210, 200, 221, 183, 191, 186, 208, 198]
+g E B [198, 210, 206, 228, 186, 199, 198, 210, 196]
+g E C [197, 212, 211, 226, 196, 188, 200, 217, 201]
+g E D [118, 108, 124, 203, 106, 122, 119, 117, 110]
+g E E [2, 1, 0, 0, 1, 0, 1, 1, 0]
+g 2 [[   2.  116.  211.  204.  195.]
+ [  71.    2.  124.  218.  210.]
+ [ 238.  107.    0.  102.  227.]
+ [ 225.  213.  125.    1.   72.]
+ [ 198.  199.  201.  118.    1.]]
+r A A [0, 1, 2, 0, 0, 3, 0, 3, 0]
+r A B [5, 1, 2, 3, 0, 4, 3, 6, 2]
+r A C [30, 21, 34, 26, 24, 37, 38, 26, 29]
+r A D [55, 54, 67, 72, 56, 60, 62, 67, 48]
+r A E [71, 61, 70, 83, 62, 75, 73, 67, 64]
+r B A [0, 4, 5, 3, 0, 2, 1, 5, 1]
+r B B [2, 0, 2, 1, 1, 5, 1, 2, 3]
+r B C [3, 0, 4, 4, 3, 3, 2, 3, 5]
+r B D [11, 18, 20, 17, 16, 15, 11, 23, 13]
+r B E [36, 29, 33, 44, 31, 38, 35, 36, 30]
+r C A [5, 10, 13, 11, 8, 11, 9, 19, 8]
+r C B [4, 1, 4, 3, 2, 6, 1, 2, 1]
+r C C [0, 0, 2, 1, 2, 2, 2, 0, 2]
+r C D [1, 2, 0, 1, 5, 1, 1, 1, 0]
+r C E [8, 3, 9, 8, 9, 10, 6, 8, 4]
+r D A [29, 33, 45, 44, 23, 35, 47, 37, 28]
+r D B [22, 14, 26, 21, 13, 21, 25, 13, 9]
+r D C [2, 1, 4, 7, 3, 3, 7, 2, 2]
+r D D [1, 0, 2, 1, 1, 0, 0, 0, 1]
+r D E [1, 0, 2, 1, 3, 2, 1, 1, 0]
+r E A [59, 55, 86, 88, 63, 78, 77, 70, 68]
+r E B [67, 55, 65, 64, 59, 65, 69, 55, 47]
+r E C [31, 24, 30, 43, 26, 31, 37, 23, 13]
+r E D [2, 4, 2, 1, 1, 2, 2, 2, 0]
+r E E [2, 0, 1, 1, 1, 2, 0, 0, 1]
+r 2 [[  0.   3.  29.  60.  70.]
+ [  2.   2.   3.  16.  35.]
+ [ 10.   2.   2.   1.   8.]
+ [ 35.  21.   3.   1.   1.]
+ [ 70.  64.  30.   2.   1.]]
+i A A [1, 1, 2, 1, 1, 2, 0, 2, 0]
+i A B [0, 1, 2, 0, 1, 1, 3, 1, 1]
+i A C [2, 0, 1, 0, 1, 4, 0, 2, 2]
+i A D [4, 2, 4, 3, 1, 1, 3, 3, 3]
+i A E [1, 0, 3, 2, 2, 2, 2, 1, 2]
+i B A [1, 0, 0, 1, 3, 1, 2, 4, 1]
+i B B [1, 1, 3, 0, 2, 2, 2, 1, 4]
+i B C [2, 0, 2, 0, 2, 1, 1, 1, 1]
+i B D [3, 1, 1, 2, 3, 0, 3, 1, 2]
+i B E [1, 0, 4, 2, 1, 1, 1, 0, 1]
+i C A [1, 0, 2, 1, 3, 1, 1, 4, 0]
+i C B [1, 1, 2, 0, 0, 2, 0, 0, 1]
+i C C [1, 0, 1, 1, 2, 0, 1, 0, 2]
+i C D [2, 0, 4, 1, 3, 2, 2, 1, 2]
+i C E [2, 0, 2, 2, 1, 1, 1, 0, 1]
+i D A [2, 2, 2, 1, 3, 1, 0, 6, 1]
+i D B [1, 1, 2, 2, 1, 2, 1, 3, 2]
+i D C [1, 0, 2, 1, 0, 1, 3, 1, 1]
+i D D [4, 1, 3, 0, 0, 0, 4, 0, 1]
+i D E [1, 0, 6, 0, 2, 0, 1, 0, 0]
+i E A [1, 2, 5, 1, 3, 1, 2, 8, 1]
+i E B [1, 3, 2, 2, 3, 1, 3, 3, 2]
+i E C [2, 5, 1, 0, 3, 2, 6, 1, 4]
+i E D [1, 0, 3, 2, 1, 1, 3, 1, 1]
+i E E [1, 0, 2, 1, 1, 1, 1, 1, 0]
+i 2 [[ 1.  1.  1.  3.  2.]
+ [ 1.  2.  1.  2.  1.]
+ [ 1.  1.  1.  2.  1.]
+ [ 2.  2.  1.  1.  0.]
+ [ 2.  2.  2.  1.  1.]]
+g A A [0, 3, 0, 0, 2, 2, 0, 0, 0]
+g A B [64, 61, 68, 84, 55, 76, 62, 71, 51]
+g A C [224, 244, 243, 271, 226, 219, 234, 254, 239]
+g A D [220, 254, 252, 257, 225, 214, 235, 256, 227]
+g A E [234, 269, 256, 260, 230, 230, 235, 260, 246]
+g B A [29, 29, 33, 35, 28, 33, 39, 39, 23]
+g B B [0, 0, 3, 2, 0, 2, 1, 1, 0]
+g B C [83, 70, 81, 92, 68, 88, 71, 76, 66]
+g B D [220, 220, 216, 250, 200, 230, 213, 229, 219]
+g B E [243, 254, 237, 275, 237, 240, 228, 259, 240]
+g C A [234, 220, 240, 280, 217, 237, 210, 222, 211]
+g C B [43, 48, 60, 68, 50, 58, 53, 54, 49]
+g C C [1, 0, 1, 1, 0, 1, 2, 4, 0]
+g C D [55, 53, 63, 60, 51, 57, 58, 56, 49]
+g C E [230, 203, 217, 271, 210, 229, 215, 225, 99]
+g D A [246, 246, 250, 283, 244, 245, 227, 259, 246]
+g D B [223, 223, 216, 256, 209, 231, 210, 227, 223]
+g D C [77, 74, 83, 86, 78, 77, 87, 77, 65]
+g D D [1, 2, 1, 1, 3, 1, 1, 0, 0]
+g D E [34, 36, 31, 33, 29, 39, 32, 32, 23]
+g E A [241, 258, 253, 266, 232, 229, 237, 261, 250]
+g E B [218, 247, 236, 250, 219, 213, 224, 237, 231]
+g E C [216, 226, 225, 247, 213, 217, 216, 240, 219]
+g E D [72, 63, 72, 85, 58, 74, 72, 68, 54]
+g E E [0, 1, 1, 1, 0, 1, 0, 0, 0]
+g 3 [[   0.   64.  239.  235.  246.]
+ [  33.    1.   76.  220.  240.]
+ [ 222.   53.    1.   56.  217.]
+ [ 246.  223.   77.    1.   32.]
+ [ 250.  231.  219.   72.    0.]]
+r A A [1, 1, 0, 0, 1, 0, 0, 0, 1]
+r A B [2, 3, 1, 3, 1, 1, 1, 2, 1]
+r A C [12, 3, 10, 11, 6, 15, 8, 1, 6]
+r A D [22, 21, 23, 23, 20, 20, 23, 19, 19]
+r A E [29, 24, 29, 36, 24, 28, 29, 25, 23]
+r B A [0, 1, 0, 2, 1, 0, 0, 1, 1]
+r B B [0, 0, 2, 3, 0, 0, 0, 1, 0]
+r B C [0, 0, 2, 2, 3, 4, 2, 0, 0]
+r B D [2, 7, 4, 2, 4, 5, 4, 3, 5]
+r B E [9, 7, 7, 10, 5, 9, 8, 4, 6]
+r C A [1, 7, 4, 5, 1, 0, 2, 6, 0]
+r C B [1, 0, 3, 1, 1, 1, 1, 0, 0]
+r C C [2, 1, 1, 1, 1, 1, 2, 1, 1]
+r C D [1, 2, 1, 0, 1, 3, 0, 2, 1]
+r C E [2, 2, 0, 3, 1, 1, 0, 0, 4]
+r D A [12, 13, 10, 11, 7, 10, 13, 8, 4]
+r D B [3, 5, 6, 5, 4, 4, 1, 2, 4]
+r D C [3, 0, 1, 2, 2, 1, 2, 1, 2]
+r D D [1, 3, 0, 0, 0, 2, 0, 1, 2]
+r D E [3, 1, 0, 2, 0, 0, 0, 0, 2]
+r E A [31, 28, 32, 34, 27, 32, 33, 27, 29]
+r E B [23, 19, 28, 26, 22, 29, 22, 12, 12]
+r E C [13, 5, 18, 9, 7, 11, 12, 8, 4]
+r E D [1, 4, 0, 0, 0, 1, 0, 2, 2]
+r E E [4, 0, 0, 1, 0, 0, 0, 0, 1]
+r 3 [[  0.   1.   8.  21.  28.]
+ [  1.   0.   2.   4.   7.]
+ [  2.   1.   1.   1.   1.]
+ [ 10.   4.   2.   1.   0.]
+ [ 31.  22.   9.   1.   0.]]
+i A A [2, 0, 3, 2, 2, 0, 0, 0, 0]
+i A B [1, 2, 0, 2, 0, 1, 2, 0, 0]
+i A C [1, 1, 1, 0, 0, 0, 1, 1, 3]
+i A D [1, 2, 1, 1, 2, 1, 0, 1, 5]
+i A E [2, 1, 2, 1, 0, 3, 0, 4, 1]
+i B A [1, 0, 1, 1, 2, 1, 0, 1, 0]
+i B B [0, 1, 0, 0, 0, 1, 2, 0, 0]
+i B C [0, 1, 2, 1, 0, 0, 3, 1, 4]
+i B D [3, 1, 1, 0, 1, 1, 0, 1, 3]
+i B E [1, 0, 1, 0, 0, 2, 0, 2, 0]
+i C A [2, 0, 2, 2, 3, 1, 1, 2, 1]
+i C B [0, 2, 0, 0, 0, 2, 1, 0, 1]
+i C C [0, 1, 2, 0, 0, 0, 4, 0, 4]
+i C D [1, 1, 2, 1, 0, 1, 0, 1, 2]
+i C E [2, 0, 1, 0, 2, 2, 0, 2, 1]
+i D A [1, 0, 3, 2, 3, 2, 1, 1, 1]
+i D B [0, 0, 1, 1, 1, 1, 1, 1, 0]
+i D C [3, 0, 2, 1, 0, 0, 1, 1, 2]
+i D D [1, 2, 2, 0, 1, 1, 0, 0, 3]
+i D E [1, 0, 0, 0, 2, 1, 0, 2, 0]
+i E A [1, 0, 3, 2, 2, 0, 3, 0, 1]
+i E B [0, 1, 1, 0, 0, 3, 2, 2, 0]
+i E C [0, 1, 2, 0, 0, 0, 1, 3, 3]
+i E D [2, 2, 0, 1, 0, 1, 0, 1, 2]
+i E E [2, 1, 1, 0, 2, 2, 0, 4, 0]
+i 3 [[ 0.  1.  1.  1.  1.]
+ [ 1.  0.  1.  1.  0.]
+ [ 2.  0.  0.  1.  1.]
+ [ 1.  1.  1.  1.  0.]
+ [ 1.  1.  1.  1.  1.]]
+
+prefilter=False:
+g A A [0, 0, 3, 3, 1, 1, 0, 2, 0]
+g A B [2108, 2503, 2431, 2161, 2028, 2629, 2161, 2560, 2205]
+g A C [30804, 40327, 23242, 31329, 20021, 47344, 29154, 42396, 31997]
+g A D [1855, 2006, 1998, 2155, 1867, 2256, 1797, 2139, 2017]
+g A E [379, 345, 364, 433, 346, 328, 343, 364, 325]
+g B A [128, 112, 131, 235, 114, 129, 122, 198, 118]
+g B B [0, 1, 1, 0, 0, 0, 0, 0, 0]
+g B C [620, 599, 799, 654, 558, 619, 718, 711, 667]
+g B D [192, 206, 210, 223, 188, 188, 190, 208, 195]
+g B E [207, 218, 215, 227, 197, 202, 200, 212, 200]
+g C A [205, 238, 231, 239, 206, 205, 208, 231, 200]
+g C B [226, 233, 255, 255, 207, 253, 217, 281, 256]
+g C C [1, 0, 0, 0, 0, 0, 1, 0, 0]
+g C D [223, 271, 230, 239, 224, 236, 225, 267, 227]
+g C E [210, 222, 219, 235, 200, 202, 198, 220, 202]
+g D A [198, 214, 215, 227, 187, 190, 190, 215, 201]
+g D B [192, 206, 209, 226, 186, 188, 192, 207, 196]
+g D C [1036, 945, 1103, 1114, 1028, 1070, 1127, 1142, 996]
+g D D [1, 0, 1, 2, 0, 0, 0, 0, 0]
+g D E [128, 117, 125, 207, 124, 126, 123, 132, 123]
+g E A [432, 439, 453, 482, 414, 416, 402, 474, 394]
+g E B [1574, 1547, 1646, 1561, 1511, 1573, 1532, 1679, 1562]
+g E C [6423, 7120, 6700, 4719, 4667, 7639, 6546, 8031, 6585]
+g E D [1789, 1747, 1937, 1856, 1832, 1865, 1682, 1906, 1812]
+g E E [1, 1, 0, 0, 1, 1, 3, 2, 1]
+g 1 [[  1.00000000e+00   2.20500000e+03   3.13290000e+04   2.00600000e+03
+    3.46000000e+02]
+ [  1.28000000e+02   0.00000000e+00   6.54000000e+02   1.95000000e+02
+    2.07000000e+02]
+ [  2.08000000e+02   2.53000000e+02   0.00000000e+00   2.30000000e+02
+    2.10000000e+02]
+ [  2.01000000e+02   1.96000000e+02   1.07000000e+03   0.00000000e+00
+    1.25000000e+02]
+ [  4.32000000e+02   1.56200000e+03   6.58500000e+03   1.83200000e+03
+    1.00000000e+00]]
+r A A [2, 0, 2, 4, 1, 1, 0, 0, 0]
+r A B [306, 415, 443, 310, 321, 447, 456, 434, 322]
+r A C [2255, 2347, 2401, 2289, 2145, 2332, 2005, 2785, 2142]
+r A D [559, 384, 402, 463, 405, 432, 667, 732, 573]
+r A E [119, 116, 129, 140, 102, 123, 114, 118, 112]
+r B A [5, 14, 8, 9, 5, 7, 8, 9, 2]
+r B B [2, 0, 1, 1, 0, 0, 3, 1, 3]
+r B C [3, 1, 7, 4, 1, 3, 2, 3, 0]
+r B D [42, 28, 34, 32, 30, 24, 34, 29, 26]
+r B E [91, 72, 86, 102, 73, 85, 85, 83, 76]
+r C A [37, 43, 48, 47, 33, 42, 52, 36, 31]
+r C B [21, 25, 17, 30, 22, 31, 23, 30, 26]
+r C C [0, 0, 0, 1, 0, 0, 1, 0, 0]
+r C D [27, 25, 40, 31, 19, 38, 24, 35, 23]
+r C E [40, 35, 32, 49, 34, 40, 33, 39, 37]
+r D A [93, 85, 106, 107, 77, 101, 89, 89, 83]
+r D B [27, 20, 38, 35, 27, 28, 27, 20, 22]
+r D C [1, 2, 9, 4, 3, 3, 18, 4, 3]
+r D D [0, 0, 1, 2, 0, 0, 0, 0, 0]
+r D E [2, 2, 1, 1, 3, 4, 1, 4, 1]
+r E A [125, 111, 129, 142, 105, 124, 108, 112, 109]
+r E B [444, 440, 565, 757, 441, 462, 548, 520, 486]
+r E C [2182, 2226, 2443, 1980, 2102, 2045, 2101, 2547, 2202]
+r E D [516, 496, 666, 579, 605, 545, 596, 625, 312]
+r E E [5, 6, 3, 4, 1, 3, 1, 3, 3]
+r 1 [[  1.00000000e+00   4.15000000e+02   2.28900000e+03   4.63000000e+02
+    1.18000000e+02]
+ [  8.00000000e+00   1.00000000e+00   3.00000000e+00   3.00000000e+01
+    8.50000000e+01]
+ [  4.20000000e+01   2.50000000e+01   0.00000000e+00   2.70000000e+01
+    3.70000000e+01]
+ [  8.90000000e+01   2.70000000e+01   3.00000000e+00   0.00000000e+00
+    2.00000000e+00]
+ [  1.12000000e+02   4.86000000e+02   2.18200000e+03   5.79000000e+02
+    3.00000000e+00]]
+i A A [2, 0, 2, 3, 0, 0, 1, 2, 0]
+i A B [5, 7, 12, 4, 5, 12, 18, 13, 5]
+i A C [226, 245, 303, 302, 226, 268, 300, 327, 221]
+i A D [6, 3, 5, 15, 8, 5, 7, 7, 7]
+i A E [11, 9, 12, 21, 5, 10, 13, 16, 12]
+i B A [5, 7, 7, 2, 1, 3, 2, 8, 1]
+i B B [7, 4, 1, 4, 3, 4, 4, 2, 3]
+i B C [0, 0, 1, 2, 0, 1, 3, 1, 0]
+i B D [8, 7, 11, 2, 2, 4, 8, 6, 8]
+i B E [2, 3, 6, 8, 2, 6, 4, 11, 7]
+i C A [0, 2, 7, 2, 0, 1, 0, 1, 0]
+i C B [10, 15, 12, 9, 7, 16, 11, 15, 9]
+i C C [10, 17, 11, 15, 6, 19, 10, 9, 13]
+i C D [16, 9, 18, 4, 10, 11, 13, 16, 13]
+i C E [5, 1, 3, 4, 1, 2, 1, 4, 0]
+i D A [7, 10, 11, 7, 8, 9, 9, 7, 4]
+i D B [3, 4, 3, 2, 2, 4, 5, 2, 2]
+i D C [0, 2, 1, 1, 0, 1, 1, 0, 0]
+i D D [12, 4, 6, 0, 6, 6, 5, 7, 4]
+i D E [2, 1, 0, 4, 1, 1, 2, 1, 0]
+i E A [10, 17, 14, 12, 4, 9, 10, 10, 9]
+i E B [7, 7, 15, 4, 11, 10, 17, 7, 8]
+i E C [197, 90, 325, 204, 92, 79, 276, 281, 102]
+i E D [3, 3, 5, 9, 4, 4, 5, 1, 4]
+i E E [9, 2, 5, 7, 3, 1, 1, 9, 1]
+i 1 [[   1.    7.  268.    7.   12.]
+ [   3.    4.    1.    7.    6.]
+ [   1.   11.   11.   13.    2.]
+ [   8.    3.    1.    6.    1.]
+ [  10.    8.  197.    4.    3.]]
+g A A [0, 0, 2, 2, 3, 2, 2, 9, 4]
+g A B [123, 127, 203, 231, 122, 206, 117, 204, 122]
+g A C [352, 341, 359, 392, 331, 318, 328, 340, 320]
+g A D [211, 218, 223, 241, 200, 206, 211, 239, 214]
+g A E [190, 209, 209, 224, 185, 189, 195, 210, 197]
+g B A [68, 68, 81, 102, 67, 74, 81, 75, 64]
+g B B [2, 4, 1, 4, 5, 7, 3, 0, 0]
+g B C [131, 117, 129, 210, 112, 120, 202, 196, 121]
+g B D [206, 225, 233, 234, 207, 207, 210, 229, 224]
+g B E [211, 230, 242, 240, 203, 206, 206, 228, 211]
+g C A [231, 254, 238, 271, 230, 237, 231, 250, 244]
+g C B [115, 101, 114, 220, 100, 114, 106, 111, 93]
+g C C [2, 4, 0, 7, 0, 2, 10, 1, 4]
+g C D [112, 99, 113, 201, 98, 110, 104, 106, 101]
+g C E [223, 233, 241, 264, 219, 215, 230, 256, 238]
+g D A [215, 240, 240, 248, 215, 211, 208, 247, 225]
+g D B [209, 231, 238, 238, 205, 205, 210, 229, 210]
+g D C [214, 109, 202, 215, 118, 229, 119, 215, 115]
+g D D [1, 4, 2, 0, 3, 2, 2, 1, 2]
+g D E [82, 73, 76, 105, 70, 81, 80, 75, 73]
+g E A [192, 215, 210, 227, 185, 189, 201, 219, 200]
+g E B [192, 209, 209, 227, 191, 194, 192, 208, 195]
+g E C [277, 291, 304, 404, 320, 314, 345, 336, 301]
+g E D [134, 115, 138, 206, 117, 132, 132, 131, 123]
+g E E [0, 0, 0, 0, 0, 1, 2, 1, 0]
+g 2 [[   2.  127.  340.  214.  197.]
+ [  74.    3.  129.  224.  211.]
+ [ 238.  111.    2.  106.  233.]
+ [ 225.  210.  202.    2.   76.]
+ [ 201.  195.  314.  132.    0.]]
+r A A [0, 2, 7, 3, 0, 4, 0, 5, 1]
+r A B [5, 2, 4, 2, 0, 3, 2, 6, 2]
+r A C [42, 54, 55, 39, 34, 68, 46, 56, 35]
+r A D [56, 56, 68, 73, 54, 61, 64, 70, 48]
+r A E [79, 64, 79, 84, 64, 78, 74, 69, 65]
+r B A [0, 4, 6, 3, 0, 2, 1, 6, 1]
+r B B [4, 0, 2, 2, 2, 5, 3, 6, 3]
+r B C [3, 1, 3, 2, 1, 2, 1, 3, 2]
+r B D [12, 21, 26, 17, 18, 17, 18, 25, 21]
+r B E [37, 31, 34, 45, 33, 40, 37, 36, 34]
+r C A [6, 11, 13, 11, 9, 11, 14, 23, 8]
+r C B [4, 1, 4, 3, 2, 6, 2, 2, 1]
+r C C [0, 1, 1, 1, 1, 1, 0, 0, 0]
+r C D [1, 2, 0, 2, 3, 1, 1, 2, 0]
+r C E [8, 3, 7, 7, 11, 10, 5, 9, 4]
+r D A [31, 33, 50, 42, 27, 41, 50, 41, 32]
+r D B [26, 18, 27, 25, 15, 21, 28, 14, 10]
+r D C [1, 1, 3, 6, 4, 3, 8, 1, 0]
+r D D [1, 1, 4, 1, 1, 0, 0, 0, 1]
+r D E [1, 1, 2, 1, 3, 2, 2, 2, 1]
+r E A [62, 59, 91, 89, 65, 77, 78, 74, 69]
+r E B [67, 53, 63, 65, 55, 67, 70, 54, 45]
+r E C [58, 54, 46, 52, 40, 50, 49, 72, 35]
+r E D [2, 4, 1, 1, 2, 2, 4, 2, 3]
+r E E [1, 1, 4, 0, 1, 2, 0, 0, 1]
+r 2 [[  2.   2.  46.  61.  74.]
+ [  2.   3.   2.  18.  36.]
+ [ 11.   2.   1.   1.   7.]
+ [ 41.  21.   3.   1.   2.]
+ [ 74.  63.  50.   2.   1.]]
+i A A [3, 2, 5, 0, 2, 1, 0, 2, 0]
+i A B [0, 1, 1, 0, 0, 1, 4, 1, 1]
+i A C [12, 22, 18, 26, 18, 22, 18, 27, 24]
+i A D [4, 3, 3, 3, 1, 1, 3, 1, 4]
+i A E [5, 3, 5, 4, 2, 3, 3, 1, 4]
+i B A [0, 0, 1, 1, 3, 1, 3, 4, 1]
+i B B [4, 1, 2, 1, 3, 4, 2, 3, 5]
+i B C [5, 3, 6, 3, 3, 5, 2, 4, 4]
+i B D [5, 3, 4, 2, 1, 3, 5, 5, 3]
+i B E [1, 0, 4, 2, 1, 1, 1, 0, 1]
+i C A [0, 0, 5, 0, 3, 1, 3, 7, 0]
+i C B [2, 1, 2, 0, 3, 2, 3, 0, 3]
+i C C [1, 0, 5, 1, 4, 2, 5, 5, 2]
+i C D [2, 0, 4, 1, 1, 2, 4, 2, 2]
+i C E [2, 1, 2, 2, 2, 1, 3, 0, 1]
+i D A [2, 2, 4, 1, 3, 1, 1, 7, 1]
+i D B [1, 3, 1, 2, 2, 3, 1, 5, 3]
+i D C [3, 1, 6, 2, 1, 8, 5, 6, 4]
+i D D [6, 2, 3, 1, 0, 1, 4, 0, 2]
+i D E [2, 0, 7, 2, 2, 1, 1, 2, 1]
+i E A [2, 4, 8, 1, 3, 1, 3, 8, 2]
+i E B [1, 2, 1, 2, 3, 3, 3, 3, 2]
+i E C [10, 16, 16, 14, 17, 15, 19, 22, 26]
+i E D [1, 0, 2, 0, 1, 1, 1, 1, 1]
+i E E [1, 1, 1, 3, 1, 2, 1, 3, 1]
+i 2 [[  2.   1.  22.   3.   3.]
+ [  1.   3.   4.   3.   1.]
+ [  1.   2.   2.   2.   2.]
+ [  2.   2.   4.   2.   2.]
+ [  3.   2.  16.   1.   1.]]
+g A A [0, 2, 0, 3, 3, 1, 0, 0, 0]
+g A B [67, 62, 68, 88, 57, 75, 64, 72, 57]
+g A C [229, 245, 248, 275, 228, 227, 241, 257, 247]
+g A D [220, 256, 251, 258, 226, 219, 231, 257, 228]
+g A E [235, 266, 257, 261, 230, 231, 237, 262, 249]
+g B A [30, 30, 35, 41, 30, 31, 43, 39, 25]
+g B B [0, 1, 3, 2, 1, 1, 1, 1, 0]
+g B C [86, 78, 88, 99, 72, 90, 75, 77, 69]
+g B D [215, 230, 229, 257, 204, 233, 215, 236, 232]
+g B E [241, 257, 238, 277, 240, 239, 229, 263, 245]
+g C A [236, 222, 242, 280, 221, 238, 209, 223, 209]
+g C B [51, 49, 62, 68, 53, 57, 56, 63, 50]
+g C C [1, 2, 1, 1, 0, 1, 2, 4, 2]
+g C D [57, 53, 66, 66, 54, 59, 60, 59, 49]
+g C E [228, 208, 221, 269, 206, 232, 214, 230, 105]
+g D A [244, 249, 256, 283, 240, 245, 230, 265, 247]
+g D B [227, 238, 226, 262, 212, 235, 217, 234, 226]
+g D C [80, 79, 88, 93, 82, 78, 89, 80, 70]
+g D D [0, 3, 1, 3, 1, 1, 1, 1, 0]
+g D E [38, 37, 35, 35, 28, 42, 36, 34, 27]
+g E A [241, 258, 247, 268, 230, 230, 238, 266, 250]
+g E B [223, 249, 235, 257, 221, 213, 232, 244, 227]
+g E C [221, 237, 235, 249, 222, 224, 223, 244, 225]
+g E D [75, 68, 81, 87, 61, 76, 72, 72, 57]
+g E E [0, 1, 1, 1, 2, 0, 0, 1, 0]
+g 3 [[   0.   67.  245.  231.  249.]
+ [  31.    1.   78.  230.  241.]
+ [ 223.   56.    1.   59.  221.]
+ [ 247.  227.   80.    1.   35.]
+ [ 247.  232.  225.   72.    1.]]
+r A A [1, 1, 0, 1, 2, 0, 0, 1, 2]
+r A B [2, 3, 0, 3, 0, 1, 1, 2, 1]
+r A C [13, 3, 10, 11, 7, 13, 8, 6, 9]
+r A D [25, 23, 24, 24, 19, 21, 23, 20, 20]
+r A E [32, 27, 32, 36, 25, 28, 28, 28, 22]
+r B A [1, 1, 0, 2, 1, 0, 1, 1, 1]
+r B B [0, 0, 2, 2, 0, 0, 1, 1, 1]
+r B C [3, 0, 2, 3, 2, 4, 2, 0, 1]
+r B D [2, 7, 4, 1, 3, 6, 4, 3, 6]
+r B E [9, 7, 8, 8, 5, 13, 10, 5, 7]
+r C A [1, 7, 5, 5, 1, 1, 3, 6, 0]
+r C B [1, 0, 3, 1, 1, 1, 2, 0, 0]
+r C C [2, 1, 1, 1, 1, 0, 1, 1, 1]
+r C D [1, 2, 1, 0, 0, 3, 0, 2, 2]
+r C E [2, 3, 0, 2, 1, 1, 1, 0, 4]
+r D A [13, 13, 11, 13, 6, 13, 16, 10, 6]
+r D B [4, 6, 6, 6, 4, 5, 4, 2, 5]
+r D C [3, 0, 1, 2, 2, 1, 1, 2, 3]
+r D D [1, 3, 0, 0, 1, 1, 0, 1, 2]
+r D E [2, 2, 0, 1, 0, 0, 0, 0, 2]
+r E A [30, 29, 37, 38, 31, 33, 36, 31, 33]
+r E B [25, 19, 31, 25, 25, 27, 24, 14, 13]
+r E C [12, 6, 18, 10, 8, 11, 14, 9, 3]
+r E D [1, 4, 0, 1, 1, 0, 2, 1, 2]
+r E E [3, 1, 0, 1, 0, 0, 1, 0, 2]
+r 3 [[  1.   1.   9.  23.  28.]
+ [  1.   1.   2.   4.   8.]
+ [  3.   1.   1.   1.   1.]
+ [ 13.   5.   2.   1.   0.]
+ [ 33.  25.  10.   1.   1.]]
+i A A [2, 0, 3, 2, 2, 0, 2, 2, 0]
+i A B [1, 2, 0, 2, 0, 0, 3, 0, 0]
+i A C [3, 2, 1, 0, 0, 0, 4, 4, 3]
+i A D [1, 3, 1, 1, 3, 2, 0, 1, 6]
+i A E [1, 1, 3, 1, 1, 3, 1, 5, 1]
+i B A [1, 0, 1, 1, 2, 0, 2, 2, 1]
+i B B [0, 2, 0, 0, 1, 2, 3, 0, 0]
+i B C [0, 2, 1, 2, 1, 0, 3, 1, 4]
+i B D [2, 3, 1, 2, 1, 1, 1, 1, 5]
+i B E [1, 1, 2, 0, 1, 2, 0, 4, 0]
+i C A [2, 1, 2, 2, 3, 1, 0, 2, 1]
+i C B [2, 2, 0, 0, 2, 1, 1, 0, 1]
+i C C [1, 2, 2, 0, 0, 0, 4, 0, 4]
+i C D [1, 1, 2, 1, 0, 1, 1, 1, 3]
+i C E [1, 0, 2, 0, 2, 2, 1, 3, 1]
+i D A [1, 0, 2, 2, 3, 2, 1, 1, 1]
+i D B [0, 1, 1, 1, 0, 3, 2, 1, 0]
+i D C [2, 0, 1, 1, 1, 0, 1, 1, 3]
+i D D [0, 2, 3, 0, 1, 1, 1, 0, 4]
+i D E [0, 0, 0, 0, 2, 1, 0, 2, 0]
+i E A [1, 0, 2, 2, 2, 0, 3, 1, 2]
+i E B [1, 2, 1, 0, 0, 2, 2, 2, 1]
+i E C [1, 2, 1, 1, 3, 0, 2, 3, 4]
+i E D [3, 2, 0, 1, 1, 1, 0, 1, 3]
+i E E [1, 1, 1, 0, 3, 2, 0, 4, 0]
+i 3 [[ 2.  0.  2.  1.  1.]
+ [ 1.  0.  1.  1.  1.]
+ [ 2.  1.  1.  1.  1.]
+ [ 1.  1.  1.  1.  0.]
+ [ 2.  1.  2.  1.  1.]]
+
+OK, heat maps anlsysis is basically done, though there are many
+unanswered questions about the values in tehre.
+
+Moving on to the dipole analysis with diaSourceDipoles.py. And ugh,
+the measurements are quite poor!  The lobes of the dipoles are not
+even being connected.  I need to really dig into this, sigh...
+
+E.g. C A {'raft': '2,2', 'sensor': '2,2', 'visit': 1000001}
+Note that this is prefilter=True 
+
+The clear dipole at visual location:
+  neg: 3223, 3203
+  pos: 3226, 3198
+Has naive measurements at:
+  neg = (3225, 3196.1) 
+  pos = (3225.9, 3171.9) 
+
+This is going to take some digging in to...
+
+Lets recreate the diffim command:
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs8 --id visit=1000001 raft=2,2 sensor=2,2 --output=/nfs/lsst/home/becker/Winter2014/outputs8CA_doPreConvolveTrue_test --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=1002000 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True  --clobber-config
+
+ds9 outputs8CA_doPreConvolveTrue_test/deepDiff/v1000001-fg/R22/diffexp-S22.fits 
+
+Yep, thats it.
+
+Time to dig in...
+
+So we do merge positive/negative guys.  
+ winter2013ImageDifference.detection: Detected 198 positive sources to 5 sigma.
+ winter2013ImageDifference.detection: Detected 199 negative sources to 5 sigma
+ winter2013ImageDifference: Merging detections into 208 sources
+
+
+# Ah, I bet this is the problem...  Not being triggered..?
+
+            if self.config.doMeasurement:
+                self.log.info("Running diaSource measurement")
+                if len(diaSources) < self.config.maxDiaSourcesToMeasure:
+                    self.dipoleMeasurement.run(subtractedExposure, diaSources)
+                else:
+                    self.measurement.run(subtractedExposure, diaSources)
+
+grep maxDiaSourcesToMeasure outputs8CA_doPreConvolveTrue_test/config/deepDiff.py
+   root.maxDiaSourcesToMeasure=200
+
+Rerun with maxDiaSourcesToMeasure=300 and see what happens
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs8 --id visit=1000001 raft=2,2 sensor=2,2 --output=/nfs/lsst/home/becker/Winter2014/outputs8CA_doPreConvolveTrue_test --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=1002000 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True maxDiaSourcesToMeasure=300 --clobber-config
+ 
+Actually, it looks like all the prefilter=True g-band ones have
+between 200 and 300 false positives.  So I'll need to re-run the
+g-band with this turned on.  r and i-band shoudl be fine since there
+are so few false positives...
+
+Just do it for these guys, don't bother with the prefilter=False ones.
+Since we are just trying to characterize the angle and separation of
+the dipoles.
+
+Commands are in:
+  SOURCE_ME_v8_redo_g
+This has 25 lines, for each of 5 x 5 permutations of template and science image.  So this make sense.  Make it so!
+
+
+While this is running, dig into that particular dipole to see whats up
+
+New naive centroids are:
+ (3222, 3202) (3225, 3197) 3.04475365955 -4.97916257859
+
+Nice!  Taking into account that ds9 coords are -1 different than LSST
+coords, this is exacly as I measured it by hand.  Now I can look at
+the Psf centroids as well...
+
+And jeez, the names of these fields are just horrible:
+
+      (Field['PointD'](name="flux.dipole.psf.pos.centroid", doc="psf fitted center of positive lobe", units="pixels"), Key<PointD>(offset=424, nElements=2)),
+
+Means centroid?  Who designed this...  Oh, me...
+
+centPosNaive, centNegNaive, centPosPsf, centNegPsf 
+ 
+(3225, 3197) (3222, 3202) (3225.5, 3197) (3222, 3202)
+
+# Little more info
+centPosNaive, centNegNaive, fluxPosNaive, fluxNegNaive, ":", centPosPsf, centNegPsf, fluxPosPsf, fluxNegPsf
+(3225, 3197) (3222, 3202) 1989.26564687 -2150.14538127 : (3225.5, 3197) (3222, 3202) 2266.84624316 -2287.68371608
+
+
+# Nice, we're actually getting decent answers out of the dipole
+  fitting, at least in regards to flux.  A bit worried that because we
+  are stepping in discrete units in the centroid, its going to impact
+  the accuracy of our orientation vectors.  And frankly offset vectors.
+
+Code says: $IP_DIFFIM_DIR/src/dipoleAlgorithm.cc
+    int nStepsPer  = 10; // Total steps is nStepsPer**4
+    float offset   = 0.5 * fwhm; // Maximum distance to search on either side of initial centroid
+    float stepsize = 2 * offset / nStepsPer;
+
+    for (float dnx = negativePeak->getFx() - offset;
+         dnx <= negativePeak->getFx() + offset; dnx += stepsize) {
+
+Just put a check in python/diaSourceDipoles.py indicates that this is
+0.48 pixels for this image.  Going to limit the effectiveness of this.
+Ah well...  Clear that the fitting is a limitation, needed to wrap it
+in a minimzer in W13 but resource limited.  Here too.  I suppose that
+using a large set of offsets from all the objects will allow me to
+average over this quantization.
+
+Averaging over all the dipoles, I find:
+                                           Amp:          Angle:
+ DX POSITIVE: 3.54609696944 -5.12843138307 6.23503104784 -55.337754208
+ DX NEGAGIVE: -3.46931037124 5.12032092347 6.18496570818 -55.8801132742
+
+And note that I am looking at CA, so template = zenith, science image
+visit A.  Am measuring Dcr at an angle of 145.337754208.  VERY CLOSE
+to expectations!  Sweet...  
+
+Also the Blue stars are refracting down and to the right, and red
+stars up and to the left here.  So DX POSITIVE are the blue stars, and
+DX NEGATIVE are the red stars.  The amplitude of the blue stars is
+slightly larger than that of the red stars, 1.247 arcseconds.  And for
+the red stars its 1.237 arcseconds.  This is, frankly, a lot larger
+than it should be...
+
+I think part of the problem is the coarse step sizes in the centroid
+fitter.  We really should place this in a minimizer...
+
+Opening #3161 to address this issue.  Otherwise we simply will not
+have very trustworthy dipole measurements.
+
+OK, I need an upated meas-deblender because of #3112.
+
+Which means I need an updated afw.  Here we go... :(
+
+Note: I had to git pull and scons my own versions of the packages below:
+
+ setup boost 1.55.0+1
+ setup -k -r ~/LSST/DMS/base
+ setup -k -r ~/LSST/DMS/utils
+ setup -k -r ~/LSST/DMS/daf_base
+ setup -k -r ~/LSST/DMS/pex_logging
+ setup -k -r ~/LSST/DMS/pex_policy
+ setup -k -r ~/LSST/DMS/daf_persistence
+ setup -k -r ~/LSST/DMS/afw
+ setup -k -r ~/LSST/DMS/meas_algorithms
+ setup -k -r ~/LSST/DMS/meas_astrom
+ setup -k -r ~/LSST/DMS/meas_deblender
+ setup -k -r ~/LSST/DMS/ip_diffim_3161
+
+OK, so I have the core changes implemented.  Try re-running 1 image and look at centroids:
+
+# Make sure I have correct ip_diffim
+
+[becker@lsst-dev ip_diffim_3161]$ echo $IP_DIFFIM_DIR/
+/lsst/home/becker/LSST/DMS/ip_diffim_3161/
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs8 --id visit=1000001 raft=2,2 sensor=2,2 --output=/nfs/lsst/home/becker/Winter2014/outputs8CA_doPreConvolveTrue_test2 --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=1002000 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True maxDiaSourcesToMeasure=300 --clobber-config
+
+# Grr, and apparently I need to rebuild the rest of the world too,
+  e.g. Isr even though I don't use it.
+
+Ok, just ip_isr and coadd_utils.  Aaanyways, have a look at our dipole of interest:
+print centNegPsf, centPosPsf, dx, dy, totalFlux, sigmaFlux 
+
+(3222, 3201.8) (3225.2, 3197.1) 3.19099987461 -4.76768293033 -65.0522557941 -1.18400911132
+
+vs previous:
+
+(3222, 3202) (3225.5, 3197) 3.47583007812 -5.0 -20.8374729162 -0.998003238391
+
+
+Still getting large offsets:
+DX POSITIVE: 3.43571063182 -5.0423490684 6.10158927438 -55.7306157226
+DX NEGAGIVE: -3.45315427988 5.02123037791 6.0940158343 -55.4832769685
+
+Print out chi2/dof for these guys to see how the fits are going?
+Perhaps its using the wrong Psf!?  I.e. the non-preconvolved one?
+
+chi2dof = 4.52701854706
+
+Suspicious...  Do I need a special algorithm to deblend prefiltered
+dipoles?!  Perhaps...  Have a look at the post-filtered version.
+
+ds9 outputs8CA_doPreConvolveFalse/deepDiff/v1000001-fg/R22/diffexp-S22.fits
+
+Well, it looks reasonable.  Diff and examine:
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs8 --id visit=1000001 raft=2,2 sensor=2,2 --output=/nfs/lsst/home/becker/Winter2014/outputs8CA_doPreConvolveFalse_test2 --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=1002000 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True maxDiaSourcesToMeasure=300 --clobber-config
+
+This same guy is at:
+
+# centNegPsf,    centPosPsf,    dx,             dy,            totalFlux,    sigmaFlux       chi2dof
+(3223.3, 3199.9) (3223.9, 3199) 0.607663042198 -0.87289742889 -174.82037492 -0.0150162198269 1.05915951729
+
+OK, so nice fit.  I trust this one.  Must be the deblending of
+prefiltered sources.  Will make sure to only validate on the post
+filtered data.
+
+DX NEGAGIVE: -0.496835826997 0.709918266284 0.891893323592 -55.1122341925 # Red stars
+DX POSITIVE: 0.465562610534 -0.694678880843 0.856425082116 -55.1564929567 # Blue stars
+
+Empirical angles are 145.1 degrees!  And amplitudes are 0.89 pixels or so.
+
+And from my DCR.py analysis:
+dcr50["g"]["A"] = 55.7405440 diff=0.049"=0.246pixels
+dcr50["g"]["G"] = 55.6911709
+dcr50["g"]["M"] = 55.5859005 diff=0.105"=0.526pixels
+
+dcr50["r"]["A"] = 55.1207659 diff=0.015"=0.075pixels
+dcr50["r"]["G"] = 55.1057127
+dcr50["r"]["M"] = 55.0806588 diff=0.025"=0.125pixels
+
+dcr50["i"]["A"] = 54.8355931
+dcr50["i"]["G"] = 54.8307703
+dcr50["i"]["M"] = 54.8156433
+
+We are seeing both objects with offsets of 0.8-0.9 pixels.  Hmm...
+Not quite right.  This says to me that we are seeing Dcr at a level
+3.5 larger for the blue star and 1.7 bigger for the red star.
+
+What do things looks like in the r-band?
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs8 --id visit=2000001 raft=2,2 sensor=2,2 --output=/nfs/lsst/home/becker/Winter2014/outputs8CA_doPreConvolveFalse_test2 --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=2002000 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True maxDiaSourcesToMeasure=300 --clobber-config
+
+DX NEGAGIVE: -0.102892737342 0.238052539601 0.259337477061 -66.6246953357 # Red stars
+DX POSITIVE: 0.117428376846 -0.159540712589 0.190471915626 -49.0136295024 # Blue stars
+
+Obs getting into the noise here, only 10 measurements.  Will have to
+do this in bulk with all 9 CCDs.  Quickie shows that we are still
+getting too large of an offset.  Factor of 2 for red stars, and 2.5
+for blue stars.
+
+I updated DCR.py to include the phoSim values.  They agree with mine
+on a per-wavelength basis.  However, when I look at the overall
+refraction of an object with an SED, I see significant offsets.  Which
+you DO expect, since the phoSim analysis is w.r.t. 500 nm.  This sets
+the reference refraction of a field.  And since John refracts things
+photon by photon (wavelength by wavelength) I don't see anything
+obviously wrong with this approach.  But the as-realized results are
+in fact different.  Let me take a step back and look at the
+astrometric residuals...
+
+imageDifferenceWinter2013.py ... doDebugRegister=True
+
+Log the information in metadata, and also log (r-band)
+ winter2013ImageDifference: Blue star offsets (long, lat in arcsec): 0.012 0.005, 0.004 0.003
+ winter2013ImageDifference: Green star offsets (long, lat in arcsec): 0.000 0.004, 0.000 0.004
+ winter2013ImageDifference: Red star offsets (long, lat in arcsec): -0.019 0.006, -0.005 0.006
+
+ Corresponds to 0.013" and 0.020" for blue,red stars
+
+And for g-band:
+winter2013ImageDifference: Blue star offsets (long, lat in arcsec): 0.040 0.005, 0.012 0.003
+winter2013ImageDifference: Green star offsets (long, lat in arcsec): 0.001 0.006, 0.000 0.004
+winter2013ImageDifference: Red star offsets (long, lat in arcsec): -0.073 0.007, -0.022 0.005
+
+ Corresponds to 0.042" and 0.076" for blue,red stars
+
+So blue stars seem to be doing well, compared to theory.  And red
+stars are *underrefracted" compared to theory.  Need to run this on
+more images.  And I need to understand why the diffim dipoles are so
+much different.
+
+Make this a new pipeline run.  Only look at post filtered data since
+dipole measurement is reasonable on this.  And add in
+doDebugRegister=True to the commands.
+
+And just look at template=C.  Ah, and also maxDiaSourcesToMeasure=???  Lets make it 1000.
+
+Call this outputs8bCB.  Lookin like the DC3b PT1.2 days...
+
+grep outputs8C SOURCE_ME_v8 | grep doPreConvolveFalse | wc -l
+ 15
+ This makes sense; 3 filters, and 5 science image airmasses
+
+grep outputs8C SOURCE_ME_v8 | grep doPreConvolveFalse > SOURCE_ME_v8b
+
+##### Running
+
+Hmm, my connection to NCSA got lost during the batch job
+Did all the images get processed?
+grep Red outputs8b*out | wc -l
+ 135
+This is 15 * 9.  OK...
