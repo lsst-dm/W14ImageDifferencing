@@ -49,7 +49,7 @@ for filterName, filterId in zip(("g", "r", "i"), (1, 2, 3)):
     for suffixI, airmassIdI, frameId, mjdI in zip(("A", "C", "E"), (0, 2, 4), (1, 2, 3), (51130.11171, 51130.27283, 51130.43324)):
         visit   = int("%d00%d002" % (filterId, airmassIdI))
 
-        mapper  = Mapper(root=os.path.join(indir, "outputs8%s%s_doPreConvolveFalse" % (suffixT, suffixI)), calibRoot = None, outputRoot = None)
+        mapper  = Mapper(root=os.path.join(indir, "outputs8%s%s_doPreConvolveTrue" % (suffixT, suffixI)), calibRoot = None, outputRoot = None)
         butler  = dafPersist.ButlerFactory(mapper = mapper).create()
         dataId  = {"filter": filterName, "visit": visit, "raft": "2,2", "sensor": "1,1"}
         calexp  = butler.get(datasetType="calexp", dataId=dataId)
@@ -95,7 +95,7 @@ for filterName, filterId in zip(("g", "r", "i"), (1, 2, 3)):
                 amp   -= gamp
                 if amp == 0:
                     continue
-                amp   *= 10.0
+                amp   *= 100.0
                 if gr < 0: color="blue"
                 elif gr < 1: color="green"
                 else: color="red"
@@ -205,8 +205,8 @@ for filterName, filterId in zip(("g", "r", "i"), (1, 2, 3)):
         ax.set_xticklabels(("Y", "$45^\circ$", "X", "$135^\circ$", "$180^\circ$", "$225^\circ$", "$270^\circ$", "$315^\circ$"), weight="bold", fontsize=20)
 
         
-    #import pdb; pdb.set_trace()
-    #plt.show()
+    import pdb; pdb.set_trace()
+    plt.show()
     
     
     
