@@ -3444,3 +3444,262 @@ $PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs8 --id visit=1000001 raft
 ds9 outputs8CA_doPreConvolveTrue_test/deepDiff/v1000001-fg/R22/diffexp-S22.fits 
 
 Yep, thats it.
+
+Time to dig in...
+
+So we do merge positive/negative guys.  
+ winter2013ImageDifference.detection: Detected 198 positive sources to 5 sigma.
+ winter2013ImageDifference.detection: Detected 199 negative sources to 5 sigma
+ winter2013ImageDifference: Merging detections into 208 sources
+
+
+# Ah, I bet this is the problem...  Not being triggered..?
+
+            if self.config.doMeasurement:
+                self.log.info("Running diaSource measurement")
+                if len(diaSources) < self.config.maxDiaSourcesToMeasure:
+                    self.dipoleMeasurement.run(subtractedExposure, diaSources)
+                else:
+                    self.measurement.run(subtractedExposure, diaSources)
+
+grep maxDiaSourcesToMeasure outputs8CA_doPreConvolveTrue_test/config/deepDiff.py
+   root.maxDiaSourcesToMeasure=200
+
+Rerun with maxDiaSourcesToMeasure=300 and see what happens
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs8 --id visit=1000001 raft=2,2 sensor=2,2 --output=/nfs/lsst/home/becker/Winter2014/outputs8CA_doPreConvolveTrue_test --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=1002000 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True maxDiaSourcesToMeasure=300 --clobber-config
+ 
+Actually, it looks like all the prefilter=True g-band ones have
+between 200 and 300 false positives.  So I'll need to re-run the
+g-band with this turned on.  r and i-band shoudl be fine since there
+are so few false positives...
+
+Just do it for these guys, don't bother with the prefilter=False ones.
+Since we are just trying to characterize the angle and separation of
+the dipoles.
+
+Commands are in:
+  SOURCE_ME_v8_redo_g
+This has 25 lines, for each of 5 x 5 permutations of template and science image.  So this make sense.  Make it so!
+
+
+While this is running, dig into that particular dipole to see whats up
+
+New naive centroids are:
+ (3222, 3202) (3225, 3197) 3.04475365955 -4.97916257859
+
+Nice!  Taking into account that ds9 coords are -1 different than LSST
+coords, this is exacly as I measured it by hand.  Now I can look at
+the Psf centroids as well...
+
+And jeez, the names of these fields are just horrible:
+
+      (Field['PointD'](name="flux.dipole.psf.pos.centroid", doc="psf fitted center of positive lobe", units="pixels"), Key<PointD>(offset=424, nElements=2)),
+
+Means centroid?  Who designed this...  Oh, me...
+
+centPosNaive, centNegNaive, centPosPsf, centNegPsf 
+ 
+(3225, 3197) (3222, 3202) (3225.5, 3197) (3222, 3202)
+
+# Little more info
+centPosNaive, centNegNaive, fluxPosNaive, fluxNegNaive, ":", centPosPsf, centNegPsf, fluxPosPsf, fluxNegPsf
+(3225, 3197) (3222, 3202) 1989.26564687 -2150.14538127 : (3225.5, 3197) (3222, 3202) 2266.84624316 -2287.68371608
+
+
+# Nice, we're actually getting decent answers out of the dipole
+  fitting, at least in regards to flux.  A bit worried that because we
+  are stepping in discrete units in the centroid, its going to impact
+  the accuracy of our orientation vectors.  And frankly offset vectors.
+
+Code says: $IP_DIFFIM_DIR/src/dipoleAlgorithm.cc
+    int nStepsPer  = 10; // Total steps is nStepsPer**4
+    float offset   = 0.5 * fwhm; // Maximum distance to search on either side of initial centroid
+    float stepsize = 2 * offset / nStepsPer;
+
+    for (float dnx = negativePeak->getFx() - offset;
+         dnx <= negativePeak->getFx() + offset; dnx += stepsize) {
+
+Just put a check in python/diaSourceDipoles.py indicates that this is
+0.48 pixels for this image.  Going to limit the effectiveness of this.
+Ah well...  Clear that the fitting is a limitation, needed to wrap it
+in a minimzer in W13 but resource limited.  Here too.  I suppose that
+using a large set of offsets from all the objects will allow me to
+average over this quantization.
+
+Averaging over all the dipoles, I find:
+                                           Amp:          Angle:
+ DX POSITIVE: 3.54609696944 -5.12843138307 6.23503104784 -55.337754208
+ DX NEGAGIVE: -3.46931037124 5.12032092347 6.18496570818 -55.8801132742
+
+And note that I am looking at CA, so template = zenith, science image
+visit A.  Am measuring Dcr at an angle of 145.337754208.  VERY CLOSE
+to expectations!  Sweet...  
+
+Also the Blue stars are refracting down and to the right, and red
+stars up and to the left here.  So DX POSITIVE are the blue stars, and
+DX NEGATIVE are the red stars.  The amplitude of the blue stars is
+slightly larger than that of the red stars, 1.247 arcseconds.  And for
+the red stars its 1.237 arcseconds.  This is, frankly, a lot larger
+than it should be...
+
+I think part of the problem is the coarse step sizes in the centroid
+fitter.  We really should place this in a minimizer...
+
+Opening #3161 to address this issue.  Otherwise we simply will not
+have very trustworthy dipole measurements.
+
+OK, I need an upated meas-deblender because of #3112.
+
+Which means I need an updated afw.  Here we go... :(
+
+Note: I had to git pull and scons my own versions of the packages below:
+
+ setup boost 1.55.0+1
+ setup -k -r ~/LSST/DMS/base
+ setup -k -r ~/LSST/DMS/utils
+ setup -k -r ~/LSST/DMS/daf_base
+ setup -k -r ~/LSST/DMS/pex_logging
+ setup -k -r ~/LSST/DMS/pex_policy
+ setup -k -r ~/LSST/DMS/daf_persistence
+ setup -k -r ~/LSST/DMS/afw
+ setup -k -r ~/LSST/DMS/meas_algorithms
+ setup -k -r ~/LSST/DMS/meas_astrom
+ setup -k -r ~/LSST/DMS/meas_deblender
+ setup -k -r ~/LSST/DMS/ip_diffim_3161
+
+OK, so I have the core changes implemented.  Try re-running 1 image and look at centroids:
+
+# Make sure I have correct ip_diffim
+
+[becker@lsst-dev ip_diffim_3161]$ echo $IP_DIFFIM_DIR/
+/lsst/home/becker/LSST/DMS/ip_diffim_3161/
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs8 --id visit=1000001 raft=2,2 sensor=2,2 --output=/nfs/lsst/home/becker/Winter2014/outputs8CA_doPreConvolveTrue_test2 --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=1002000 doPreConvolve=True subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True maxDiaSourcesToMeasure=300 --clobber-config
+
+# Grr, and apparently I need to rebuild the rest of the world too,
+  e.g. Isr even though I don't use it.
+
+Ok, just ip_isr and coadd_utils.  Aaanyways, have a look at our dipole of interest:
+print centNegPsf, centPosPsf, dx, dy, totalFlux, sigmaFlux 
+
+(3222, 3201.8) (3225.2, 3197.1) 3.19099987461 -4.76768293033 -65.0522557941 -1.18400911132
+
+vs previous:
+
+(3222, 3202) (3225.5, 3197) 3.47583007812 -5.0 -20.8374729162 -0.998003238391
+
+
+Still getting large offsets:
+DX POSITIVE: 3.43571063182 -5.0423490684 6.10158927438 -55.7306157226
+DX NEGAGIVE: -3.45315427988 5.02123037791 6.0940158343 -55.4832769685
+
+Print out chi2/dof for these guys to see how the fits are going?
+Perhaps its using the wrong Psf!?  I.e. the non-preconvolved one?
+
+chi2dof = 4.52701854706
+
+Suspicious...  Do I need a special algorithm to deblend prefiltered
+dipoles?!  Perhaps...  Have a look at the post-filtered version.
+
+ds9 outputs8CA_doPreConvolveFalse/deepDiff/v1000001-fg/R22/diffexp-S22.fits
+
+Well, it looks reasonable.  Diff and examine:
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs8 --id visit=1000001 raft=2,2 sensor=2,2 --output=/nfs/lsst/home/becker/Winter2014/outputs8CA_doPreConvolveFalse_test2 --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=1002000 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True maxDiaSourcesToMeasure=300 --clobber-config
+
+This same guy is at:
+
+# centNegPsf,    centPosPsf,    dx,             dy,            totalFlux,    sigmaFlux       chi2dof
+(3223.3, 3199.9) (3223.9, 3199) 0.607663042198 -0.87289742889 -174.82037492 -0.0150162198269 1.05915951729
+
+OK, so nice fit.  I trust this one.  Must be the deblending of
+prefiltered sources.  Will make sure to only validate on the post
+filtered data.
+
+DX NEGAGIVE: -0.496835826997 0.709918266284 0.891893323592 -55.1122341925 # Red stars
+DX POSITIVE: 0.465562610534 -0.694678880843 0.856425082116 -55.1564929567 # Blue stars
+
+Empirical angles are 145.1 degrees!  And amplitudes are 0.89 pixels or so.
+
+And from my DCR.py analysis:
+dcr50["g"]["A"] = 55.7405440 diff=0.049"=0.246pixels
+dcr50["g"]["G"] = 55.6911709
+dcr50["g"]["M"] = 55.5859005 diff=0.105"=0.526pixels
+
+dcr50["r"]["A"] = 55.1207659 diff=0.015"=0.075pixels
+dcr50["r"]["G"] = 55.1057127
+dcr50["r"]["M"] = 55.0806588 diff=0.025"=0.125pixels
+
+dcr50["i"]["A"] = 54.8355931
+dcr50["i"]["G"] = 54.8307703
+dcr50["i"]["M"] = 54.8156433
+
+We are seeing both objects with offsets of 0.8-0.9 pixels.  Hmm...
+Not quite right.  This says to me that we are seeing Dcr at a level
+3.5 larger for the blue star and 1.7 bigger for the red star.
+
+What do things looks like in the r-band?
+
+$PIPE_TASKS_DIR/bin/imageDifferenceWinter2013.py inputs8 --id visit=2000001 raft=2,2 sensor=2,2 --output=/nfs/lsst/home/becker/Winter2014/outputs8CA_doPreConvolveFalse_test2 --configfile imageDifferenceConfigGstar.py --config diaSourceMatchRadius=2.0 doAddCalexpBackground=False winter2013TemplateId=2002000 doPreConvolve=False subtract.kernel.active.singleKernelClipping=False subtract.kernel.active.kernelSumClipping=False subtract.kernel.active.spatialKernelClipping=False subtract.kernel.active.scaleByFwhm=True subtract.kernel.active.spatialKernelOrder=5 subtract.kernel.active.alardNGauss=3 subtract.kernel.active.alardDegGauss="[5,2,2]" subtract.kernel.active.alardSigGauss="[1.0,1.0,1.0]" doSelectDcrCatalog=True maxDiaSourcesToMeasure=300 --clobber-config
+
+DX NEGAGIVE: -0.102892737342 0.238052539601 0.259337477061 -66.6246953357 # Red stars
+DX POSITIVE: 0.117428376846 -0.159540712589 0.190471915626 -49.0136295024 # Blue stars
+
+Obs getting into the noise here, only 10 measurements.  Will have to
+do this in bulk with all 9 CCDs.  Quickie shows that we are still
+getting too large of an offset.  Factor of 2 for red stars, and 2.5
+for blue stars.
+
+I updated DCR.py to include the phoSim values.  They agree with mine
+on a per-wavelength basis.  However, when I look at the overall
+refraction of an object with an SED, I see significant offsets.  Which
+you DO expect, since the phoSim analysis is w.r.t. 500 nm.  This sets
+the reference refraction of a field.  And since John refracts things
+photon by photon (wavelength by wavelength) I don't see anything
+obviously wrong with this approach.  But the as-realized results are
+in fact different.  Let me take a step back and look at the
+astrometric residuals...
+
+imageDifferenceWinter2013.py ... doDebugRegister=True
+
+Log the information in metadata, and also log (r-band)
+ winter2013ImageDifference: Blue star offsets (long, lat in arcsec): 0.012 0.005, 0.004 0.003
+ winter2013ImageDifference: Green star offsets (long, lat in arcsec): 0.000 0.004, 0.000 0.004
+ winter2013ImageDifference: Red star offsets (long, lat in arcsec): -0.019 0.006, -0.005 0.006
+
+ Corresponds to 0.013" and 0.020" for blue,red stars
+
+And for g-band:
+winter2013ImageDifference: Blue star offsets (long, lat in arcsec): 0.040 0.005, 0.012 0.003
+winter2013ImageDifference: Green star offsets (long, lat in arcsec): 0.001 0.006, 0.000 0.004
+winter2013ImageDifference: Red star offsets (long, lat in arcsec): -0.073 0.007, -0.022 0.005
+
+ Corresponds to 0.042" and 0.076" for blue,red stars
+
+So blue stars seem to be doing well, compared to theory.  And red
+stars are *underrefracted" compared to theory.  Need to run this on
+more images.  And I need to understand why the diffim dipoles are so
+much different.
+
+Make this a new pipeline run.  Only look at post filtered data since
+dipole measurement is reasonable on this.  And add in
+doDebugRegister=True to the commands.
+
+And just look at template=C.  Ah, and also maxDiaSourcesToMeasure=???  Lets make it 1000.
+
+Call this outputs8bCB.  Lookin like the DC3b PT1.2 days...
+
+grep outputs8C SOURCE_ME_v8 | grep doPreConvolveFalse | wc -l
+ 15
+ This makes sense; 3 filters, and 5 science image airmasses
+
+grep outputs8C SOURCE_ME_v8 | grep doPreConvolveFalse > SOURCE_ME_v8b
+
+##### Running
+
+Hmm, my connection to NCSA got lost during the batch job
+Did all the images get processed?
+grep Red outputs8b*out | wc -l
+ 135
+This is 15 * 9.  OK...
