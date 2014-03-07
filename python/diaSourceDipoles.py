@@ -120,10 +120,14 @@ if __name__ == "__main__":
                                 dxps = np.append(dxps, dxp)
                                 dyps = np.append(dyps, dyp)
 
-                        distn = np.sqrt(dxns**2 + dyns**2)
+                        distn = np.sqrt(dxns**2 + dyns**2) * 0.2
                         angn  = np.arctan(dyns/dxns) * 180 / np.pi
-                        distp = np.sqrt(dxps**2 + dyps**2)
+                        distp = np.sqrt(dxps**2 + dyps**2) * 0.2
                         angp  = np.arctan(dyps/dxps) * 180 / np.pi
+                        # OK, so for dy < 0, this is being measured w.r.t. x axis; in our coordinate system take abs and add 90.
+                        angn  = 90 + np.abs(angn)
+                        # And for dy > 0 its 270 + np.abs
+                        angp  = 270 + np.abs(angp)
                         if len(dxns)>0 and len(dxps)>0:
                             print filterName, "%s%s" % (suffixT, suffixI), visit, "dy<0 : dx=%+.3f dy=%+.3f d=%.3f ang=%.3f n=%d" % (np.median(dxns), np.median(dyns), np.median(distn), np.median(angn), len(dxns))
                             print filterName, "%s%s" % (suffixT, suffixI), visit, "dy>0 : dx=%+.3f dy=%+.3f d=%.3f ang=%.3f n=%d" % (np.median(dxps), np.median(dyps), np.median(distp), np.median(angp), len(dxps))
