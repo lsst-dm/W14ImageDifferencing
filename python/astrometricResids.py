@@ -35,8 +35,14 @@ if __name__ == "__main__":
                         rDlonMed.append(metadata.get("RegisterRedLongOffsetMedian"))
                         rDlonStd.append(metadata.get("RegisterRedLongOffsetStd"))
                 
+                # What about outliers?
                 bDist = np.mean(np.sqrt(np.array(bDlatMed)**2+np.array(bDlonMed)**2))
                 gDist = np.mean(np.sqrt(np.array(gDlatMed)**2+np.array(gDlonMed)**2))
                 rDist = np.mean(np.sqrt(np.array(rDlatMed)**2+np.array(rDlonMed)**2))
+
+                # Use median
+                bDist = np.median(np.sqrt(np.array(bDlatMed)**2+np.array(bDlonMed)**2))
+                gDist = np.median(np.sqrt(np.array(gDlatMed)**2+np.array(gDlonMed)**2))
+                rDist = np.median(np.sqrt(np.array(rDlatMed)**2+np.array(rDlonMed)**2))
                 print filterName, "%s%s" % (suffixT, suffixI), visit, "%.4f %.4f %.4f" % (bDist, gDist, rDist)
     
