@@ -38,11 +38,21 @@ Summary
 \subsection{Subtask 3: Simulate Starfield using Multiple SEDs at Multiple Airmasses}
 \subsection{Subtask 4: Include Realistic Mix of Stars and Galaxies}
 Pushed back to S14.
-\section{Review of Wavelength Dependent Refraction}
+\section{Review of Wavelength Dependent Refraction \label{sec:theory}}
 \section{Running PhoSim}
+\subsection{Reference SEDs \label{sec:seds}}
 \section{Analysis of Subtask 1}
 \section{Analysis of Subtask 2}
 \section{Analysis of Subtask 3}
+\section{Possible Solutions to Dcr Issue}
+
+Remapping each template image pixel by pixel, depending on color
+
+Color-dependent Psf matching kernel (does not fix template issue)
+
+Dipole fit that restricts the angle of separation to be along Dcr vector
+
+%%%%%%%%%%%%%%%%%%%%%%%%% FIGURES %%%%%%%%%%%
 
 \clearpage
 \begin{figure}[h!]
@@ -270,6 +280,163 @@ Pushed back to S14.
     This figure was created using the script {\tt python/heatMap.py}.}
   \label{fig:heatpre}
 \end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%% /FIGURES %%%%%%%%%%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%% TABLES %%%%%%%%%%%%
+
+\clearpage
+
+\begin{table}
+\centering
+\begin{tabular}{cccccc}
+\hline
+\multicolumn{6}{|c|}{PhoSim Visits} \\
+\hline
+Visit & MJD           & rotSkyPos   & rotTelPos   & Altitude & Airmass \\
+\hline
+\A    & 51130.111719  & 251.0689567 & 145.7139810 & 40.1     & 1.55 \\
+\B    & 51130.176302  & 251.0689567 & 152.2708405 & 59.9     & 1.16 \\
+\C    & 51130.272830  & 251.0689567 & 341.0975816 & 89.9     & 1.00 \\
+\D    & 51130.272830  & 251.0689567 & 349.8619334 & 59.9     & 1.16 \\
+\E    & 51130.433247  & 251.0689567 & 356.4181128 & 40.1     & 1.55 \\
+\end{tabular}
+\caption[So I can have 2 paragraphs]{Summary of the configuration parameters that define each
+  phoSim visit \A\B\C\D\E.  Observations were designed to follow a
+  single star field through zenith on a single night, and observed
+  twice before and twice after crossing the meridian, as well as at
+  zenith.  Each visit was simulated using the same random seed
+  (153555399), in 3 filters ($g$, $r$, $i$), and under 4 observing
+  conditions.  These correspond to the template image ({\tt
+    Opsim\_rawseeing} = 0.878'' and {\tt SIM\_VISTIME} = 300) and then
+  3 bins in seeing for the science image corresponding to {\tt
+    Opsim\_rawseeing} = 0.6'', 0.878'', and 1.2'' for seeing bins {\tt
+    1,2,3}, respectively.  All science images were simulated with {\tt
+    SIM\_VISTIME} = 15.  
+  \\ ~ \\
+  Overall, this yielded $5 \times 3 \times 4 = 60$ runs of phoSim,
+  which are encoded as {\tt visitId=X00Y00Z} where {\tt X} represents
+  the photSim filterId $gri$={\tt 123}, {\tt Y} represents the visit
+  \A\B\C\D\E = {\tt 01234}, and {\tt Z} represents the seeing:
+  {\tt 0} for the template and {\tt 123} for the science
+  images.  All 9 CCDs within {\tt raft=2,2} were simulated.
+  All trim files used to generate the sims for this
+  analysis may be found in the {\tt sims8/} directory.}
+\label{tab:visits}
+\end{table}
+
+\begin{table}
+\centering
+\begin{tabular}{ccccc}
+\hline
+\multicolumn{5}{|c|}{Orientation of Dcr} \\
+\hline
+Visit    & SED & {\tt rotTelPos} & {\tt Wcs} + Topo & Measured \\
+         &     &                 &                  & Dipole Orientation \\
+\hline
+\A & {\tt A0V}   & $145.7^{\circ}$ & $144.9^{\circ}$ & $145.7^{\circ}$    \\
+   & {\tt M2.0V} & $325.7^{\circ}$ & $324.9^{\circ}$ & $325.6^{\circ}$    \\
+\hline
+\B & {\tt A0V}   & $152.3^{\circ}$ & $151.1^{\circ}$ & $151.7^{\circ}$    \\
+   & {\tt M2.0V} & $332.3^{\circ}$ & $331.1^{\circ}$ & $331.8^{\circ}$    \\
+\hline
+\D & {\tt A0V}   & $349.9^{\circ}$ & $351.0^{\circ}$ & $349.3^{\circ}$    \\
+   & {\tt M2.0V} & $169.9^{\circ}$ & $171.0^{\circ}$ & $170.0^{\circ}$    \\
+\hline
+\E & {\tt A0V}   & $356.4^{\circ}$ & $357.1^{\circ}$ & $355.2^{\circ}$    \\
+   & {\tt M2.0V} & $176.4^{\circ}$ & $177.1^{\circ}$ & $176.2^{\circ}$    \\
+\end{tabular}
+\caption[So I can have 2 paragraphs]{The expected and measured
+  orientations of Dcr, using the coordinate conventions depicted in
+  Figure~\ref{fig:phosimdcr}.  These numbers represent the orientation
+  of the {\it positive} lobe of any dipole arising from the Dcr
+  effect.  Numbers are reported as a function of visit \A--\E, and the
+  spectral energy distribution of the source.  For the {\tt rotTelPos}
+  and {\tt Wcs} columns, the numbers for the red {\tt M2.0V} stars are
+  simply $180^{\circ}$ from those of the blue {\tt A0V} stars, which
+  should be in the direction of zenith.  The numbers under {\tt
+    rotTelPos} reflect the designed orientation of Dcr that was input
+  to phoSim.  The numbers under {\tt Wcs} reflect the empirically
+  determined direction to zenith in each image, using the {\tt calexp}
+  fitted {\tt Wcs} and topocentric corrections appropriate for each
+  visit.  Finally, we report the measured median orientation of
+  DiaSources in each image difference, when differenced against the
+  template taken at zenith (visit \C).  Here the red and blue
+  populations are considered separately.  \\ ~ \\ These numbers come
+  from analysis of $g$--band data, seeing bin {\tt 1}, which have the
+  most dipoles.  We only show results for 1 filter since the
+  orientation should be filter--independent.  Results in the
+  $r$--band, in cases where there are more than 10 dipoles measured,
+  show quantitatively similar results.  In addition, we only report
+  numbers from the postfiltered data, where dipole measurement is
+  known to operate correctly.  We do not see any dependence of these
+  orentations on the seeing.  Full results may be found in the file
+  {\tt NOTES}.}
+\label{tab:dcrang}
+\end{table}
+
+\begin{table}
+\centering
+\begin{tabular}{cccccccc}
+\hline
+\multicolumn{8}{|c|}{Amplitude of Dcr} \\
+\hline
+Visit    & SED & Filter & Theory & {\tt Wcs} Offsets & Dipole Amplitude   & Dipole Amplitude   & Dipole Amplitude \\
+         &     &        &        &                   & Seeing Bin {\tt 1} & Seeing Bin {\tt 2} & Seeing Bin {\tt 3} \\
+\hline
+\A & {\tt A0V}   & $g$ & 0.049'' & 0.042'' & 0.167''  & 0.259''  & 0.208''  \\
+   &             & $r$ & 0.015'' & 0.013'' & 0.049''  & $\cdots$ & $\cdots$ \\
+   &             & $i$ & 0.005'' & 0.005'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+   & {\tt M2.0V} & $g$ & 0.105'' & 0.077'' & 0.144''  & 0.204''  & 0.293''  \\
+   &             & $r$ & 0.025'' & 0.020'' & 0.230''  & $\cdots$ & $\cdots$ \\
+   &             & $i$ & 0.015'' & 0.012'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+\hline
+\B & {\tt A0V}   & $g$ & 0.024'' & 0.020'' & 0.183''  & 0.243''  & $\cdots$ \\
+   &             & $r$ & 0.007'' & 0.006'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+   &             & $i$ & 0.002'' & 0.002'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+   & {\tt M2.0V} & $g$ & 0.051'' & 0.038'' & 0.222''  & 0.266''  & $\cdots$ \\
+   &             & $r$ & 0.012'' & 0.010'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+   &             & $i$ & 0.007'' & 0.005'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+\hline
+\D & {\tt A0V}   & $g$ & 0.024'' & 0.020'' & 0.201''  & 0.251''  & $\cdots$ \\
+   &             & $r$ & 0.007'' & 0.006'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+   &             & $i$ & 0.002'' & 0.002'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+   & {\tt M2.0V} & $g$ & 0.051'' & 0.038'' & 0.201''  & 0.254''  & $\cdots$ \\
+   &             & $r$ & 0.012'' & 0.010'' & $\cdots$ & $\cdots$ & $\cdots$ \\ 
+   &             & $i$ & 0.007'' & 0.006'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+\hline
+\E & {\tt A0V}   & $g$ & 0.049'' & 0.042'' & 0.169''  & 0.235''  & 0.360''  \\
+   &             & $r$ & 0.015'' & 0.013'' & 0.135''  & $\cdots$ & $\cdots$ \\
+   &             & $i$ & 0.005'' & 0.005'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+   & {\tt M2.0V} & $g$ & 0.105'' & 0.077'' & 0.158''  & 0.213''  & 0.267''  \\
+   &             & $r$ & 0.025'' & 0.020'' & 0.262''  & $\cdots$ & $\cdots$ \\
+   &             & $i$ & 0.015'' & 0.011'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+\end{tabular}
+\caption[So I can have 2 paragraphs]{The expected and measured
+  amplitudes of Dcr, in arcseconds.  These numbers represent the
+  differential offset between positions of an object at zenith (visit
+  \C) and at the airmasses associated with visits \A\B\D\E, with
+  respect to the positions of the reference {\tt G0V} stars, which
+  define the astrometric reference system in this study.  The Theory
+  column is the expected amplitude as described in
+  Section~\ref{sec:theory}, using the reference SEDs described in
+  Section~\ref{sec:seds}.  The {\tt Wcs} column represents the mean
+  offsets between stars of the given SED and the astrometric reference
+  solution, determined using {\tt calexp's} {\tt Wcs} and {\tt Source}
+  products.  Residuals of the reference {\tt G0V} stars are smaller
+  than 0.002'' in all cases.  The dipole amplitudes are determined
+  using the same fits that yield the dipole orientations in
+  Table~\ref{tab:dcrang}, and represent the offset between the fitted
+  positive and negative lobes of the dipole.  These numbers are only
+  reported for data sets that contain more than 10 measurements.
+  Because we see a seeing dependence on these numbers, we report them
+  for each of the seeing bins {\tt 1,2,3}.  Full results may be found
+  in the file {\tt NOTES}.}
+\label{tab:dcramp}
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%% /TABLES %%%%%%%%%%%
+
 
 \clearpage
 \bibliographystyle{apj}
