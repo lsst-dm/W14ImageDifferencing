@@ -12,3 +12,8 @@ taskList.txt
 dcr.tex
 Star_SEDS.dat
 *~
+*.aux
+*.blg
+*.log
+*.toc
+

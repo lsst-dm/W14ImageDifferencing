@@ -301,6 +301,7 @@ if __name__ == "__main__":
                 plt.setp(ax.get_xticklabels()+ax.get_yticklabels(), visible=False)
             ax.plot(zds, offsets, "k-", lw=2)
             ax.axhline(y=0, c='k', linestyle=':')
+            print "# Offsets at 30, 50 =", offsets[3], offsets[5]
             # Without STP correction
             offsets = []
             for zd in zds:
