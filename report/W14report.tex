@@ -316,7 +316,7 @@ Visit & MJD           & rotSkyPos   & rotTelPos   & Altitude & Airmass \\
   \\ ~ \\
   Overall, this yielded $5 \times 3 \times 4 = 60$ runs of phoSim,
   which are encoded as {\tt visitId=X00Y00Z} where {\tt X} represents
-  the photSim filterId $gri$={\tt 123}, {\tt Y} represents the visit
+  the phoSim filterId $gri$={\tt 123}, {\tt Y} represents the visit
   \A\B\C\D\E = {\tt 01234}, and {\tt Z} represents the seeing:
   {\tt 0} for the template and {\tt 123} for the science
   images.  All 9 CCDs within {\tt raft=2,2} were simulated.
@@ -370,7 +370,7 @@ Visit    & SED & {\tt rotTelPos} & {\tt Wcs} + Topo & Measured \\
   show quantitatively similar results.  In addition, we only report
   numbers from the postfiltered data, where dipole measurement is
   known to operate correctly.  We do not see any dependence of these
-  orentations on the seeing.  Full results may be found in the file
+  orientations on the seeing.  Full results may be found in the file
   {\tt NOTES}.}
 \label{tab:dcrang}
 \end{table}
@@ -444,6 +444,147 @@ Visit    & SED & Filter & Theory & {\tt Wcs} Offsets & Dipole Amplitude   & Dipo
 
 \clearpage
 \begin{appendices}
+\section{Use of PhoSim}
+
+I describe here the end-to-end process of generating instance (or
+trim) files for {\tt phoSim}, running these images to create output
+{\tt eImages}, creating {\tt astrometry.net} index files for
+astrometric calibration, and running these images through {\tt
+  processEimage.py}.  This does {\it not} include the process of
+generating instance catalogs from a master base catalog, or the
+process of using calibration data to run the simulated images through
+{\tt processCcd.py}, which does (amongst other operations) the
+assembly of amp images into CCD images and instrument signature
+removal.  The process is described for {\tt phoSim} version 3.3.2.
+
+\subsection{Setting up PhoSim}
+
+\subsection{Generation of Instance Catalogs for W14}
+
+\subsubsection{General}
+exposure times
+single snap
+control file
+header
+seeing
+
+\subsubsection{Task A}
+
+We describe our first step in the {\tt phoSim} process, the generation
+of the input configuration.  We start with the trim files used in W13
+processing, which consist of a random star field populated by stars of
+SED {\tt km50\_5000.fits\_g20\_5140.gz}, and covering a range of
+magnitudes $19 < r < 21$.  Observations were designed to be at a
+zenith distance of $20.2^{\circ}$, with a boresight pointing of (Ra,
+Decl) = ($79.68926^{\circ}, -9.70229^{\circ}$).  Observations were
+simulated in the $i$--band.  These trim files are stored in the {\tt sims3}
+directory in this repository.
+
+\subsubsection{Task B}
+
+We chose spectrum {\tt km20\_6000.fits\_g30\_6020.gz} for our
+reference {\tt G0V}-star, and replaced 80\% of the objects in the
+original trim file with this SED.  We then selected the bluest object
+contained in the base catalog, {\tt kp01\_9750.fits\_g45\_9830.gz},
+for every tenth object starting at object \#0, and the most populous
+red object in the catalog {\tt m2.0Full.dat.gz} for every tenth object
+starting at object \#5.  These correspond to spectral types {\tt A0V}
+and {\tt M2.0V}, respectively.  
+
+Because the magnitudes in the trim files represent a 500nm magnitude
+(approximate $g$--band), it was required to make color corrections to
+the requested magnitudes of the objects to preserve the relative
+brightness distribution of the as--simulated, multi--SED sources.
+This was done using their respective $i$--band magnitudes (i.e. a
+correction of $-2.5~log_{10}~( f_{i;SED} / f_{i;GOV} )$).
+Accordingly, the brightness distributions in the $gr$--bands were not
+optimal (this was fixed in Task C).  The colors of each spectral type
+were calculated using {\tt python/colors.py}.  Script {\tt
+  makeNewTrims.py} was used to make these modifications to the {\tt
+  sims3/} trim files, yielding {\tt sims5/} trim files ($i$--band).
+The only modifications made to the input trim files to simulate images
+in the $gr$--bands were to change the {\tt Opsim\_filter} field to
+indicate $gri$ = 123; these are stored in the {\tt sims5gr/}
+directory.
+
+\subsubsection{Task C}
+
+First, to have similar brightness distributions in all data, we make a
+SED--dependent {\it and} passband--dependent magnitude correction to
+the trim files used for this task.  These corrections are made in
+script {\tt generateTrimFilesDcr.py}, which ran on the $i$--band trim
+files from {\tt sims5}.
+
+Second, the original observations do not pass through zenith on the
+given night of simulated observations.  To design the observations to
+pass through zenith at the LSST site, which is at southern latitude
+$-29.67^{\circ}$, we first subtracted $19.96437^{\circ}$ from all
+coordinates in the input trim files so that the field is centered at a
+declination equal to the Southern latitude of the site.  This includes
+both the per-object coordinates and the boresight pointing {\tt
+  Unrefracted\_Dec} in the trim file header.
+
+We simulated this star field throughout the night of MJD 51130 (the
+night of the fiducial image simulations) to establish the times at
+which it was at an altitude of 40 and 60 degrees (zenith distance of
+50 and 30 degrees; airmass of 1.55 and 1.15), and when it was closest
+to zenith.  We chose 5 specific times at which to simulate the images:
+before meridian crossing at airmass 1.55; before meridian crossing at
+airmass 1.15; closest to zenith; after meridian crossing at airmass
+1.15; after meridian crossing at airmass 1.55).
+
+Because the instance catalog inputs to {\tt phoSim} form an
+overcomplete set (e.g. the user specifies Ra, Decl, altitude, azimuth,
+and time of observation), it is possible to request a simulation
+configuration that is not physically possible.  For this reason, we
+used \\{\tt
+  lsst.sims.catalogs.measures.example\_utils.makeObsParamsRaDecSky}
+subroutine \\{\tt makeObsParamsRaDecSky} to generate a self--consistent
+set of observation parameters given the Ra and Decl of the field, and
+the times of observation established above.
+
+In addition, this script synchronized the values of {\tt
+  Opsim\_rotskypos} and {\tt Opsim\_rottelpos}.  {\tt Rotskypos} sets
+the orientation of Ra and Decl of the catalog, effectively a rotation
+of the Pole away from the Zenith.  When {\tt rotskypos=0} the Ra
+direction is ``up'', along the y--axis.  This value was kept the same
+for all images, so that the star field was always rendered in
+approximately the same orientation.  {\tt Rottelpos} is defined as
+({\tt rotskypos}-180+parallactic angle), such that the angle of DCR
+should be along this axis.  This will also be the angle of increasing
+Altitude in the Az,Alt coordinate system.  This value is observation
+dependent, and was determined using {\tt makeObsParamsRaDecSky}.  Trim
+files for this run are found in the {\tt sims8/} directory of this
+repository.
+
+\subsection{Running {\tt phosim.py}}
+
+\subsection{Creating Astrometry Index Files}
+
+setup -r /lsst/home/krughoff/lsst/lsst_devel/Linux64/astrometry.net-0.38/astrometry
+text2fits.py 2002000.ref 2002000.fits
+setenv P 1402120
+build-index -i 2002000.fits -o index-${P}00.fits -I ${P}00 -P 0 -S r -n 100 -L 20 -E -j 0.4 -r 1
+build-index -1 index-${P}00.fits -o index-${P}01.fits -I ${P}01 -P 1 -S r -L 20 -E -M -j 0.4 
+build-index -1 index-${P}00.fits -o index-${P}02.fits -I ${P}02 -P 2 -S r -L 20 -E -M -j 0.4 
+build-index -1 index-${P}00.fits -o index-${P}03.fits -I ${P}03 -P 3 -S r -L 20 -E -M -j 0.4 
+build-index -1 index-${P}00.fits -o index-${P}04.fits -I ${P}04 -P 4 -S r -L 20 -E -M -j 0.4 
+ls index-1402120* | awk '{printf("modhead %s+7 REFCAT '2002000'\n",$1)}' | sh     
+setup astrometry_net 0.30  
+cp -r /nfs/lsst/home/becker/Winter2014/astrometry_net_data/ups .
+edit andConfig.py 
+setup -k -r .
+
+\subsection{Running processEimage.py}
+
+\section{ImageDifferenceTask}
+
+
+We used {\tt \$PIPE\_TASKS\_DIR/bin/imageDifferenceWinter2013.py},
+which has an additional flag that allows us to use a particular visit
+ID as the template, instead of extracting one from the template
+archive.
+
 \end{appendices}
 
 \end{document}
