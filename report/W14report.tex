@@ -26,24 +26,97 @@
 
 \begin{document}
 \maketitle
-Summary
+
+The goals of this Winter 2014 (W14) task are to investigate the
+effects of differential chromatic refraction (DCR) on the rate of
+false positives in image differences.  We quantify this by using a
+suite of image simulations that contain no intrinsic variability, and
+run the images through the LSST Data Management image subtraction
+pipeline, which includes detection and measurement of false positives
+(both positive--going and negative--going) in the differences.  As
+demonstrated in a similar analysis in Winter 2013 (W13), we are able
+to achieve a false detection rate consistent with random Gaussian
+fluctuations in the background.  We compare the results of DCR with
+theory to validate both the amplitude and orientation of the effect in
+our simulations.
+
+Since the underlying image simulation software ({\tt phoSim}) has
+evolved from our W13 work (v3.2.2 to v3.3.2), our first subtask was to
+recreate the results of W13, which involve a suite of 15s $i$--band
+images taken at zenith angle of $20.2^{\circ}$ and in seeings of 0.66,
+0.8, and 1.2 arcseconds.  These are differenced against a 300s
+$i$--band image generated at the same airmass with seeing 0.8''.  The
+focus of this analysis is the image--vs--template seeing dependence of
+the rate of false positives, and how pre--filtering of the science
+{\tt Exposures} with their {\tt Psfs} affects this rate.  We limit our
+analysis to the 9 sensors of central raft $2,2$ for this analysis.
+The second subtask involves the generation of $g$--band and $r$--band
+images in the same observing configuration, to verify there is not
+wavelength dependence to our results.  For both these first and second
+subtasks, the simulated catalog includes stars of a single spectral
+energy distribution (SED) covering a narrow range in (high S/N)
+brightness.  We find that our results are quantitatively similar to
+those of the W13 analysis.  We do not see substantial issues with DCR
+in these data, as expected.
+
+Our third subtask involved creating a similar suite of $gri$--band
+images, but generated at 5 airmasses throughout a single night, using
+a star catalog with 3 discrete SEDs.  The data include 2 observations
+before meridian crossing at airmasses 1.55 and 1.16, one observation
+near zenith, and then 2 observations after the meridian crossing at
+airmasses 1.16 and 1.55.  Observations at the same airmass, before and
+after meridian crossing, will have different parallactic angles, and
+thus different directions of DCR.  This will directly test whether or
+not the parallactic angle needs to be a consideration when designing
+templates for image subtraction during LSST operations.  We difference
+each of 5 per--airmass templates against each of the 15 science images
+(binned 5 in airmass and 3 in seeing), and do this for each of the 3
+passbands.  We find that the difference images where the parallactic
+angles are aligned yield false positives consistent with the rates
+seen above.  However, when differencing images taken at one
+parallactic angle with a template taken at another, we find a
+significantly enhanced rate of false positives.  This rate is both
+passband and seeing dependent, in the sense that the false positives
+are more enhanced in the $g$--band than in the $i$--band, and higher
+in the better seeing data than in the worse seeing data.  We validate
+that the amplitudes and orientations of DCR ``dipoles'' are similar
+both to theory and to the effects designed into the simulations.  We
+also find that joint--Psf dipole measurements in the difference images
+tend to overestimate the amplitude of the effect.  A fourth subtask --
+investigating the false positive rates using a more realistic mixture
+of stars and galaxies in the input catalog -- was deferred to later
+analysis, as this is not central to resolving the DCR issue.
+
+Finally, we provide extensive documentation on the running of the
+image simulations, how to design DCR into the data, and how to
+interpret the results.  
 
 \clearpage
 \tableofcontents
 \clearpage
 
 \section{Production Scope and Goals}
+
+We first outline the
+
 \subsection{Subtask 1: Reproduce W13 Results Using Current PhoSim}
 \subsection{Subtask 2: Simulate Starfield using Multiple SEDs at a Single Airmass}
 \subsection{Subtask 3: Simulate Starfield using Multiple SEDs at Multiple Airmasses}
 \subsection{Subtask 4: Include Realistic Mix of Stars and Galaxies}
 Pushed back to S14.
+
 \section{Review of Wavelength Dependent Refraction \label{sec:theory}}
+
 \section{Running PhoSim}
+
 \subsection{Reference SEDs \label{sec:seds}}
+
 \section{Analysis of Subtask 1}
+
 \section{Analysis of Subtask 2}
+
 \section{Analysis of Subtask 3}
+
 \section{Possible Solutions to Dcr Issue}
 
 Remapping each template image pixel by pixel, depending on color
@@ -561,7 +634,7 @@ repository.
 
 \subsection{Creating Astrometry Index Files}
 
-setup -r /lsst/home/krughoff/lsst/lsst_devel/Linux64/astrometry.net-0.38/astrometry
+setup -r /lsst/home/krughoff/lsst/lsst\_devel/Linux64/astrometry.net-0.38/astrometry
 text2fits.py 2002000.ref 2002000.fits
 setenv P 1402120
 build-index -i 2002000.fits -o index-${P}00.fits -I ${P}00 -P 0 -S r -n 100 -L 20 -E -j 0.4 -r 1
@@ -569,9 +642,9 @@ build-index -1 index-${P}00.fits -o index-${P}01.fits -I ${P}01 -P 1 -S r -L 20 
 build-index -1 index-${P}00.fits -o index-${P}02.fits -I ${P}02 -P 2 -S r -L 20 -E -M -j 0.4 
 build-index -1 index-${P}00.fits -o index-${P}03.fits -I ${P}03 -P 3 -S r -L 20 -E -M -j 0.4 
 build-index -1 index-${P}00.fits -o index-${P}04.fits -I ${P}04 -P 4 -S r -L 20 -E -M -j 0.4 
-ls index-1402120* | awk '{printf("modhead %s+7 REFCAT '2002000'\n",$1)}' | sh     
-setup astrometry_net 0.30  
-cp -r /nfs/lsst/home/becker/Winter2014/astrometry_net_data/ups .
+ls index-1402120* | awk '{printf("modhead %s+7 REFCAT '2002000'\n",\$1)}' | sh     
+setup astrometry\_net 0.30  
+cp -r /nfs/lsst/home/becker/Winter2014/astrometry\_net\_data/ups .
 edit andConfig.py 
 setup -k -r .
 
