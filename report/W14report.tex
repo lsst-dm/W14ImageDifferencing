@@ -174,7 +174,7 @@ false positives were similar to the W13 analysis, with minor
 differences.  Results of these analyses are described in
 Section~\ref{sec:task1} below.
 
-Trim files for this subtask are contained in subdirectory {\tt sims0/}
+Trim files for this subtask are contained in subdirectory {\tt sims3/}
 of this repository.  Work on this subtask resulted in Ticket \#3143,
 described in Section~\ref{sec:3143} below.
 
@@ -208,9 +208,11 @@ color--dependence to our results.  However, because we did not modify
 the input brightness distributions for the stars to have similar S/N
 in each passband, the results are somewhat compromised due to the
 different signal--to--noise distributions.  We do not expect this to
-substantially modify our conclusions.  The trim files for this are
-contained in subdirectory {\tt sims5gr/} of this repository.
+substantially modify our conclusions.  Results of these analyses are described in
+Section~\ref{sec:task2} below.
 
+The trim files for this are
+contained in subdirectory {\tt sims5gr/} of this repository.
 Work on this subtask resulted in Ticket \#3128, described in
 Section~\ref{sec:3143} below.
 
@@ -223,40 +225,169 @@ declination of approximately $20^{\circ}$, applied to the coordinate
 of each star and the requested boresight pointing of the simulations.
 We next evaluated the times that this starfield would pass through 5
 discrete zenith angles: $50^{\circ}$, $30^{\circ}$, $0^{\circ}$,
-$30^{\circ}$, $50^{\circ}$, corresponding to visits {\tt A, B, C, D,
-  E}.  We note that $50^{\circ}$ is the approximate airmass cutoff of
-the LSST Universal Cadence.
+$30^{\circ}$, $50^{\circ}$, corresponding to visits \A, \B, \C, \D,
+and  \E.  We note that $50^{\circ}$ is the approximate airmass cutoff of
+the LSST Universal Cadence.  We further modified the brightesses of each star in each filter's trim files 
+such that each object was rendered at approximately the same S/N in each filter.  
+
+To examine how a mistmatch between the effects of DCR in teh template
+and science affects the false positive rate, we perform each
+permutation of differencing the template visit \A\B\C\D\E with science
+visit \A\B\C\D\E.  The ``on diagonal'' components (\A\A, \B\B, etc)
+reflect an exact match between the airmass and parallactic angle of
+the template and science image.  Combinations \A\E and \B\D (as well
+as \E\A and \D\B) reflect a match between the airmass of the
+observations, but a mismatch of parallactic angle.  All other
+permutations reflect a mismatch between both airmass and parallactic
+angle of the images.  We perform differences of all 5 template visits with all 5 science image visits,
+for all 3 filters and all 3 seeing values.
+Results of these analyses are described in
+Section~\ref{sec:task3} below.
+
+The trim files for this are
+contained in subdirectory {\tt sims8/} of this repository.  Work on this subtask resulted in Ticket \#3161, described in
+Section~\ref{sec:3161} below.
 
 \subsection{Subtask 4: Include Realistic Mix of Stars and Galaxies}
-Pushed back to S14.
 
-\subsection{Ticket \#3128 \label{sec:3128}}
+This subtask was not undertaken, and was deferred to a future analysis.
 
-\subsection{Ticket \#3143 \label{sec:3143}}
+\subsection{Development Work: Ticket \#3128 \label{sec:3128}}
 
-\subsection{Ticket \#3161}
+This ticket was opened to allow the user to select the sample of
+``red'' and ``blue'' stars to be added to the control sample.  This
+enabled after--the--fact diagnostics of the different populations of
+objects.
 
+\subsection{Development Work: Ticket \#3143 \label{sec:3143}}
 
+This ticket was opened to fix a bug in the settings of the
+deconvolution kernel sizes.  A varaible that was unused during the
+process of deconvolution was unintentionally causing a
+misconfiguraiton of the $gr$--band, seeing {\tt 1} data during
+postfiltering.  This resulted in a factor of 10--100 increase in the
+deconvolution false positives, compared to the $i$--band.  This
+indicates that deconvolution may indeed be compensated for kernel
+configuration, restsulting in an acceptible false positive rate,
+although the variance in the images ends up being much higher (and the
+effective detection treshold much lower) compared to the prefiltering
+route.
+
+\subsection{Development Work: Ticket \#3161 \label{sec:3161}}
+
+This ticket was the most extensive implemented in this W14 work.
+Joint--Psf dipole measurement (simultaneously fitting for a positive
+and negative--going {\tt Psf}, 6 terms including two x,y centroids and
+two fluxes) in the original subtask 3 differences used a very coarse
+``minimization'' routine originally implemented in W13.  This routine
+effectively took half pixel steps in the 4 centroid positions, and
+performed a linear fit for the two fluxes at each step, returning the
+fit that yielded the lowest $\chi^2$.  However, the dipole separations
+expected from DCR were in general far smaller than the default step
+size, and thus the measurments were too coarse for this task.  In
+addition, this process was expectedly slow, making measurment of more
+than $\sim 200$ dipoles in a given image unfeasible.
+
+In Ticket \#3161 we implemented a fully non--linear joint {\tt Psf}
+fit, using the {\tt Minuit} package.  This substantially sped up the
+per--dipole measurement process, by a factor of 20--30, from 1--2
+measurements per second to 20--60 per second.  This speed--up analysis
+was performed using script {\tt python/compareMeasurementTiming.py} in
+this repository.
 
 \section{Review of Wavelength Dependent Refraction \label{sec:theory}}
 
-\section{Running PhoSim}
+We first review the expected signature of differential chromatic
+refraction in the image simulations.  We use the formalism of
+\cite{1982PASP...94..715F} throughout.
 
-\subsection{Reference SEDs \label{sec:seds}}
+The wavelength--dependent index of refraction of the atmosphere,
+$n(\lambda)$, may be represented as
+\begin{eqnarray}
+n_0(\lambda) - 1 & = & 10^{-6} \times \left[ 64.328 + \frac{29498.1}{146 - \lambda} + \frac{255.4}{41 - \lambda} \right]
+\end{eqnarray}
+where $\lambda$ is the wavelenth in microns.  Temperature, pressure,
+and water vapor corrections may be expressed as:
+\begin{eqnarray}
+C1(P,T) & = & P \times \frac{1 + (1.049 - 0.0157~T) \times 10^{-6}~P}{720.883 * (1 + 0.003661~T)} \\
+C2(f,T) & = & 10^{-6} \times f \times \frac{0.0624 - 0.000680/\lambda^2}{1 + 0.003661 * T} \\
+n(\lambda) - 1 & = & (n_0(\lambda) - 1) * C1 - C2 
+\end{eqnarray}
+where P is the ambient pressure in mm of mercury, T is the temperature
+in Celsius, and f is the water vapor pressure in mm of mercury.  The
+index of refraction is larger for shorter wavelength light, meaning
+that photons from the blue end of the spectrum are refracted more than
+ones from the red.  Accordingly, this effect is dependent on the
+zenith distance $Z$, such that:
+\begin{eqnarray}
+R(\lambda) & = & \frac{n(\lambda)^2 - 1}{2~n(\lambda)^2}~{\rm tan}(Z)
+\end{eqnarray}
+where R is the deflection angle in radians.  This deflection is
+expressed along the direction of increasing altitude, such that blue
+sources will appear higher in the sky, compared to red sources, when
+seen through the atmosphere.
+
+What this means in practice is that there will be a SED--dependent,
+per--object deflection whose amplitude depends on the soruce color,
+and whose orientation depends on the angle towards zenith in the
+image.  We examine the amplitude of this effect for 5 discrete
+spectra, 3 of which are used in the {\tt phoSim} analysis.  Because we
+are using the same spectra for our theoretical analysis as we are
+using for running {\tt phoSim}, we expect concordance between the
+amplitude and orientations of the DCR effect in the simulated images.
+
+In Figure~\ref{fig:spectra}, we show along the top the spectra, in
+units of $f_\nu(\lambda)$, of 5 sources.  Left to right, these
+represent a ``blue'' {\tt A0V} star, a reference {\tt G0V} star, a red
+{\tt M2.0V} star, and an active galactic nucleus at redshift $z=0$ and
+then at $z=0.5$.  We also show the transimission profiles of the LSST
+$g$, $r$, and $i$--bands along the left side of the figure, along with
+the product of these two curves which represent the effective spectrum
+of each source as viewed through each LSST filter.
+Figure~\ref{fig:refraction} shows the flux--weighted refraction of
+each SED as a function of zenith distance.  This is presented in units
+of arcseconds; note that at the Unviersal Cadence limit of
+$50^{\circ}$ zenith angle, the refraction of all sources approaches 1
+arcminute.  In Figure~\ref{fig:dcr}, we show the {\it differential}
+refraction of each spectrum, DCR, with respect to the {\tt G0V} star.
+Note that the maximum amplitude of DCR is approximately 0.1'' at
+$50^{\circ}$, or approximately half an LSST pixel.  Is is this effect
+we wish to explore in this sequence of analyses.  
 
 \section{Analysis of Subtask 1 \label{sec:task1}}
 
-\section{Analysis of Subtask 2}
+\section{Analysis of Subtask 2 \label{sec:task2}}
 
-\section{Analysis of Subtask 3}
+\section{Analysis of Subtask 3 \label{sec:task3}}
 
-\section{Possible Solutions to Dcr Issue}
+\section{Possible Solutions to DCR Issue}
+
+We outline possible resolutions to the DCR issue.  Classes that need
+to know about DCR include the {\tt WCS} class, for astrometric
+modeling, and the {\tt Psf} class, for its contribution to
+color--dependent point spread functions.  The consumers of this
+information include the image coaddition and differencing tasks.  The
+latter has a double dependency on DCR, since it uses coadded
+templates whose generation itself depends on an adequate treatment to
+DCR.  We expect to work towards this reolution in the upcoming Summer
+2014 production (S14) cycle.  Possible solutions include:
+
+\begin{itemize}
+\item
 
 Remapping each template image pixel by pixel, depending on color
 
 Color-dependent Psf matching kernel (does not fix template issue)
 
 Dipole fit that restricts the angle of separation to be along Dcr vector
+
+\end{itemize}
+
+In any case, it is likely that any resolution will require a
+per--object treatment, similar to that described in Section~3.3 of
+\cite{1999ApJ...521..602A}, who use a per--pixel color map to
+compensate for DCR.  A key improvment over this technique is the need
+to undertake this operation in a way that preserves the PSF.
 
 %%%%%%%%%%%%%%%%%%%%%%%%% FIGURES %%%%%%%%%%%
 
@@ -683,7 +814,7 @@ SED {\tt km50\_5000.fits\_g20\_5140.gz}, and covering a range of
 magnitudes $19 < r < 21$.  Observations were designed to be at a
 zenith distance of $20.2^{\circ}$, with a boresight pointing of (Ra,
 Decl) = ($79.68926^{\circ}, -9.70229^{\circ}$).  Observations were
-simulated in the $i$--band.  These trim files are stored in the {\tt sims3}
+simulated in the $i$--band.  These trim files are stored in the {\tt sims3/}
 directory in this repository.
 
 \subsubsection{Subtask 2}
