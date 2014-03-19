@@ -108,7 +108,7 @@ DCR effects on a science image and on the nearest (in terms of airmass
 and seeing) template.  However, this design does {\it not} account for
 the angle that DCR takes through an image, which will be different for
 every observation, and which ideally requires a per--image (in
-orientation) and per--object (in distance) correction to properly
+orientation) and per--object (in amplitude) correction to properly
 compensate for it.
 
 To examine these effects, we designed a staged analysis where each
@@ -118,8 +118,8 @@ catalog and simulation configuration used in the previous W13
 analysis, our second subtask includes multi--passband sims, while the
 third subtask additionally includes multi--airmass and
 multi--parallactic angle sims.  This final stage is sufficient to
-characterizes the effects of DCR on the false positive rate.  More
-details on each of the subtasks are provided in
+characterizes the effects of DCR on the false positive rate.
+Technical details on each of the subtasks are provided in
 Appendix~\ref{appx:tasks}.
 
 We generated images in three passbands corresponding to the LSST
@@ -128,45 +128,115 @@ $g$--band, $r$--band, and $i$--band filters.  Fifteen--second
 One accomanying image subtraction template was also generated (as
 opposed to assembled via coaddition) with an effective 300 second
 exposure time and a seeing of 0.88''.  All 4 sets of images were
-generated for every airmass--filter combination.
+generated for each airmass--filter combination.
 
-Upon generation of the simulated images, we ran the simulated {\tt
-  eImages} through single frame measurement (SFM) using the script
-{\tt processEimage.py}.  Note that we did not use the raw
-per--amplifier simulated images, instead choosing to operate on the
-{\tt eImages} because the former would have required the generation of
-calibration products and instrument signature removal (ISR).  
+After generation we ran the simulated {\tt eImages} through single
+frame measurement (SFM) using the script {\tt processEimage.py}.  Note
+that we did not use the raw per--amplifier simulated images, instead
+choosing to operate on the {\tt eImages} because the former would have
+required the generation of calibration products and instrument
+signature removal (ISR).  Had we run in this mode, SFM would have
+proceeded using script {\tt processCcd.py}.
 
-We next ran the images through the {\tt ImageSubtractionTask}, using
-the 300s image as the image subtraction template.  For this reason,
-the derived class {\tt Winter2013ImageDifferenceTask} (so--called as
-it was initially designed for the W13 production cycle) was used, as
-this includes a specific flag to use a visit as the template, instead
-of an extraction from the coadd repository.  We next ran detecton and
+We next ran the images through image differencing, using the 300s
+image as the image subtraction template.  For this reason, the derived
+class {\tt Winter2013ImageDifferenceTask} (so--called as it was
+initially designed for the W13 production cycle) was used, as this
+includes a specific flag to use a visit as the template, instead of an
+extraction from the coadd repository.  We next ran detecton and
 measurement on the difference image to extrat the {\tt DiaSources}
 from the image.  We look at detections of both positive and negative
 polarity, and at a detectoin threshold of 5--sigma.  Dipoles were
 identified and measured, and their separation and orientation compared
 to what was expected from theory, and what was expected based on the
 inputs to {\tt phoSim}.  The numbers of false positives were recorded
-as a function of filter, image seeing, image airmass, and template
-airmass where applicable.
+as a function of filter, image seeing, image airmass, and (where
+applicable) template airmass.  In the following, we reference the 3
+bins in seeing as {\tt Seeings 1,2,3} for seeing = 0.6'', 0.88'',
+1.2'', respectively, and the 5 visits at different airmasses as {\tt
+  Visits A,B,C,D,E}.
 
-\subsection{Ticket #XXXX}
-
-\subsection{Ticket #XXXX}
+We briefly summarize each of the proposed and performed subtasks
+below, and elaborate on the tickets developed during this production.
 
 \subsection{Subtask 1: Reproduce W13 Results Using Current PhoSim}
 
+Starting with the W13 {\tt phoSim} configuration, we produce simulated
+images at a single airmass (1.07) and in a single passband ($i$).
+Science images are simulated at each of the 3 seeign values described
+above, and a single template image as described above.  We simulated
+images for the 9 CCDs of the central raft $2,2$.  We perform image
+differencing, and source detection and measurement, and validate that
+the average numbers of false positives are consistent with the resutls
+of W13.  We also analyzed the actual W13 data using the current
+version of the DM pipeline, and validated that the total numbers of
+false positives were similar to the W13 analysis, with minor
+differences.  Results of these analyses are described in
+Section~\ref{sec:task1} below.
 
-We generate simulated images in 3 seeing bins, {\tt Opsim\_rawseeing =
-  0.6'', 0.88'', and 1.2''}
-
+Trim files for this subtask are contained in subdirectory {\tt sims0/}
+of this repository.  Work on this subtask resulted in Ticket \#3143,
+described in Section~\ref{sec:3143} below.
 
 \subsection{Subtask 2: Simulate Starfield using Multiple SEDs at a Single Airmass}
+
+Starting with the input trim files to subtask 1 above, we replace the
+SEDs used for the starfield with 3 discrete SEDs chosen to span a
+range in color.  We choose a {\tt G0V} star to be our refernce source,
+and replace 80\% of the source SEDs with those of SED {\tt
+  km20\_6000.fits\_g30\_6020.gz}.  When performing the image
+differencing, {\it only} these objects will be used for the creation
+of the Psf--matching kernel.  This effectively makes this set of
+sources the reference for the differential refraction.  We then
+replace 10\% of the SEDs with those of a ``blue'' source -- spectrum
+{\tt kp01\_9750.fits\_g45\_9830.gz} representing an {\tt A0V} star --
+and 10\% of the SEDs with those of a ``red'' source -- spectrum {\tt
+  m2.0Full.dat.gz} representing an {\tt M2.0V} star.  We modified the
+brightnesses of the sources in the $i$--band trim file to have
+approximately the same S/N as the original sources, given the color of
+each star.
+
+We then re--ran the image differencing analysis, and validated that we
+were able to difference the $i$--band data to a similar quality as in
+subtask 1 above.  The trim files for this are contained in
+subdirectory {\tt sims5/} of this repository.
+
+We further generated sets of simulations in the $g$--band and
+$r$--band using the exact same set of trim files except for the
+requested {\tt Opsim\_filter}.  Analysis of these images showed no
+color--dependence to our results.  However, because we did not modify
+the input brightness distributions for the stars to have similar S/N
+in each passband, the results are somewhat compromised due to the
+different signal--to--noise distributions.  We do not expect this to
+substantially modify our conclusions.  The trim files for this are
+contained in subdirectory {\tt sims5gr/} of this repository.
+
+Work on this subtask resulted in Ticket \#3128, described in
+Section~\ref{sec:3143} below.
+
 \subsection{Subtask 3: Simulate Starfield using Multiple SEDs at Multiple Airmasses}
+
+Starting with the {\tt sims5/} trim files referenced above, we further
+modify the simulations by first moving the star field to pass through
+zenith on the night of simulation.  This required a shift in
+declination of approximately $20^{\circ}$, applied to the coordinate
+of each star and the requested boresight pointing of the simulations.
+We next evaluated the times that this starfield would pass through 5
+discrete zenith angles: $50^{\circ}$, $30^{\circ}$, $0^{\circ}$,
+$30^{\circ}$, $50^{\circ}$, corresponding to visits {\tt A, B, C, D,
+  E}.  We note that $50^{\circ}$ is the approximate airmass cutoff of
+the LSST Universal Cadence.
+
 \subsection{Subtask 4: Include Realistic Mix of Stars and Galaxies}
 Pushed back to S14.
+
+\subsection{Ticket \#3128 \label{sec:3128}}
+
+\subsection{Ticket \#3143 \label{sec:3143}}
+
+\subsection{Ticket \#3161}
+
+
 
 \section{Review of Wavelength Dependent Refraction \label{sec:theory}}
 
@@ -174,7 +244,7 @@ Pushed back to S14.
 
 \subsection{Reference SEDs \label{sec:seds}}
 
-\section{Analysis of Subtask 1}
+\section{Analysis of Subtask 1 \label{sec:task1}}
 
 \section{Analysis of Subtask 2}
 
@@ -604,7 +674,7 @@ control file
 header
 seeing
 
-\subsubsection{Task A}
+\subsubsection{Subtask 1}
 
 We describe our first step in the {\tt phoSim} process, the generation
 of the input configuration.  We start with the trim files used in W13
@@ -616,7 +686,7 @@ Decl) = ($79.68926^{\circ}, -9.70229^{\circ}$).  Observations were
 simulated in the $i$--band.  These trim files are stored in the {\tt sims3}
 directory in this repository.
 
-\subsubsection{Task B}
+\subsubsection{Subtask 2}
 
 We chose spectrum {\tt km20\_6000.fits\_g30\_6020.gz} for our
 reference {\tt G0V}-star, and replaced 80\% of the objects in the
@@ -643,7 +713,7 @@ in the $gr$--bands were to change the {\tt Opsim\_filter} field to
 indicate $gri$ = 123; these are stored in the {\tt sims5gr/}
 directory.
 
-\subsubsection{Task C}
+\subsubsection{Subtask 3}
 
 First, to have similar brightness distributions in all data, we make a
 SED--dependent {\it and} passband--dependent magnitude correction to
