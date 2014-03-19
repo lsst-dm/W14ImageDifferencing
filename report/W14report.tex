@@ -73,8 +73,8 @@ each of 5 per--airmass templates against each of the 15 science images
 (binned 5 in airmass and 3 in seeing), and do this for each of the 3
 passbands.  We find that the difference images where the parallactic
 angles are aligned yield false positives consistent with the rates
-seen above.  However, when differencing images taken at one
-parallactic angle with a template taken at another, we find a
+seen above, at all airmasses.  However, when differencing images taken
+at one parallactic angle with a template taken at another, we find a
 significantly enhanced rate of false positives.  This rate is both
 passband and seeing dependent, in the sense that the false positives
 are more enhanced in the $g$--band than in the $i$--band, and higher
@@ -97,9 +97,72 @@ interpret the results.
 
 \section{Production Scope and Goals}
 
-We first outline the
+The primary goal of this W14 production was to investigate the effects
+of DCR on the image differencing process, with the expectation that
+this inform the requirements on image differencing templates.  The
+current DM baseline is that LSST will have up to 9 templates per
+passband per region of sky, binned 3x3 in airmass and seeing.  The
+airmass bins are currently segmented {\it only} on the zenith distance
+of the observation, and are designed to minimize mismatch between the
+DCR effects on a science image and on the nearest (in terms of airmass
+and seeing) template.  However, this design does {\it not} account for
+the angle that DCR takes through an image, which will be different for
+every observation, and which ideally requires a per--image (in
+orientation) and per--object (in distance) correction to properly
+compensate for it.
+
+To examine these effects, we designed a staged analysis where each
+successive stage builds on the results of the previous stage, but adds
+an additional layer of complexity.  Starting with the base input
+catalog and simulation configuration used in the previous W13
+analysis, our second subtask includes multi--passband sims, while the
+third subtask additionally includes multi--airmass and
+multi--parallactic angle sims.  This final stage is sufficient to
+characterizes the effects of DCR on the false positive rate.  More
+details on each of the subtasks are provided in
+Appendix~\ref{appx:tasks}.
+
+We generated images in three passbands corresponding to the LSST
+$g$--band, $r$--band, and $i$--band filters.  Fifteen--second
+``snaps'' were generated at 3 discrete seeings: 0.6'', 0.88'', 1.2''.
+One accomanying image subtraction template was also generated (as
+opposed to assembled via coaddition) with an effective 300 second
+exposure time and a seeing of 0.88''.  All 4 sets of images were
+generated for every airmass--filter combination.
+
+Upon generation of the simulated images, we ran the simulated {\tt
+  eImages} through single frame measurement (SFM) using the script
+{\tt processEimage.py}.  Note that we did not use the raw
+per--amplifier simulated images, instead choosing to operate on the
+{\tt eImages} because the former would have required the generation of
+calibration products and instrument signature removal (ISR).  
+
+We next ran the images through the {\tt ImageSubtractionTask}, using
+the 300s image as the image subtraction template.  For this reason,
+the derived class {\tt Winter2013ImageDifferenceTask} (so--called as
+it was initially designed for the W13 production cycle) was used, as
+this includes a specific flag to use a visit as the template, instead
+of an extraction from the coadd repository.  We next ran detecton and
+measurement on the difference image to extrat the {\tt DiaSources}
+from the image.  We look at detections of both positive and negative
+polarity, and at a detectoin threshold of 5--sigma.  Dipoles were
+identified and measured, and their separation and orientation compared
+to what was expected from theory, and what was expected based on the
+inputs to {\tt phoSim}.  The numbers of false positives were recorded
+as a function of filter, image seeing, image airmass, and template
+airmass where applicable.
+
+\subsection{Ticket #XXXX}
+
+\subsection{Ticket #XXXX}
 
 \subsection{Subtask 1: Reproduce W13 Results Using Current PhoSim}
+
+
+We generate simulated images in 3 seeing bins, {\tt Opsim\_rawseeing =
+  0.6'', 0.88'', and 1.2''}
+
+
 \subsection{Subtask 2: Simulate Starfield using Multiple SEDs at a Single Airmass}
 \subsection{Subtask 3: Simulate Starfield using Multiple SEDs at Multiple Airmasses}
 \subsection{Subtask 4: Include Realistic Mix of Stars and Galaxies}
@@ -532,7 +595,7 @@ removal.  The process is described for {\tt phoSim} version 3.3.2.
 
 \subsection{Setting up PhoSim}
 
-\subsection{Generation of Instance Catalogs for W14}
+\subsection{Generation of Instance Catalogs for W14 \label{appx:tasks}}
 
 \subsubsection{General}
 exposure times
