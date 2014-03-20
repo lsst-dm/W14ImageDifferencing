@@ -14,6 +14,9 @@
 
 \def\figdir{../figures}
 \def\pasp{{\it PASP}}
+\def\aap{{\it Astr.~Ap.}}     %Astronomy & Astrophysics%
+\def\aaps{{\it A\&AS}}
+\def\apj{{\it ApJ}}
 \def\A{{\tt A}}
 \def\B{{\tt B}}
 \def\C{{\tt C}}
@@ -304,11 +307,13 @@ refraction in the image simulations.  We use the formalism of
 The wavelength--dependent index of refraction of the atmosphere,
 $n(\lambda)$, may be represented as
 \begin{eqnarray}
+\label{eqn:dcr0}
 n_0(\lambda) - 1 & = & 10^{-6} \times \left[ 64.328 + \frac{29498.1}{146 - \lambda} + \frac{255.4}{41 - \lambda} \right]
 \end{eqnarray}
 where $\lambda$ is the wavelenth in microns.  Temperature, pressure,
 and water vapor corrections may be expressed as:
 \begin{eqnarray}
+\label{eqn:dcr}
 C1(P,T) & = & P \times \frac{1 + (1.049 - 0.0157~T) \times 10^{-6}~P}{720.883 * (1 + 0.003661~T)} \\
 C2(f,T) & = & 10^{-6} \times f \times \frac{0.0624 - 0.000680/\lambda^2}{1 + 0.003661 * T} \\
 n(\lambda) - 1 & = & (n_0(\lambda) - 1) * C1 - C2 
@@ -351,10 +356,16 @@ $50^{\circ}$ zenith angle, the refraction of all sources approaches 1
 arcminute.  In Figure~\ref{fig:dcr}, we show the {\it differential}
 refraction of each spectrum, DCR, with respect to the {\tt G0V} star.
 Note that the maximum amplitude of DCR is approximately 0.1'' at
-$50^{\circ}$, or approximately half an LSST pixel.  Is is this effect
-we wish to explore in this sequence of analyses.  
+$50^{\circ}$, or approximately half an LSST pixel.  This is effect we
+wish to explore in this sequence of analyses.
 
 \section{Analysis of Subtask 1 \label{sec:task1}}
+
+Re--ran CCD 1,1 to compare results
+
+Table~\ref{tab:task1}.  Seeing values were 5\% better for the
+otherwise same input configuratons, which triggered the bug resolved
+by \#3143.
 
 \section{Analysis of Subtask 2 \label{sec:task2}}
 
@@ -373,14 +384,9 @@ DCR.  We expect to work towards this reolution in the upcoming Summer
 2014 production (S14) cycle.  Possible solutions include:
 
 \begin{itemize}
-\item
-
-Remapping each template image pixel by pixel, depending on color
-
-Color-dependent Psf matching kernel (does not fix template issue)
-
-Dipole fit that restricts the angle of separation to be along Dcr vector
-
+\item Remapping each template image pixel by pixel, depending on color
+\item Color-dependent Psf matching kernel (does not fix template issue)
+\item Dipole fit that restricts the angle of separation to be along Dcr vector
 \end{itemize}
 
 In any case, it is likely that any resolution will require a
@@ -426,9 +432,10 @@ to undertake this operation in a way that preserves the PSF.
     Figure~\ref{fig:spectra}, as a function of zenith distance in
     degrees along the x--axis.  The solid black line is the nominal
     result from Eqn~\ref{eqn:dcr}, while the dashed red line ignores
-    the corrections for temperature and pressure.  Note the maximum
-    amplitude of refraction reaches nearly 1 arcminute.  This figure
-    may be recreated using the script {\tt python/DCR.py}.}
+    the corrections for temperature and pressure (Eqn~\ref{eqn:dcr0}).
+    Note the maximum amplitude of refraction reaches nearly 1
+    arcminute.  This figure may be recreated using the script {\tt
+      python/DCR.py}.}
   \label{fig:refraction}
 \end{figure}
 
@@ -467,7 +474,7 @@ to undertake this operation in a way that preserves the PSF.
     \A\ and \E\ are taken at airmass 1.55 (zenith distance of 50
     degrees) but at opposite sides of the meridian crossing of the
     star field; a similar situation was designed for observations
-    \B\ and \D, which are taken at airmass 1.15 (zenith distance of 30
+    \B\ and \D, which are taken at airmass 1.16 (zenith distance of 30
     degrees).  Visit \C\ is not depicted as it was taken at zenith.
     This figure was created using the script {\tt
       python/dcrSchematic.py}.}
@@ -626,9 +633,93 @@ to undertake this operation in a way that preserves the PSF.
 
 \begin{table}
 \centering
+\begin{tabular}{ccccc}
+\hline
+\multicolumn{5}{|c|}{Subtask 1 False Positives in {\tt raft=2,2 sensor=1,1}} \\
+\hline
+Seeing  & Prefilter    & W13  & W14 pipeline on W13 data   & W14   \\
+\hline
+{\tt 1} & True         & 10   & 10                         & 17    \\
+        & False        & 23   & 19                         & 68630 \\
+{\tt 2} & True         & 7    & 6                          & 6     \\
+        & False        & 8    & 8                          & 6     \\
+{\tt 3} & True         & 3    & 3                          & 3     \\
+        & False        & 7    & 7                          & 3 
+\end{tabular}
+\caption[]{Summary of the results of subtask 1, which aims to
+  reproduce the results of W13 using {\tt phoSim} version 3.3.2 and
+  the current v7\_3 stack.  The first column shows the numbers of
+  false positives from {\tt raft=2,2 sensor=1,1} of the W13 analysis,
+  the central column from the re--reduction of those same data using
+  the v7\_3 stack, and the final column the results of the regenerated
+  images during W14.  The large numbers of false positives in the
+  deconvolution configuration (seeing {\tt 1}, prefilter False) were
+  triggered by the bug resolved in ticket \#3143.  Results from this
+  table were generated using script {\tt python/countDiaSourcesT1.py}
+  in this repository.}
+\label{tab:task1}
+\end{table}
+
+\begin{table}
+\centering
+\begin{tabular}{ccccc}
+\hline
+\multicolumn{5}{|c|}{Subtask 2 False Positives in {\tt raft=2,2}} \\
+\hline
+Seeing   & Filter & Prefilter    & N   \\
+\hline
+{\tt 1}  & g      & True         &     \\
+         &        & False        &     \\
+{\tt 2}  &        & True         &     \\
+         &        & False        &     \\
+{\tt 3}  &        & True         &     \\
+         &        & False        & 
+\hline
+{\tt 1}  & r      & True         &     \\
+         &        & False        &     \\
+{\tt 2}  &        & True         &     \\
+         &        & False        &     \\
+{\tt 3}  &        & True         &     \\
+         &        & False        & 
+\hline
+{\tt 1}  & i      & True         &     \\
+         &        & False        &     \\
+{\tt 2}  &        & True         &     \\
+         &        & False        &     \\
+{\tt 3}  &        & True         &     \\
+         &        & False        & 
+\end{tabular}
+\caption[]{Summary of the results of subtask 2.  Results from this
+  table were generated using script {\tt python/countDiaSourcesT2.py}
+  in this repository.}
+\label{tab:task1}
+\end{table}
+
+False 4866601 (False,) 9 2 0 2
+True 4866601 (True,) 9 13 0 12
+False 5866601 (False,) 9 2 0 2
+True 5866601 (True,) 9 8 0 8
+False 6866601 (False,) 9 1 0 1
+True 6866601 (True,) 9 10 0 10
+False 4866602 (False,) 9 7 0 7
+True 4866602 (True,) 9 5 0 4
+False 5866602 (False,) 9 7 0 7
+True 5866602 (True,) 9 5 0 5
+False 6866602 (False,) 9 5 0 5
+True 6866602 (True,) 9 4 0 4
+False 4866603 (False,) 9 4 0 4
+True 4866603 (True,) 9 3 0 3
+False 5866603 (False,) 9 4 0 4
+True 5866603 (True,) 9 3 0 3
+False 6866603 (False,) 9 3 0 3
+True 6866603 (True,) 9 2 0 2
+
+
+\begin{table}
+\centering
 \begin{tabular}{cccccc}
 \hline
-\multicolumn{6}{|c|}{PhoSim Visits} \\
+\multicolumn{6}{|c|}{Subtask 3 PhoSim Visits} \\
 \hline
 Visit & MJD           & rotSkyPos   & rotTelPos   & Altitude & Airmass \\
 \hline
@@ -864,11 +955,11 @@ both the per-object coordinates and the boresight pointing {\tt
 We simulated this star field throughout the night of MJD 51130 (the
 night of the fiducial image simulations) to establish the times at
 which it was at an altitude of 40 and 60 degrees (zenith distance of
-50 and 30 degrees; airmass of 1.55 and 1.15), and when it was closest
+50 and 30 degrees; airmass of 1.55 and 1.16), and when it was closest
 to zenith.  We chose 5 specific times at which to simulate the images:
 before meridian crossing at airmass 1.55; before meridian crossing at
-airmass 1.15; closest to zenith; after meridian crossing at airmass
-1.15; after meridian crossing at airmass 1.55).
+airmass 1.16; closest to zenith; after meridian crossing at airmass
+1.16; after meridian crossing at airmass 1.55).
 
 Because the instance catalog inputs to {\tt phoSim} form an
 overcomplete set (e.g. the user specifies Ra, Decl, altitude, azimuth,
@@ -898,7 +989,9 @@ repository.
 
 \subsection{Creating Astrometry Index Files}
 
-setup -r /lsst/home/krughoff/lsst/lsst\_devel/Linux64/astrometry.net-0.38/astrometry
+\small{
+\begin{verbatim}
+setup -r /lsst/home/krughoff/lsst/lsst_devel/Linux64/astrometry.net-0.38/astrometry
 text2fits.py 2002000.ref 2002000.fits
 setenv P 1402120
 build-index -i 2002000.fits -o index-${P}00.fits -I ${P}00 -P 0 -S r -n 100 -L 20 -E -j 0.4 -r 1
@@ -906,11 +999,13 @@ build-index -1 index-${P}00.fits -o index-${P}01.fits -I ${P}01 -P 1 -S r -L 20 
 build-index -1 index-${P}00.fits -o index-${P}02.fits -I ${P}02 -P 2 -S r -L 20 -E -M -j 0.4 
 build-index -1 index-${P}00.fits -o index-${P}03.fits -I ${P}03 -P 3 -S r -L 20 -E -M -j 0.4 
 build-index -1 index-${P}00.fits -o index-${P}04.fits -I ${P}04 -P 4 -S r -L 20 -E -M -j 0.4 
-ls index-1402120* | awk '{printf("modhead %s+7 REFCAT '2002000'\n",\$1)}' | sh     
-setup astrometry\_net 0.30  
-cp -r /nfs/lsst/home/becker/Winter2014/astrometry\_net\_data/ups .
+ls index-1402120* | awk '{printf("modhead %s+7 REFCAT '2002000'\n",$1)}' | sh     
+setup astrometry_net 0.30  
+cp -r /nfs/lsst/home/becker/Winter2014/astrometry_net_data/ups .
 edit andConfig.py 
 setup -k -r .
+\end{verbatim}
+}
 
 \subsection{Running processEimage.py}
 
