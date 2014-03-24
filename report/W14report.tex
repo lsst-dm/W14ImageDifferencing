@@ -47,21 +47,21 @@ our simulations.
 Since the underlying image simulation software ({\tt phoSim}) and the
 DM pipelines have evolved from our W13 work (v3.2.2 to v3.3.2), our
 first subtask was to recreate the results of W13, which involve a
-suite of 15s $i$--band images taken at zenith angle of $20.2^{\circ}$
-and in seeings of 0.66, 0.8, and 1.2 arcseconds.  These were
-differenced against a 300s $i$--band image generated at the same
+suite of 15s $i$--band images taken at a zenith angle of
+$20.2^{\circ}$ and in seeings of 0.66, 0.8, and 1.2 arcseconds.  These
+were differenced against a 300s $i$--band image generated at the same
 airmass, with seeing 0.8''.  The focus of this analysis was the
 image--vs--template seeing dependence of the rate of false positives,
 and how pre--filtering of the science {\tt Exposures} with their {\tt
-  Psfs} affects this rate.  We limited this reanalysis to the 9 sensors
-of central raft {\tt 2,2}.  The second subtask involved the generation
-of $g$--band and $r$--band images in the same observing configuration,
-to verify there is not wavelength dependence to our results.  For
-these first and second subtasks, the simulated catalog included stars
-of a single spectral energy distribution (SED) covering a narrow range
-in (high S/N) brightness.  We find that our results are quantitatively
-similar to those of the W13 analysis.  We do not see substantial
-issues with DCR in these data, as expected.
+  Psfs} affects this rate.  We limited this reanalysis to the 9
+sensors of central raft {\tt 2,2}.  The second subtask involved the
+generation of $g$--band and $r$--band images in the same observing
+configuration, to verify there is no wavelength dependence to our
+results.  For these first and second subtasks, the simulated catalog
+included stars of a single spectral energy distribution (SED) covering
+a narrow range in (high S/N) brightness.  We find that our results are
+quantitatively similar to those of the W13 analysis.  We do not see
+substantial issues with DCR in these data, as expected.
 
 Our third subtask involved creating a similar suite of $gri$--band
 images, but at 5 airmasses throughout a single night, using a star
@@ -104,14 +104,14 @@ how to interpret the results.
 
 The primary goal of this W14 production was to investigate the effects
 of DCR on the image differencing process, with the expectation that
-this inform the requirements on image differencing templates.  The
+this informs the requirements on image differencing templates.  The
 current DM baseline is that LSST will have up to 9 templates per
 passband per region of sky, binned 3x3 in airmass and seeing.  The
 airmass bins are currently segmented {\it only} on the zenith distance
 of the observation, and are designed to minimize mismatch between the
 DCR effects on a science image and on the nearest (in terms of airmass
 and seeing) template.  However, this design does {\it not} account for
-the angle that refraction displaces objects within image, which will
+the angle that refraction displaces objects within the image, which will
 be different for every observation, and which ideally requires a
 per--image (in orientation) and per--object (in amplitude) correction
 to properly compensate for it.
@@ -141,7 +141,7 @@ that we did {\it not} use the raw per--amplifier simulated images,
 instead choosing to operate on the {\tt eImages} because the former
 would have required the generation of calibration products and
 instrument signature removal (ISR).  Had we run in this mode, SFM
-would have proceeded using script {\tt processCcd.py}.
+would have proceeded using the script {\tt processCcd.py}.
 
 We next ran the images through image differencing, using the 300s
 image as the image subtraction template.  For this reason, the derived
@@ -421,18 +421,64 @@ CCDs of the central raft were analyzed.
 
 We first validated the process on $i$--band data, modifying the
 brightness of the objects (based upon their color) to provide a
-similar S/N distribution as in subtask 1.  Once this was validated to
-work, we ran two additional runs in the $g$ and $r$--bands.  The
+similar S/N distribution as in subtask 1.  Once this was demonstrated
+to work, we ran two additional runs in the $g$ and $r$--bands.  The
 numbers of false positives are reported in Table~\ref{tab:task2}.  We
-average over all 9 CCDs in the raft to report the mean numbers of
-false positives per CCD.  
+averaged over all 9 CCDs in the raft to report the mean numbers of
+false positives per CCD.  Figure~\ref{fig:fptheory} compares the
+number of 5--sigma detected {\tt DiaSources} in red.  The black line
+depicts the run of false positives with detection threshold, using the
+mean seeing for each sample.  We find that, in general, our results
+are consistent with this theoretical limit.  One noteworthy exception
+is in the deconvolution configuration, where the 0.88'' template is
+differenced against the 0.6'' science data without prefiltering
+(leftmost column of left panel).  In this case, our realized false
+positive rate was significantly {\it lower} than expected from theory.
+This is consistent with the results from W13 (Section 6.4), where
+deconvolution significantly enhanced the noise properties of the
+difference image.
 
-{\bf TODO} Show figure with theory.  
+To quantify this effect in W14, we examined the variance in two ways.
+First, we calculated the median value of the difference image variance
+plane, ignoring any masked pixels, and call this $V_p$.  We then
+calculated the empirical variance of the corresponding image plane,
+scaling the interquartile range by 0.741 as expected from a Gaussian
+distribution, and squared this result to yield $V_e$.  We calculated
+the ratio $V_e$/$V_p$ to measure how much the propagated variance
+over/underestimates the empirical variance.  We find that the median
+of this ratio was within 1\% of 1.0 for all prefiltering and
+postfiltering data, {\it including the deconvolution configuration}.
+This median value is however consistently above 1.0, indicating slight
+underestimation of the true variance by the propagated variance plane
+in all cases.  This indicates that the variance plane provides an
+adequate estimate of the noise in the image at the stage immediately
+following image subtraction.
 
-{\bf TODO} We note that the numbers of false positives are
-consistently {\it underestimated} in the deconvolution configuration.
-We examine the noise properties of the resulting images using script
-{\tt python/examineVariance.py}.
+Secondly, we took the difference images that had {\it not} been
+filtered by their {\tt Psf}, and perform the {\tt Psf} convolution.
+We note that this is the image that the detection algorithm runs on in
+the postfiltering configuration (in fact, this is the postfiltering
+process itself!).  In prefiltering, this detection image is the image
+difference product itself, which we demonstrated above to have
+adequate variance tracking.  We then calculated the same ratios for
+this filtered difference image.  We find that for the deconvolution
+configurations, the variance plane provided an {\it overestimate} of
+the empirical variance by 30--40\% (ratio of 0.7--0.76).  For the
+convolution configurations, the variance plane {\it underestimates}
+the empirical variance by 4--5\%.  Both of these conclusions are
+consistent with the {\tt prefiltering = False} panels in
+Figure~\ref{fig:fptheory}, where the false positives rates are
+significantly lower than theory in the prefiltering seeing {\tt 1}
+data (deconvolution; the variance plane overestimates the true noise)
+and moderately but consistently higher than theory in the seeing {\tt
+  2,3} data (convolution; variance plane underestimates the true
+noise).  As mentioned in the W13 report, the fact that the template is
+convolved twice is thought to be the main reason we have a poor
+estimate of the noise at the detection stage in the postfiltering
+analysis.  For completeness, we found no filter--dependence to these
+results.  
+
+We used script {\tt python/examineVariance.py} for this analysis.
 
 \section{Subtask 3 Analysis \label{sec:task3}}
 
@@ -602,9 +648,25 @@ Other options are both solicited and welcome.
   the DM stack since W13.  We find no filter--dependence to these
   results.
 
+\item We find that the variance planes of the data products
+  immediately following image subtraction are consistent with the
+  empirical variance to 1\%.  This result holds for both the
+  prefiltering and postfiltering analysis paths.
+
+\item However, the convolution of an unfiltered difference image with
+  its {\tt Psf} (i.e. the postfiltering process immediately preceding
+  detection) results in an image whose variance plane provides a poor
+  estimate of the true variance.  In the case of deconvolution of the
+  template, this variance plane {\it overestimates} the true variance
+  by 30--40\%, resulting in a lower rate of false positives but also
+  shallower effective depth.  In the case of convolution of the
+  template, this variance is a 4--5\% {\it underestimate}, resulting
+  in an enhanced rate of false positives.  This effect is only
+  relevant for the postfiltering analysis path.
+
 \item We find that differencing templates and images taken at the same
   airmass and parallactic angle -- regardless of airmass, parallactic
-  angle, filter, or seeing -- generally produces the same high quality
+  angle, filter, or seeing -- generally produce the same high quality
   results.
 
 \item We find that mismatches between parallactic angle, even for
@@ -643,10 +705,10 @@ Other options are both solicited and welcome.
 \item The treatment of DCR will likely be a complicated one, and at
   the extreme may require an object--dependent remapping during the
   image registration process.  Image subtraction is doubly dependent
-  on this effect, as the template images need to first be coadded
+  on this effect, as its template images need to first be coadded
   (which requires registration of input images {\it and} of the
-  objects within the images) before being warped to the image
-  coordinate system to be used for subtraction.
+  DCR--affected objects within the images) before being warped to the
+  image coordinate system to be used for subtraction.
 
 \item We further document the end--to--end process of creating and
   running simulated data in the Appendices below.
@@ -656,7 +718,7 @@ Other options are both solicited and welcome.
 %%%%%%%%%%%%%%%%%%%%%%%%% FIGURES %%%%%%%%%%%
 
 \clearpage
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \centering
   \includegraphics[width=1.1\textwidth]{\figdir/DCR1.png}
   \caption{{\bf Effective Spectral Energy Distributions} : The
@@ -681,7 +743,7 @@ Other options are both solicited and welcome.
 \end{figure}
 
 \clearpage
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \centering
   \includegraphics[width=1.1\textwidth]{\figdir/DCR2.png}
   \caption{{\bf Refraction Amplitude vs. Filter and Spectral Energy
@@ -698,7 +760,7 @@ Other options are both solicited and welcome.
 \end{figure}
 
 \clearpage
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \centering
   \includegraphics[width=1.1\textwidth]{\figdir/DCR3.png}
   \caption{{\bf Differential Chromatic Refraction vs. Filter and
@@ -712,7 +774,27 @@ Other options are both solicited and welcome.
   \label{fig:dcr}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
+  \centering
+  \subfloat[Prefiltering = False]{{\includegraphics[width=0.46\textwidth]{\figdir/outputs5b_doPreConvolveFalse_fp.png} }}
+  \qquad
+  \subfloat[Prefiltering = True]{{\includegraphics[width=0.46\textwidth]{\figdir/outputs5b_doPreConvolveTrue_fp.png} }} \\
+  \caption{{\bf Subtask 2: False Positive Rates vs. Theory}: Using the
+    mean realized seeing for each passband and {\tt Opsim\_rawseeing}
+    combination, we plot the expected numbers of false positives per
+    sensor (both positive and negative going) as a function of
+    detection threshold.  We plot the median number of {\tt
+      DiaSources} detected at 5 sigma across the nine {\tt raft=2,2}
+    CCDs in red, using the interquartile range to calculate the RMS.
+    Results using postfiltering of the data with its {\tt Psf} are on
+    the left, and prefiltering are on the right.  This figure was
+    created using the script {\tt python/falsePositivePlots.py}.}
+  \label{fig:fptheory}
+\end{figure}
+
+
+
+\begin{figure}[!ht]
   \centering
   \includegraphics[width=1.1\textwidth]{\figdir/dcrPhoSim.png}
   \caption{{\bf Designed Orientation of DCR in W14 PhoSim Runs}: This
@@ -739,7 +821,6 @@ Other options are both solicited and welcome.
       python/dcrSchematic.py}.}
   \label{fig:phosimdcr}
 \end{figure}
-
 
 \begin{figure}
     \centering
@@ -768,7 +849,7 @@ Other options are both solicited and welcome.
     \label{fig:wcsdcr}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \centering
   \includegraphics[width=1.0\textwidth]{\figdir/heatmapFalse.png}
   \caption{{\bf Number of False Positives, Postfiltering}: This figure
@@ -796,7 +877,7 @@ Other options are both solicited and welcome.
   \label{fig:heatpost}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \centering
   \includegraphics[width=1.0\textwidth]{\figdir/heatmapTrue.png}
   \caption{{\bf Number of False Positives, Prefiltering}: Same as
@@ -1051,6 +1132,14 @@ Visit    & SED & Filter & Theory & {\tt Wcs} Offsets & Dipole Amplitude   & Dipo
 
 \clearpage
 \begin{appendices}
+
+The root directory for this analysis is located on the NCSA machines
+at {\tt /nfs/lsst/home/becker/Winter2014}.  All files not included in
+this {\tt git} repository may be found there, including the output
+repositories needed by the majority of the analysis and plotting
+scripts.  A complete guide to every step in this W14 process may be
+found in the {\tt NOTES} file.
+
 \section{Use of PhoSim}
 
 I describe here the end-to-end process of generating instance catalogs
@@ -1064,7 +1153,7 @@ process of using calibration data to run the simulated images through
 assembly of amp images into CCD images and instrument signature
 removal.  
 
-The process is valid for {\tt phoSim} version 3.3.2.
+The process is valid for {\tt phoSim} version 3.3.2.  
 
 \subsection{Setting up PhoSim}
 
@@ -1115,7 +1204,7 @@ python $PHOSIM_DIR/phosim.py $PWD/2001000.trim -w $PWD/2001000.work -o $PWD/2001
   -s "R22_S00|R22_S01|R22_S02|R22_S10|R22_S11|R22_S12|R22_S20|R22_S21|R22_S22" -p 16
 \end{Verbatim}
 } 
-where {\tt -w} defins the work directory (which must already exist),
+where {\tt -w} defines the work directory (which must already exist),
 {\tt -o} the output directory (which must already exist), {\tt -c} the
 control file, {\tt -s} the sensors to simulate, and {\tt -p} the
 number of cores to use.
@@ -1148,8 +1237,8 @@ cp ../inputs5/_mapper .
 
 \subsection{Creating Astrometry Index Files}
 
-A calibraton file must be created for {\tt astrometry.net}, which is
-used as the phoometric and astrometric reference.  Typically this is
+A calibration file must be created for {\tt astrometry.net}, which is
+used as the photometric and astrometric reference.  Typically this is
 created from a base catalog, but since I am starting with instance
 catalogs here, the process is somewhat different.  I use one of the
 input trim files for this process as follows: 
@@ -1174,7 +1263,7 @@ setup -k -r .
 }
 
 Note that the file {\tt andConfig.py} must be modified to use the
-naming convention defined by envorinment variable {\tt P} above:
+naming convention defined by environment variable {\tt P} above:
 {\small
 \begin{Verbatim}[frame=single]
 cat astrometry_net_data8/andConfig.py 
@@ -1230,7 +1319,7 @@ Important flags here are the W14 configuration file {\tt
 
 \section{Generation of Instance Catalogs for W14 \label{appx:tasks}}
 
-We outline the salient (and non--obvious) configuraton parameters for
+We outline the salient (and non--obvious) configuration parameters for
 the W14 trim/instance catalogs below:
 \begin{itemize}
   \item {\tt SIM\_MINSOURCE 1} : Only simulate the sensor if 1 or more
@@ -1268,20 +1357,19 @@ starting at object \#5.  These correspond to spectral types {\tt A0V}
 and {\tt M2.0V}, respectively.  
 
 Because the magnitudes in the trim files represent a 500nm magnitude
-(approximate $g$--band), it was required to make color corrections to
-the requested magnitudes of the objects to preserve the relative
-brightness distribution of the as--simulated, multi--SED sources.
-This was done using their respective $i$--band magnitudes (i.e. a
-correction of $-2.5~log_{10}~( f_{i;SED} / f_{i;GOV} )$).
-Accordingly, the brightness distributions in the $gr$--bands were not
-optimal (this was fixed in subtask 3).  The colors of each spectral type
-were calculated using {\tt python/colors.py}.  Script {\tt
-  makeNewTrims.py} was used to make these modifications to the {\tt
-  sims3/} trim files, yielding {\tt sims5/} trim files ($i$--band).
-The only modifications made to the input trim files to simulate images
-in the $gr$--bands were to change the {\tt Opsim\_filter} field to
-indicate $gri$ = 123; these are stored in the {\tt sims5gr/}
-directory.
+(approximate $g$--band), color corrections to the requested magnitudes
+of the objects were required to preserve the relative brightness
+distribution of the as--simulated, multi--SED sources.  This was done
+using their respective $i$--band magnitudes (i.e. a correction of
+$-2.5~log_{10}~( f_{i;SED} / f_{i;GOV} )$).  Accordingly, the
+brightness distributions in the $gr$--bands were not optimal (this was
+fixed in subtask 3).  The colors of each spectral type were calculated
+using {\tt python/colors.py}.  Script {\tt makeNewTrims.py} was used
+to make these modifications to the {\tt sims3/} trim files, yielding
+{\tt sims5/} trim files ($i$--band).  The only modifications made to
+the input trim files to simulate images in the $gr$--bands were to
+change the {\tt Opsim\_filter} field to indicate $gri$ = 123; these
+are stored in the {\tt sims5gr/} directory.
 
 \subsection{Subtask 3}
 
@@ -1339,7 +1427,7 @@ We provide here additional figures here that demonstrate the amplitude
 of the refraction, of the differential refraction, and the airmass and
 passband--dependent quality of the difference images.
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \centering
   \includegraphics[width=0.5\textwidth]{\figdir/outputs8bCA_g_doPreConvolveFalse_refract_crop.png}
   \caption{{\bf Refraction}: This figure depicts the amplitude and
@@ -1353,7 +1441,7 @@ passband--dependent quality of the difference images.
   \label{fig:refractim}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \centering
   \includegraphics[width=1.0\textwidth]{\figdir/outputs8b_g_doPreConvolveFalse_dcr_crop.png}
   \caption{{\bf Differential Chromatic Refraction and Difference Image
@@ -1386,7 +1474,7 @@ passband--dependent quality of the difference images.
   \label{fig:dcrimg}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \centering
   \includegraphics[width=1.0\textwidth]{\figdir/outputs8b_r_doPreConvolveFalse_dcr_crop.png}
   \caption{{\bf Differential Chromatic Refraction and Difference Image
@@ -1396,7 +1484,7 @@ passband--dependent quality of the difference images.
   \label{fig:dcrimr}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \centering
   \includegraphics[width=1.0\textwidth]{\figdir/outputs8b_i_doPreConvolveFalse_dcr_crop.png}
   \caption{{\bf Differential Chromatic Refraction and Difference Image
@@ -1406,7 +1494,7 @@ passband--dependent quality of the difference images.
   \label{fig:dcrimi}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
   \centering
   \includegraphics[width=1.0\textwidth]{\figdir/outputs8b_g_doPreConvolveTrue_dcr_crop.png}
   \caption{{\bf Differential Chromatic Refraction and Difference Image
