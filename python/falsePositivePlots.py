@@ -48,6 +48,7 @@ if __name__ == "__main__":
         butler = dafPersist.ButlerFactory(mapper = mapper).create()
     
         fig = plt.figure()
+        plt.subplots_adjust(hspace=0.05, wspace=0.05)
         spx = 0
         for filt, visits in zip(("g", "r", "i"), ((4866601, 4866602, 4866603), 
                                                   (5866601, 5866602, 5866603),
@@ -88,8 +89,11 @@ if __name__ == "__main__":
                 sp.plot(xt, yt, "k-")
 
                 # One way to do it
-                sp.errorbar(5.0, np.mean(orphans), np.std(orphans), fmt="go")
-                sp.errorbar(5.0, np.mean(totals), np.std(totals), fmt="rs", alpha=0.5)
+                #sp.errorbar(5.0, np.mean(orphans), np.std(orphans), fmt="go")
+                yval = np.median(totals)
+                yerr = 0.741 * (np.percentile(totals, 75) - np.percentile(totals, 25))
+                sp.errorbar(5.0, yval, yerr, fmt="ro", ms=4)
+                #sp.errorbar(5.0, np.mean(totals), np.std(totals), fmt="rs", alpha=0.5)
 
                 # Try boxplots
                 #boxp = sp.boxplot(orphans, positions=(5,), whis=100.0, widths=0.15)
@@ -102,11 +106,20 @@ if __name__ == "__main__":
                 plt.setp(sp.get_xticklabels()+sp.get_yticklabels(), fontsize=10, weight="bold")
                 #sp.semilogy()
                 if spx == 0:
-                    sp.set_title("Visit %s" % (str(visit)[-1]), fontsize=14, weight="bold")
+                    sp.set_title("Seeing %s" % (str(visit)[-1]), fontsize=14, weight="bold")
+
                 if spx == 2:
                     sp.set_xlabel("Sigma", fontsize=12, weight="bold")
+                    plt.setp(sp.get_xticklabels(), rotation=30)
+                else:
+                    plt.setp(sp.get_xticklabels(), visible=False)
+                    
+
                 if spy == 0:
                     sp.set_ylabel("Nfp", fontsize=12, weight="bold")
+                else:
+                    plt.setp(sp.get_yticklabels(), visible=False)
+
                 if spy == 2:
                     sp2 = sp.twinx()
                     sp2.set_ylabel("%s-band" % (filt), fontsize=14, weight="bold", rotation="horizontal")
