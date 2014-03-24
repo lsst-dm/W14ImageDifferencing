@@ -45,6 +45,19 @@ if __name__ == "__main__":
                                               (5866601, 5866602, 5866603),
                                               (6866601, 6866602, 6866603))):
         for visit in visits:
+            medimTs = []
+            medvaTs = []
+            iqrvaTs = []
+            medimFs = []
+            medvaFs = []
+            iqrvaFs = []
+            medimCs = []
+            medvaCs = []
+            iqrvaCs = []
+            medimOs = []
+            medvaOs = []
+            iqrvaOs = []
+
             for sx in range(3):
                 for sy in range(3):
                     sensor    = "%d,%d" % (sx, sy)
@@ -71,10 +84,26 @@ if __name__ == "__main__":
                     # than 1
                     medimO, medvaO, iqrvaO = miStats(calExp.getMaskedImage())
 
-                    print visit, sx, sy, "%.3f %.3f %.3f:" % (medvaO, iqrvaO, iqrvaO/medvaO), 
-                    print "T %.3f %.3f %.3f %.3f :" % (medimT, medvaT, iqrvaT, iqrvaT/medvaT),
-                    print "F %.3f %.3f %.3f %.3f :" % (medimF, medvaF, iqrvaF, iqrvaF/medvaF), 
-                    print "C %.3f %.3f %.3f %.3f : %.3f %.3f"   % (medimC, medvaC, iqrvaC, iqrvaC/medvaC, iqrvaC/iqrvaT, medvaC/medvaT)
-                    #import pdb; pdb.set_trace()
+                    medimTs.append(medimT)
+                    medvaTs.append(medvaT)
+                    iqrvaTs.append(iqrvaT)
+                    medimFs.append(medimF)
+                    medvaFs.append(medvaF)
+                    iqrvaFs.append(iqrvaF)
+                    medimCs.append(medimC)
+                    medvaCs.append(medvaC)
+                    iqrvaCs.append(iqrvaC)
+                    medimOs.append(medimO)
+                    medvaOs.append(medvaO)
+                    iqrvaOs.append(iqrvaO)
+                    
+                    
+            print visit, "%.3f %.3f %.3f:" % (np.median(medvaO), np.median(iqrvaO), np.median(np.array(iqrvaO)/np.array(medvaO))), 
+            print "T %.3f %.3f %.3f %.3f :" % (np.median(medimT), np.median(medvaT), np.median(iqrvaT), np.median(np.array(iqrvaT)/np.array(medvaT))),
+            print "F %.3f %.3f %.3f %.3f :" % (np.median(medimF), np.median(medvaF), np.median(iqrvaF), np.median(np.array(iqrvaF)/np.array(medvaF))), 
+            print "C %.3f %.3f %.3f %.3f : %.3f %.3f"   % (np.median(medimC), np.median(medvaC), np.median(iqrvaC), 
+                                                           np.median(np.array(iqrvaC)/np.array(medvaC)), 
+                                                           np.median(np.array(iqrvaC)/np.array(iqrvaT)), 
+                                                           np.median(np.array(medvaC)/np.array(medvaT)))
 
                         
