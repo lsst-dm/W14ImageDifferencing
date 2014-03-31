@@ -27,7 +27,9 @@
 
 \title{\vspace{-22mm} \Large{Report on Winter 2014 Production: Image Differencing} \vspace{-6mm}}
 \date{\today}
-
+\author{
+  %Andrew Becker (UW) {\it for LSST Data Management}
+}
 \begin{document}
 \maketitle
 
@@ -360,29 +362,42 @@ of all sources approaches 1 arcminute.  In Figure~\ref{fig:dcr}, we
 show the {\it differential} refraction of each spectrum, DCR, with
 respect to the {\tt G0V} star.  Note that the maximum amplitude of DCR
 is approximately 0.1'' at $50^{\circ}$, or approximately half an LSST
-pixel.  This is effect we wish to explore in this sequence of
+pixel.  This is the effect we wish to explore in this sequence of
 analyses.
 
 \section{Subtask 1 Analysis \label{sec:task1}}
 
+%To ensure that the results of W14 may be compared to the results from
+%W13, we first validated that the {\tt phoSim} software and DM stack
+%(and their interaction) had not significantly changed in the interim.
+%Unfortunately, we were unable to reproduce the exact simulated images
+%from W13 using the version of {\tt phoSim} that was used at the time
+%(v3.2.2), even when using the control files that were used as inputs.
+%It is unclear exactly why this is the case.  For this reason, we
+%up-rev'd to the current v3.3.2 of the {\tt phoSim} software.  Since
+%additional features have been added to {\tt phoSim}, and many are
+%turned {\bf on} by default, we were again unable to produce an {\it
+%  exact} match to the W13 images.  However, we were able to create
+%qualitatively similar images by using {\tt phoSim} v3.3.2 and the W13
+%control files, with the additional control parameter {\tt
+%  fieldanisotropy 0}.  We note that the realized seeing values of the
+%images, as measured by the adaptive second moments of the {\tt Psf},
+%are systematically ($\sim 5\%$) smaller in the newer data.  This was
+%important during the analysis of the deconvolution data, as it
+%triggered a bug resolved in Ticket \#3143.  
+
 To ensure that the results of W14 may be compared to the results from
 W13, we first validated that the {\tt phoSim} software and DM stack
 (and their interaction) had not significantly changed in the interim.
-Unfortunately, we were unable to reproduce the exact simulated images
-from W13 using the version of {\tt phoSim} that was used at the time
-(v3.2.2), even when using the control files that were used as inputs.
-It is unclear exactly why this is the case.  For this reason, we
-up-rev'd to the current v3.3.2 of the {\tt phoSim} software.  Since
-additional features have been added to {\tt phoSim}, and many are
-turned {\bf on} by default, we were again unable to produce an {\it
-  exact} match to the W13 images.  However, we were able to create
-qualitatively similar images by using {\tt phoSim} v3.3.2 and the W13
+We were unable to reproduce an {\it exact} match to simulated images
+from W13 (which used {\tt phoSim} v3.2.2), but were able to create
+qualitatively similar images using {\tt phoSim} v3.3.2 and the W13
 control files, with the additional control parameter {\tt
   fieldanisotropy 0}.  We note that the realized seeing values of the
 images, as measured by the adaptive second moments of the {\tt Psf},
 are systematically ($\sim 5\%$) smaller in the newer data.  This was
 important during the analysis of the deconvolution data, as it
-triggered a bug resolved in Ticket \#3143.  
+triggered a bug resolved in Ticket \#3143.
 
 Because we were unable to create exactly the same images as in W13, to
 validate the DM pipeline we ran the W13 data through the W14 pipeline
@@ -432,7 +447,7 @@ threshold, using the mean seeing for each sample.  We find that, in
 general, our results are consistent with this theoretical limit.  One
 noteworthy exception is in the deconvolution configuration, where the
 0.88'' template is differenced against the 0.6'' science data without
-prefiltering (leftmost column of left panel).  In this case, our
+prefiltering (leftmost column of top panel).  In this case, our
 realized false positive rate was significantly {\it lower} than
 expected from theory.  This is consistent with the results from W13
 (Section 6.4), where deconvolution significantly enhanced the noise
@@ -465,18 +480,21 @@ for this filtered difference image.  We find that for the
 deconvolution configurations, the variance plane provided an {\it
   overestimate} of the empirical variance by 30--40\% ($V_e$/$V_p$ =
 0.7--0.76).  For the convolution configurations, the variance plane
-{\it underestimates} the empirical variance by 4--5\%.  Both of these
-conclusions are consistent with the {\tt prefiltering = False} panels
-in Figure~\ref{fig:fptheory}, where the false positives rates are
-significantly lower than theory in the prefiltering seeing {\tt 1}
-data (deconvolution; the variance plane overestimates the true noise)
-and moderately but consistently higher than theory in the seeing {\tt
-  2,3} data (convolution; variance plane underestimates the true
-noise).  As mentioned in the W13 report, the fact that the template is
-convolved twice is thought to be the main reason we have a poor
-estimate of the noise at the detection stage in the postfiltering
-analysis.  For completeness, we found no filter--dependence to these
-results.
+{\it underestimates} the empirical variance by 4--5\%.  An
+overestimate of the variance by 35\% should lead to 15--20 times lower
+false positive rate at 5--sigma; a variance underestimate by 5\%
+should lead to a false positive rate 2--3 times higher.  These numbers
+are roughly consistent with, but larger in amplitude than, the {\tt
+  prefiltering = False} panels in Figure~\ref{fig:fptheory}, where the
+false positives rates are significantly lower than theory in the
+prefiltering seeing {\tt 1} data (deconvolution; the variance plane
+overestimates the true noise) and moderately but consistently higher
+than theory in the seeing {\tt 2,3} data (convolution; variance plane
+underestimates the true noise).  As mentioned in the W13 report, the
+fact that the template is convolved twice is thought to be the main
+reason we have a poor estimate of the noise at the detection stage in
+the postfiltering analysis.  For completeness, we found no
+filter--dependence to these results.
 
 We used script {\tt python/examineVariance.py} for this analysis.
 
@@ -523,10 +541,10 @@ residuals to the astrometric fit, which is driven by the {\tt G0V}
 stars (indeed, their mean astrometric residuals are less than 0.002''
 in any particular image).  The second numerical column of
 Table~\ref{tab:dcramp} provides this information.  We note that the
-DCR amplitudes for the {\tt A0V} objects are consistent with theory,
-although consistently under--refracted by a small amount.  The
+DCR amplitudes for the {\tt A0V} objects are roughly consistent with
+theory, although uniformly under--refracted by $\sim 15\%$.  The
 amplitudes of the relative refraction of the {\tt M2.0V} objects are
-also under--refracted but by $\sim 30\%$.  The general trend of the
+also under--refracted but by $\sim 30\%$.  The expected trend of the
 ``red'' star DCR amplitude being larger than the ``blue'' stars
 amplitude, as depicted in Figure~\ref{fig:dcr}, is seen here.
 
@@ -554,10 +572,12 @@ considerably larger than the DCR amplitude expected from theory, and
 from the amplitudes suggested by the {\tt Wcs} residuals.
 Additionally, we find that this overestimate is a function of seeing,
 in the sense that in the worse seeing data these values are typically
-overmeasured by a larger degree.  We only found significant numbers of
-dipoles in the $r$--band data in the data at airmass 1.55.  For the
-$i$--band data, there were not enough dipoles in any conditions to
-provide a measurement.
+overmeasured by a larger degree.  This a strong indication that there
+are aspects of the dipole measurement algorithm that need to be
+improved upon.  We only found significant numbers of dipoles in the
+$r$--band data in the data at airmass 1.55.  For the $i$--band data,
+there were not enough dipoles in any conditions to provide a
+measurement.
 
 \subsection{Dipole Rate}
 
@@ -584,6 +604,15 @@ conditions.  However, for the majority of the $g$ and $r$--band (and
 presumably $u$--band) data, DCR appears to be a significant impediment
 to achieving a noise--limited false positive rate.
 
+There are 2 apparent components to the heat maps.  The first
+corresponds to an enhancement in the rate of the no--refraction to
+high--refraction differences (\C\A\ and \C\E), which show large
+numbers of false positives in good seeing, and in the prefiltering
+data appears localized to the $g$--band data.  The second component
+corresponds to the maximal mismatch between the DCR vector (\A\E\ and
+\E\A), and appears to be the dominant mode in the worse seeing data,
+in the redder passbands, and in the non--$g$--band prefiltering data.
+
 \section{Thoughts on the DCR Issue}
 
 We outline possible resolutions to the DCR issue.  Classes that need
@@ -598,12 +627,12 @@ production (S14) cycle.
 
 Modeling the expected effects of DCR should be relatively
 straightforward, assuming the colors of most objects are known from
-data release processing, the observations conditions are known
-exactly, and the environmental conditions known approximately.  The
-majority of objects whose instantaneous color is not known (moving
-objects, or objects that change in brightness) will leave signatures
-in difference images anyways, so not knowing their color should not
-create additional ``false positives''.  It may however complicate the
+data release processing, the observation conditions are known exactly,
+and the environmental conditions known approximately.  The majority of
+objects whose instantaneous color is not known (moving objects, or
+objects that change in brightness) will leave signatures in difference
+images anyways, so not knowing their color should not create
+additional ``false positives''.  It may however complicate the
 measurement of these objects.  Places where this assumption breaks
 down completely are for objects that are different in color but not
 brightness, or for crowded fields where every pixel has its own color.
@@ -685,18 +714,22 @@ Other options are both solicited and welcome.
   better seeing data yield more false positives than worse seeing
   data.
 
-\item The ``worst'' configuration is differencing data taken at high
-  airmass using a template from zenith (\C\A\ and \C\E).  This alone
-  strongly argues for sets of templates at multiple airmasses.
+\item Two components in the false positive ``heat maps'' correspond to
+  enhanced false positive rates in the no--fraction vs
+  high--refraction data (\C\A\ and \C\E\ differences) and in the data
+  with maximal mismatch between the DCR vectors (\A\E\ and \E\A).
 
 \item While the enhanced false positive rate is lower in the
   prefiltered difference images than in the postfiltered, it is not
   negligible.
 
-\item We validate the amplitude and orientation of the DCR effect in
-  {\tt phoSim}.  We do find that the amplitude of DCR shift in the red
-  {\tt M2.0V} stars is under-realized by $\sim 30\%$ compared to
+\item The orientation of the DCR effect is consistent with
   expectations.
+
+\item We find that the amplitude of DCR shift in the red {\tt M2.0V}
+  stars is under-realized by $\sim 30\%$ compared to expectations.
+  The DCR shift in the {\tt A0V} is under-realized by $\sim 15\%$
+  compared to expectations.
 
 \item Dipole measurement measures lobe separations that are
   substantially larger than the effects of DCR.  This effect gets
@@ -789,8 +822,8 @@ Other options are both solicited and welcome.
     Results using postfiltering of the data with its {\tt Psf} are on
     the top, and prefiltering are on the bottom.  Note that the
     postfiltering false positives in seeing {\tt 1} which correspond
-    to a template devonvolution, are lower than expected due to an
-    overestiamte of the noise by the variance plane.  The
+    to a template deconvolution, are lower than expected due to an
+    overestimate of the noise by the variance plane.  The
     postfiltering positives for seeing {\tt 2,3} are consistently
     above the theoretical curve, likely due to a 4--5\% underestimate
     of the noise by the variance plane.  Prefiltering false positives
@@ -955,7 +988,7 @@ Seeing   & Filter & N & N  \\
   detections per sensor at 5--sigma, both positive going and negative
   going.  The vast majority of these sources are ``orphans''; the
   average number that associate with a source in the image is less
-  than 1 in all cases.  Comparisons of these numbers with theorecial
+  than 1 in all cases.  Comparisons of these numbers with theoretical
   expectations are presented in Figure~\ref{fig:fptheory}.  Results
   from this table were generated using script {\tt
     python/countDiaSourcesT2.py} in this repository.}
@@ -1058,7 +1091,7 @@ Visit    & SED & {\tt rotTelPos} & {\tt Wcs} + Topo & Measured \\
     A0V} stars.  For the orientation column, we use fitted values from
   $g$--band data, seeing {\tt 1}.  Dipole results in the $r$--band, in
   cases where there are more than 10 dipoles measured, show
-  quantitatively similar results.  We also see no dependce of these
+  quantitatively similar results.  We also see no dependence of these
   orientations on seeing.  We only report these numbers using the
   postfiltered data, where dipole measurement is known to operate
   correctly.  Full results may be found in the file {\tt NOTES}.}
