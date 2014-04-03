@@ -289,6 +289,7 @@ if __name__ == "__main__":
             if sedg.needResample(wavelen=waveleng, wavelen_match=bp.wavelen):
                 waveleng, fnug = sed.resampleSED(waveleng, fnug, wavelen_match=bp.wavelen)
             fluxg = fnug * bp.phi
+            leffg = np.exp(np.sum(fnug * bp.phi * np.log(waveleng)) / np.sum(fnug * bp.phi))
             offsets = []
             for zd in zds:
                 offset  = refract(wavelen*10**-3, zd * np.pi / 180.) * 180. / np.pi * 3600.
@@ -301,7 +302,22 @@ if __name__ == "__main__":
                 plt.setp(ax.get_xticklabels()+ax.get_yticklabels(), visible=False)
             ax.plot(zds, offsets, "k-", lw=2)
             ax.axhline(y=0, c='k', linestyle=':')
-            print "# Offsets at 30, 50 =", offsets[3], offsets[5]
+            print "# Offsets at 30, 50 = %.4f %.4f" % (offsets[3], offsets[5]),
+            print "vs leff : %.4f" % ((refract(leff*10**-3, 30 * np.pi / 180.) * 180. / np.pi * 3600.) - \
+                (refract(leffg*10**-3, 30 * np.pi / 180.) * 180. / np.pi * 3600.)),
+            print "%.4f" % ((refract(leff*10**-3, 50 * np.pi / 180.) * 180. / np.pi * 3600.) - \
+                                (refract(leffg*10**-3, 50 * np.pi / 180.) * 180. / np.pi * 3600.)),
+
+            # TRY USING f_lambda
+            wavelenf, flambda = sed.fnuToflambda(wavelen, fnu)
+            wavelenfg, flambdag = sed.fnuToflambda(waveleng, fnug)
+            lefff = np.exp(np.sum(flambda * bp.phi * np.log(wavelenf)) / np.sum(flambda * bp.phi))
+            leffgf = np.exp(np.sum(flambdag * bp.phi * np.log(wavelenfg)) / np.sum(flambdag * bp.phi))
+            print "vs leff flambda : %.4f" % ((refract(lefff*10**-3, 30 * np.pi / 180.) * 180. / np.pi * 3600.) - \
+                                                  (refract(leffgf*10**-3, 30 * np.pi / 180.) * 180. / np.pi * 3600.)),
+            print "%.4f" % ((refract(lefff*10**-3, 50 * np.pi / 180.) * 180. / np.pi * 3600.) - \
+                                (refract(leffgf*10**-3, 50 * np.pi / 180.) * 180. / np.pi * 3600.))
+
             # Without STP correction
             offsets = []
             for zd in zds:
