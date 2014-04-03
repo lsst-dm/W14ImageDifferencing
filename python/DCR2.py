@@ -11,7 +11,8 @@ dcrFormatter = FormatStrFormatter('%+0.2f')
 # THIS ONE LOOKS AT THE AIRMASS-DEPENDENT FILTER PROFILE
 # And only looks at 30,50 deg to compare to phosim outputs.
 
-def refract(wavelength, zd, docorr=True, P=600.0, T=7.0, f=8.0):
+#def refract(wavelength, zd, docorr=True, P=600.0, T=7.0, f=8.0):
+def refract(wavelength, zd, docorr=True, P=520.0, T=20.0, f=8.0):
     # ZD = zenith distance in radians
     # Wavelength = microns
     xnm1  = 10**-6 * ( 64.328 + 29498.1 / (146.0 - 1/wavelength**2) + 255.4 / (41.0 - 1/wavelength**2) )
@@ -93,6 +94,6 @@ if __name__ == "__main__":
                 offg    = refract(waveleng*10**-3, zd * np.pi / 180.) * 180. / np.pi * 3600.
                 offg    = np.sum(offg * fluxg) / np.sum(fluxg)
 
-                print "%s %d %d : %+.3f %+.3f %+.3f" % (
+                print "%s %d %d : %+.4f %+.4f %+.4f" % (
                     bpname, sidx, zd, off1-off1g, off2-off2g, off-offg)
         print
