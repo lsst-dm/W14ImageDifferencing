@@ -12,6 +12,7 @@
 %\usepackage{float}
 %\floatstyle{boxed}
 %\restylefloat{figure}
+\usepackage{framed}
 
 \def\figdir{../figures}
 \def\pasp{{\it PASP}}
@@ -168,22 +169,27 @@ production.
 
 \subsection{Subtask 1: Reproduce W13 Results Using Current PhoSim}
 
-Starting with the W13 {\tt phoSim} configuration, we produced
-simulated images at a single airmass (1.07) and in a single passband
-($i$).  Science images were simulated at each of the 3 seeing values
-described above, plus an image subtraction template image.  We
-simulated images only for the central sensor {\tt 1,1} of the central
-raft {\tt 2,2}.  We performed image differencing, source detection
-and measurement, and validated that the average numbers of false
-positives were consistent with the results of W13.  We also analyzed
-the actual W13 data using the current version of the DM pipeline, and
-validated that the total numbers of false positives were similar to
-the W13 analysis, with minor differences.  Results of these analyses
-are described in Section~\ref{sec:task1} below.
+To ensure that the results of W14 may be compared to the results from
+W13, we first validated that the {\tt phoSim} software and DM stack
+(and their interaction) had not significantly changed in the interim.
+We note that W13 used {\tt phoSim} version v3.2.2 and DM stack v7\_2;
+W14 uses v3.3.2 and v7\_3, respectively.  Starting with the W13 {\tt
+  phoSim} configuration, we produced simulated images at a single
+airmass (1.07) and in a single passband ($i$).  Science images were
+simulated at each of the 3 seeing values described above, plus an
+image subtraction template image.  We simulated images only for the
+central sensor {\tt 1,1} of the central raft {\tt 2,2}.  We performed
+image differencing, source detection and measurement, and validated
+that the average numbers of false positives were consistent with the
+results of W13.  We also analyzed the actual W13 data using the
+current version of the DM pipeline, and validated that the total
+numbers of false positives were similar to the W13 analysis, with
+minor differences.  Results of these analyses are described in
+Section~\ref{sec:task1} below.
 
 The {\tt phoSim} configuration files for this subtask are contained in
 subdirectory {\tt sims3/} of this repository.  Work on this subtask
-resulted in Ticket \#3143, described in Section~\ref{sec:3143} below.
+resulted in Ticket \#3143, described in Appendix~\ref{sec:3143} below.
 
 \subsection{Subtask 2: Simulate Starfield using Multiple SEDs at a Single Airmass}
 
@@ -221,9 +227,44 @@ configuration files for this are contained in subdirectory {\tt
   sims5gr/} of this repository.
 
 Work on this subtask resulted in Ticket \#3128, described in
-Section~\ref{sec:3143} below.
+Appendix~\ref{sec:3143} below.
 
 \subsection{Subtask 3: Simulate Starfield using Multiple SEDs at Multiple Airmasses}
+
+\begin{table}
+\centering
+\begin{tabular}{cccccc}
+\hline
+\multicolumn{6}{|c|}{Subtask 3: PhoSim Visit Configuration} \\ \hline \\
+Visit & MJD           & rotSkyPos   & rotTelPos   & Altitude & Airmass \\
+\hline
+\A    & 51130.111719  & 251.0689567 & 145.7139810 & 40.1     & 1.55 \\
+\B    & 51130.176302  & 251.0689567 & 152.2708405 & 59.9     & 1.16 \\
+\C    & 51130.272830  & 251.0689567 & 341.0975816 & 89.9     & 1.00 \\
+\D    & 51130.272830  & 251.0689567 & 349.8619334 & 59.9     & 1.16 \\
+\E    & 51130.433247  & 251.0689567 & 356.4181128 & 40.1     & 1.55 \\
+\end{tabular}
+\caption[So I can have 2 paragraphs]{Summary of the configuration
+  parameters that define each subtask 3 visit \A\B\C\D\E.
+  Observations were designed to follow a single star field through
+  zenith on a single night, and observed twice before and twice after
+  crossing the meridian, as well as at zenith.  Each visit was
+  simulated using the same random seed (153555399), in 3 filters ($g$,
+  $r$, $i$), and under 4 observing conditions.  These correspond to
+  the template image ({\tt Opsim\_rawseeing} = 0.878'' and {\tt
+    SIM\_VISTIME} = 300) and then 3 bins in seeing for the science
+  image corresponding to {\tt Opsim\_rawseeing} = 0.6'', 0.878'', and
+  1.2'' for seeing bins {\tt 1,2,3}, respectively.  All science images
+  were simulated with {\tt SIM\_VISTIME} = 15.  \\ ~ \\ Overall, this
+  yielded $5 \times 3 \times 4 = 60$ runs of {\tt phoSim}, which are
+  encoded as {\tt visitId=X00Y00Z} where {\tt X} represents the
+  filterId $gri$={\tt 123}, {\tt Y} represents the visit \A\B\C\D\E =
+  {\tt 01234}, and {\tt Z} represents the seeing: {\tt 0} for the
+  template and {\tt 123} for the science images.  All 9 CCDs within
+  {\tt raft=2,2} were simulated.  All trim files used to generate the
+  sims for this analysis may be found in the {\tt sims8/} directory.}
+\label{tab:visits}
+\end{table}
 
 Starting with the {\tt sims5/} trim files referenced above, we further
 modified the simulations by first shifting the star field to pass
@@ -233,10 +274,13 @@ of each star and the requested boresight pointing of the simulations.
 We next evaluated the times that this starfield would pass through 5
 discrete zenith angles: $50^{\circ}$, $30^{\circ}$, $0^{\circ}$,
 $30^{\circ}$, $50^{\circ}$, corresponding to visits \A, \B, \C, \D,
-and \E\ below.  We note that $50^{\circ}$ is the approximate airmass
-cutoff of the LSST Universal Cadence.  We further modified the
-brightnesses of each star in each filter's trim files such that each
-object was rendered at approximately the same S/N in each filter.
+and \E\ below.  This sequence tracks the star field through a single
+night.  The salient configuration parameters of each visit are given
+in Table~\ref{tab:visits}.  We note that $50^{\circ}$ is the
+approximate airmass cutoff of the LSST Universal Cadence.  We further
+modified the brightnesses of each star in each filter's trim files
+such that each object was rendered at approximately the same S/N in
+each filter.
 
 To examine how a mismatch between the effects of DCR in the template
 and science image affects the false positive rate, we performed each
@@ -254,56 +298,11 @@ Section~\ref{sec:task3} below.
 
 The {\tt phoSim} configuration files for this are contained in
 subdirectory {\tt sims8/} of this repository.  Work on this subtask
-resulted in Ticket \#3161, described in Section~\ref{sec:3161} below.
+resulted in Ticket \#3161, described in Appendix~\ref{sec:3161} below.
 
 \subsection{Subtask 4: Include Realistic Mix of Stars and Galaxies}
 
 This subtask was not undertaken, and is deferred to a future analysis.
-
-\subsection{Development Work: Ticket \#3128 \label{sec:3128}}
-
-This ticket was opened to allow the user to select the sample of
-``red'' and ``blue'' stars to be added to the control sample.  This
-enabled after--the--fact diagnostics of the different populations of
-objects.
-
-\subsection{Development Work: Ticket \#3143 \label{sec:3143}}
-
-This ticket was opened to fix a bug in the settings of the
-deconvolution kernel sizes.  A variable was unintentionally causing a
-misconfiguration of the kernel basis in the $g$ and $r$--band
-postfiltering seeing {\tt 1} data (which result in a deconvolution).
-This resulted in a factor of 10--100 increase in the deconvolution
-false positives, compared to the $i$--band.  This misconfiguration
-results in the large numbers of false positives reported in
-Section~\ref{sec:task1} below, and was fixed for the analysis of
-Section~\ref{sec:task2}.  This indicates that deconvolution may be
-undertaken with the proper kernel configuration, resulting in an
-acceptable false positive rate, although the variance in the images
-ends up being much higher (and the effective detection threshold much
-lower) compared to the prefiltering route.
-
-\subsection{Development Work: Ticket \#3161 \label{sec:3161}}
-
-This ticket was the most extensive implemented in this W14 work.
-Previously, joint--Psf dipole measurement (simultaneously fitting for
-a positive and negative--going {\tt Psf} with 6 model terms including
-two x,y centroids and two fluxes) used a very coarse ``minimization''
-routine.  This routine effectively took half pixel steps in the 4
-centroid positions, and performed a linear fit for the two fluxes at
-each step, returning the step that yielded the lowest $\chi^2$.
-However, the dipole separations expected from DCR were in general far
-smaller than the default step size, and thus the measurements were too
-coarse for this task.  In addition, this process was slow and
-inefficient, making measurement of more than $\sim 200$ dipoles in a
-given image infeasible.
-
-In Ticket \#3161 we implemented a fully non--linear joint {\tt Psf}
-fit, using the {\tt Minuit} package.  This substantially sped up the
-per--dipole measurement process by a factor of 20--30, from 1--2
-measurements per second to 20--60 per second.  This speed--up analysis
-was performed using script {\tt python/compareMeasurementTiming.py} in
-this repository.
 
 \section{Review of Wavelength Dependent Refraction \label{sec:theory}}
 
@@ -325,12 +324,12 @@ C1(P,T) & = & P \times \frac{1 + (1.049 - 0.0157~T) \times 10^{-6}~P}{720.883 * 
 C2(f,T) & = & 10^{-6} \times f \times \frac{0.0624 - 0.000680/\lambda^2}{1 + 0.003661 * T} \\
 n(\lambda) - 1 & = & (n_0(\lambda) - 1) * C1 - C2 
 \end{eqnarray}
-where P is the ambient pressure in mm of mercury, T is the temperature
-in Celsius, and f is the water vapor pressure in mm of mercury.  The
-index of refraction is larger for shorter wavelength light, meaning
-that photons from the blue end of the spectrum are refracted more than
-ones from the red.  This effect is dependent on the zenith distance
-$Z$, such that:
+where $P$ is the ambient pressure in mm of mercury, $T$ is the
+temperature in Celsius, and $f$ is the water vapor pressure in mm of
+mercury.  The index of refraction is larger for shorter wavelength
+light, meaning that photons from the blue end of the spectrum are
+refracted more than ones from the red.  This effect is dependent on
+the zenith distance $Z$, such that:
 \begin{eqnarray}
 R(\lambda) & = & \frac{n(\lambda)^2 - 1}{2~n(\lambda)^2}~{\rm tan}(Z)
 \end{eqnarray}
@@ -341,6 +340,45 @@ seen through the atmosphere.  What this means in practice is that
 there will be a SED--dependent, per--object deflection whose amplitude
 depends on the source airmass and color, and whose orientation depends
 on the angle towards zenith in the image.
+
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=1.1\textwidth]{\figdir/DCR1.png}
+  \caption{{\bf Effective Spectral Energy Distributions} : The
+    effective spectra of 5 reference objects -- a ``blue'' {\tt A0V},
+    a reference {\tt G0V}, and a ``red'' {\tt M2.0V} star, along with
+    a QSO at redshift $z=0$ and $z=0.5$ -- filtered through 3
+    transmission profiles corresponding to the LSST $g$, $r$, and
+    $i$--bands at 1.2 airmasses.  The top row shows the input spectral
+    energy distribution $f_\nu(\lambda)$, while the leftmost column
+    shows the LSST filter transmission profile in units of the
+    normalized system response $\phi$.  The inner row,column figures
+    show the effective spectrum of each SED (along columns) when
+    multiplied through the respective filter (along rows).  In all
+    subpanels, the x--axis is wavelength.  The {\tt A0V}, {\tt G0V},
+    and {\tt M2.0V} spectra correspond to {CAT\_SHARE\_DATA} files
+    {\tt kp01\_9750.fits\_g45\_9830.gz}, {\tt
+      km20\_6000.fits\_g30\_6020.gz}, and {\tt m2.0Full.dat.gz}
+    respectively, and were used as the SEDs of the stars in the W14
+    image simulations.  This figure may be recreated using the script
+    {\tt python/DCR.py}.}
+  \label{fig:spectra}
+\end{figure}
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=1.1\textwidth]{\figdir/DCR2.png}
+  \caption{{\bf Refraction Amplitude vs. Filter and Spectral Energy
+      Distribution}: The flux-weighted amplitude of refraction (in
+    arcseconds) for each of the filtered SEDs in
+    Figure~\ref{fig:spectra}, as a function of zenith distance in
+    degrees along the x--axis.  The solid black line is the nominal
+    result from Eqn~\ref{eqn:dcr}, while the dashed red line ignores
+    the corrections for temperature and pressure (Eqn~\ref{eqn:dcr0}).
+    Note the maximum amplitude of refraction reaches nearly 1
+    arcminute.  This figure may be recreated using the script {\tt
+      python/DCR.py}.}
+  \label{fig:refraction}
+\end{figure}
 
 We examined the theoretical amplitude of this effect using discrete
 spectra from the {\tt phoSim} source catalog.  We used the same
@@ -363,9 +401,28 @@ show the {\it differential} refraction of each spectrum, DCR, with
 respect to the {\tt G0V} star.  Note that the maximum amplitude of DCR
 is approximately 0.1'' at $50^{\circ}$, or approximately half an LSST
 pixel.  This is the effect we wish to explore in this sequence of
-analyses.
+analyses.  Finally, we included an airmass--dependence to the filter
+profiles using the {\tt throughputs} package to yield the
+flux--weighted DCR offsets expected for each source, and at each
+airmass, listed in Table~\ref{tab:dcramp}.
 
-\section{Subtask 1 Analysis \label{sec:task1}}
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=1.1\textwidth]{\figdir/DCR3.png}
+  \caption{{\bf Differential Chromatic Refraction vs. Filter and
+      Spectral Energy Distribution}: The differential chromatic
+    refraction of all sources from Figure~\ref{fig:spectra} with
+    respect to the reference {\tt G0V} star, as a function of zenith
+    distance.  The maximum amplitude of DCR between the ``red'' and
+    ``blue'' objects reaches $0.2''$, or approximately one LSST pixel.
+    This figure may be recreated using the script {\tt
+      python/DCR.py}.}
+  \label{fig:dcr}
+\end{figure}
+
+
+
+\section{Results: Subtask 1 \label{sec:task1}}
 
 %To ensure that the results of W14 may be compared to the results from
 %W13, we first validated that the {\tt phoSim} software and DM stack
@@ -386,72 +443,157 @@ analyses.
 %important during the analysis of the deconvolution data, as it
 %triggered a bug resolved in Ticket \#3143.  
 
-To ensure that the results of W14 may be compared to the results from
-W13, we first validated that the {\tt phoSim} software and DM stack
-(and their interaction) had not significantly changed in the interim.
+\begin{table}
+\centering
+\begin{tabular}{ccccc}
+\hline
+\multicolumn{5}{|c|}{Subtask 1: False Positives in {\tt raft=2,2 sensor=1,1}} \\ \hline \\
+Seeing  & Prefilter    & W13  & W14 pipeline on W13 data   & W14   \\
+\hline
+{\tt 1} & True         & 10   & 10                         & 17    \\
+        & False        & 23   & 19                         & 68630 \\
+{\tt 2} & True         & 7    & 6                          & 6     \\
+        & False        & 8    & 8                          & 6     \\
+{\tt 3} & True         & 3    & 3                          & 3     \\
+        & False        & 7    & 7                          & 3 
+\end{tabular}
+\caption[]{Summary of the results of subtask 1, which aims to
+  reproduce the results of W13 using {\tt phoSim} v3.3.2 and the
+  current v7\_3 stack.  The first column shows the numbers of false
+  positives from {\tt raft=2,2 sensor=1,1} of the original W13
+  analysis, the central column from the re--reduction of those same
+  data using the v7\_3 stack, and the final column the results of the
+  regenerated images during W14.  The large numbers of false positives
+  in the deconvolution configuration (seeing {\tt 1}, prefilter False)
+  were triggered by the bug resolved in ticket \#3143.  Results from
+  this table were generated using script {\tt
+    python/countDiaSourcesT1.py} in this repository.}
+\label{tab:task1}
+\end{table}
+
 We were unable to reproduce an {\it exact} match to simulated images
-from W13 (which used {\tt phoSim} v3.2.2), but were able to create
-qualitatively similar images using {\tt phoSim} v3.3.2 and the W13
-control files, with the additional control parameter {\tt
-  fieldanisotropy 0}.  We note that the realized seeing values of the
-images, as measured by the adaptive second moments of the {\tt Psf},
-are systematically ($\sim 5\%$) smaller in the newer data.  This was
-important during the analysis of the deconvolution data, as it
-triggered a bug resolved in Ticket \#3143.
+from W13, but were able to create qualitatively similar images using
+{\tt phoSim} v3.3.2 and the W13 control files, with the additional
+control parameter {\tt fieldanisotropy 0}.  We note that the realized
+seeing values of the images, as measured by the adaptive second
+moments of the {\tt Psf}, are systematically ($\sim 5\%$) smaller in
+the newer data.  This was important during the analysis of the
+deconvolution data, as it triggered a bug resolved in Ticket \#3143.
 
-Because we were unable to create exactly the same images as in W13, to
-validate the DM pipeline we ran the W13 data through the W14 pipeline
-(software versions tagged v7\_3).  We restricted our analysis to the
-central sensor {\tt 1,1} of the central raft {\tt 2,2}.  Finally, we
-ran the newly generated {\tt sims3} data through the W14 pipeline.  We
-compare the original W13 results, the W13 data run through the W14
-pipeline, and the W14 pipeline results in Table~\ref{tab:task1}.
-
-We first note that the two results running the DM stack on the W13
-data are not exact replicates (first vs. second column). The numbers
-of false positives was slightly lower in the newer analysis,
-especially in the better seeing data, suggesting minor but noticeable
-changes in the algorithms.  The W14 analysis is qualitatively similar,
-{\it except} the configuration that leads to deconvolution of the
+We compare the original W13 results, the W13 data run through the W14
+pipeline, and the W14 pipeline results in Table~\ref{tab:task1}.  We
+first note that the two results running the DM stack on the W13 data
+are not exact replicates (first vs. second column). The numbers of
+false positives was slightly lower in the newer analysis, especially
+in the better seeing data, suggesting minor but noticeable changes in
+the algorithms.  The W14 analysis is qualitatively similar, {\it
+  except} the configuration that leads to deconvolution of the
 template (seeing visit {\tt 1} and no prefiltering).  The moderately
 better seeing triggered a bug in the configuration of the
 deconvolution kernels, which was resolved in ticket \#3143.  We report
-the poor results here, but the equivalent $i$--band results in subtask 2
-come from the repaired software.  This improvement suggests both that
-the deconvolution configuration is currently highly sensitive to the
-inputs, and that catastrophic deconvolution failures appear to be
+the poor results here, but the equivalent $i$--band results in subtask
+2 come from the repaired software.  This improvement suggests both
+that the deconvolution configuration is currently highly sensitive to
+the inputs, and that catastrophic deconvolution failures appear to be
 potentially resolvable at the configuration level (i.e. a solution is
 not ``impossible'').
 
-\section{Subtask 2 Analysis \label{sec:task2}}
+\section{Results: Subtask 2 \label{sec:task2}}
 
-Having qualitatively validated the state of {\tt phoSim} and the
-software stack, we initiated an $i$--band analysis containing 3
-distinct SEDs.  {\tt G0V} stars, used as the reference in the theory
-analysis above, were selected as the objects from which to build the
-Psf--matching kernel.  We selected the {\tt A0V} and {\tt M2.0V} stars
-as part of the control sample, so that we could record the quality of
-their subtractions while not using them as part of the fit.  All 9
-CCDs of the central raft were analyzed.
+\begin{table}
+\centering
+\begin{tabular}{cccc}
+\hline
+\multicolumn{4}{|c|}{Subtask 2: Average False Positives in {\tt raft=2,2}} \\ \hline \\
+Seeing   & Filter & N & N  \\
+         &        & Prefilter=False & Prefilter=True   \\
+\hline
+{\tt 1}  & g      & 2 & 12    \\
+{\tt 2}  &        & 7 & 4    \\
+{\tt 3}  &        & 4 & 3    \\
+\hline
+{\tt 1}  & r      & 2 & 8    \\
+{\tt 2}  &        & 7 & 5    \\
+{\tt 3}  &        & 4 & 3    \\
+\hline
+{\tt 1}  & i      & 1 & 10    \\
+{\tt 2}  &        & 5 & 4    \\
+{\tt 3}  &        & 3 & 2    \\
+\end{tabular}
+\caption[]{Summary of the results of subtask 2.  We show the average
+  (over all 9 sensors of raft {\tt 2,2}) of the total number of false
+  detections per sensor at 5--sigma, both positive going and negative
+  going.  The vast majority of these sources are ``orphans''; the
+  average number that associate with a source in the image is less
+  than 1 in all cases.  Comparisons of these numbers with theoretical
+  expectations are presented in Figure~\ref{fig:fptheory}.  Results
+  from this table were generated using script {\tt
+    python/countDiaSourcesT2.py} in this repository.}
+\label{tab:task2}
+\end{table}
 
-We first validated the process on $i$--band data, modifying the
-brightness of the objects (based upon their color) to provide a
-similar S/N distribution as in subtask 1.  Once this was demonstrated
-to work, we ran two additional runs in the $g$ and $r$--bands.  The
-numbers of false positives are reported in Table~\ref{tab:task2}.  We
-averaged over all 9 CCDs in the raft to report the mean numbers of
-false positives per CCD.  Figure~\ref{fig:fptheory} compares the
-number of 5--sigma detected {\tt DiaSources} in red.  The black line
-depicts the theoretical run of false positives with detection
-threshold, using the mean seeing for each sample.  We find that, in
-general, our results are consistent with this theoretical limit.  One
-noteworthy exception is in the deconvolution configuration, where the
-0.88'' template is differenced against the 0.6'' science data without
-prefiltering (leftmost column of top panel).  In this case, our
-realized false positive rate was significantly {\it lower} than
-expected from theory.  This is consistent with the results from W13
-(Section 6.4), where deconvolution significantly enhanced the noise
-properties of the difference image.
+%False 4866601 (False,) 9 2 0 2
+%True 4866601 (True,) 9 13 0 12
+%False 5866601 (False,) 9 2 0 2
+%True 5866601 (True,) 9 8 0 8
+%False 6866601 (False,) 9 1 0 1
+%True 6866601 (True,) 9 10 0 10
+
+%False 4866602 (False,) 9 7 0 7
+%True 4866602 (True,) 9 5 0 4
+%False 5866602 (False,) 9 7 0 7
+%True 5866602 (True,) 9 5 0 5
+%False 6866602 (False,) 9 5 0 5
+%True 6866602 (True,) 9 4 0 4
+
+%False 4866603 (False,) 9 4 0 4
+%True 4866603 (True,) 9 3 0 3
+%False 5866603 (False,) 9 4 0 4
+%True 5866603 (True,) 9 3 0 3
+%False 6866603 (False,) 9 3 0 3
+%True 6866603 (True,) 9 2 0 2
+
+
+\begin{figure}[!ht]
+  \centering
+  \subfloat[Prefiltering = False]{{\includegraphics[width=0.65\textwidth]{\figdir/outputs5b_doPreConvolveFalse_fp.png} }} \\
+  \subfloat[Prefiltering = True]{{\includegraphics[width=0.65\textwidth]{\figdir/outputs5b_doPreConvolveTrue_fp.png} }} \\
+  \caption{{\bf Subtask 2: False Positive Rates vs. Theory}: Using the
+    mean realized seeing for each passband and {\tt Opsim\_rawseeing}
+    combination, we plot the expected numbers of false positives per
+    sensor (both positive and negative going) as a function of
+    detection threshold.  We plot the median number of {\tt
+      DiaSources} detected at 5 sigma across the nine {\tt raft=2,2}
+    CCDs in red, using the interquartile range to calculate the RMS.
+    Results using postfiltering of the data with its {\tt Psf} are on
+    the top, and prefiltering are on the bottom.  Note that the
+    postfiltering false positives in seeing {\tt 1} which correspond
+    to a template deconvolution, are lower than expected due to an
+    overestimate of the noise by the variance plane.  The
+    postfiltering positives for seeing {\tt 2,3} are consistently
+    above the theoretical curve, likely due to a 4--5\% underestimate
+    of the noise by the variance plane.  Prefiltering false positives
+    appear more evenly distributed above and below the theoretical
+    curves.  This figure was created using the script {\tt
+      python/falsePositivePlots.py}.}
+  \label{fig:fptheory}
+\end{figure}
+
+The numbers of false positives in the $gri$--bands are reported in
+Table~\ref{tab:task2}.  We averaged over all 9 CCDs in the raft to
+report the mean numbers of false positives per CCD.
+Figure~\ref{fig:fptheory} compares the number of 5--sigma detected
+{\tt DiaSources} in red.  The black line depicts the theoretical run
+of false positives with detection threshold, using the mean seeing for
+each sample.  We find that, in general, our results are consistent
+with this theoretical limit.  One noteworthy exception is in the
+deconvolution configuration, where the 0.88'' template is differenced
+against the 0.6'' science data without prefiltering (leftmost column
+of top panel).  In this case, our realized false positive rate was
+significantly {\it lower} than expected from theory.  This is
+consistent with the results from W13 (Section 6.4), where
+deconvolution significantly enhanced the noise properties of the
+difference image.
 
 To quantify this effect in W14, we examined the variance in two ways.
 First, we calculated the median value of the difference image variance
@@ -498,13 +640,35 @@ filter--dependence to these results.
 
 We used script {\tt python/examineVariance.py} for this analysis.
 
-\section{Subtask 3 Analysis \label{sec:task3}}
+\section{Results: Subtask 3 \label{sec:task3}}
 
-Finally, we designed a set of simulations that are expected to show
-the effects of DCR.  This included 5 observations tracking the single
-star field throughout a single night of observations.  The salient
-configuration parameters of each visit are given in
-Table~\ref{tab:visits}.
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=1.1\textwidth]{\figdir/dcrPhoSim.png}
+  \caption{{\bf Designed Orientation of DCR in W14 PhoSim Runs}: This
+    figure represents the anticipated orientations of DCR in the W14
+    {\tt phoSim} data.  The x,y coordinate system is depicted, as well
+    as the convention that angles ({\tt rotTelPos}, {\tt rotSkyPos})
+    rotate clockwise with respect to the positive y--axis in the image
+    coordinate system (and counterclockwise in the camera coordinate
+    system).  The {\tt rotTelPos} of 251 degrees specified for all
+    simulations, which reflects the direction to the pole, is shown
+    with the red vector \P\ and the red arc at y=0.6.  The derived
+    {\tt rotSkyPos} for visits \A,\B,\D,\E\ are shown with the blue
+    vectors, and reflect the angle towards zenith (the angle of
+    increasing altitude).  DCR is expected to happen along these
+    vectors.  The angles \P\A,\P\E\ are similar, and represented by
+    the green arcs at y=0.4; the angles \P\B,\P\D\ are also similar,
+    and represented by the purple arcs at y=0.2.  This is expected as
+    observations \A\ and \E\ are taken at airmass 1.55 (zenith
+    distance of 50 degrees) but at opposite sides of the meridian
+    crossing of the star field; a similar situation was designed for
+    observations \B\ and \D, which are taken at airmass 1.16 (zenith
+    distance of 30 degrees).  Visit \C\ is not depicted as it was
+    taken at zenith.  This figure was created using the script {\tt
+      python/dcrSchematic.py}.}
+  \label{fig:phosimdcr}
+\end{figure}
 
 Figure~\ref{fig:phosimdcr} demonstrates the designed directions of
 increasing altitude (orientation of blue--source positive dipoles due
@@ -512,7 +676,9 @@ to DCR) in visits \A, \B, \D, and \E\ (visit \C\ is effectively at
 zenith and thus no DCR is expected).  These are set by {\tt phoSim}
 configuration parameter {\tt rotTelPos}.  The direction to the pole is
 also indicated, and set by {\tt phoSim} configuration parameter {\tt
-  rotSkyPos}.  The numerical values of these angles, measured
+  rotSkyPos}.  For reference, {\tt rottelpos} is defined as ({\tt
+  rotskypos}-180+parallactic angle), such that the angle of DCR should
+be along this axis.  The numerical values of these angles, measured
 clockwise with respect to the positive y--axis (i.e. ``up'') are
 listed in the first numerical column of Table~\ref{tab:dcrang}.  The
 per--spectrum and per--passbands expected amplitudes of the DCR shift,
@@ -520,6 +686,33 @@ w.r.t. the {\tt G0V} stars, are given in the first numerical column of
 Table~\ref{tab:dcramp}.
 
 \subsection{Dipole Orientation and Amplitude}
+
+\begin{figure}
+    \centering
+    \subfloat[Visit A]{{\includegraphics[width=0.46\textwidth]{\figdir/outputs8bCA_dcr_wcs.png} }}
+    \qquad
+    \subfloat[Visit B]{{\includegraphics[width=0.46\textwidth]{\figdir/outputs8bCB_dcr_wcs.png} }} \\
+    \subfloat[Visit D]{{\includegraphics[width=0.46\textwidth]{\figdir/outputs8bCD_dcr_wcs.png} }}
+    \qquad
+    \subfloat[Visit E]{{\includegraphics[width=0.46\textwidth]{\figdir/outputs8bCE_dcr_wcs.png} }} \\
+    \caption{{\bf Wcs-Derived Orientations of PhoSim Data}: These
+      figures show the orientations of the Right Ascension and
+      Declination axes (red), and Azimuth and Altitude axes (blue) of
+      visits \A,\B,\D,\E.  Arrows represent the directions of {\it
+        increasing} coordinate value.  The Ra,Dec axes are the same in
+      all images since they were designed to have a common {\tt
+        rotTelPos}.  Ideally, the directions of increasing Alt will
+      correspond to the {\tt rotSkyPos} depicted in
+      Figure~\ref{fig:phosimdcr}.  All coordinate system orientations
+      were derived from the fitted Wcs of the {\tt calexp} of the
+      $g$--band observation of seeing {\tt 2} data.  To determine the
+      orientations empirically, small steps were taken in each
+      coordinate starting at the center of the image, and the {\tt
+        Wcs} and topocentric corrections used to map these back into
+      offsets in the pixel plane.  This figure was created using the
+      script {\tt python/compareDcrFromSims.py}.}
+    \label{fig:wcsdcr}
+\end{figure}
 
 Our first validation of DCR comes from looking at the fitted {\tt Wcs}
 of each {\tt calexp} to establish directionality.  Using a topocentric
@@ -532,6 +725,118 @@ values of the angle of increasing Altitude are provided in the second
 column of Table~\ref{tab:dcrang}.  We note that these angles are
 similar to the requested {\tt rotTelPos}, typically to within a
 degree.
+
+\begin{table}
+\centering
+\begin{tabular}{ccccc}
+\hline
+\multicolumn{5}{|c|}{Subtask 3: Orientation of DCR} \\ \hline \\
+Visit    & SED & {\tt rotTelPos} & {\tt Wcs} + Topo & Measured \\
+         &     &                 &                  & Dipole Orientation \\
+\hline
+\A & {\tt A0V}   & $145.7^{\circ}$ & $144.9^{\circ}$ & $145.7^{\circ}$    \\
+   & {\tt M2.0V} & $325.7^{\circ}$ & $324.9^{\circ}$ & $325.6^{\circ}$    \\
+\hline
+\B & {\tt A0V}   & $152.3^{\circ}$ & $151.1^{\circ}$ & $151.7^{\circ}$    \\
+   & {\tt M2.0V} & $332.3^{\circ}$ & $331.1^{\circ}$ & $331.8^{\circ}$    \\
+\hline
+\D & {\tt A0V}   & $349.9^{\circ}$ & $351.0^{\circ}$ & $349.3^{\circ}$    \\
+   & {\tt M2.0V} & $169.9^{\circ}$ & $171.0^{\circ}$ & $170.0^{\circ}$    \\
+\hline
+\E & {\tt A0V}   & $356.4^{\circ}$ & $357.1^{\circ}$ & $355.2^{\circ}$    \\
+   & {\tt M2.0V} & $176.4^{\circ}$ & $177.1^{\circ}$ & $176.2^{\circ}$    \\
+\end{tabular}
+\caption[So I can have 2 paragraphs]{The expected and measured
+  orientations of DCR, using the coordinate conventions depicted in
+  Figure~\ref{fig:phosimdcr}.  These numbers represent the orientation
+  of the {\it positive} lobe of any dipole arising from the DCR effect
+  for blue sources, and reflect the angle of increasing altitude.
+  Numbers are reported as a function of visit \A--\E, and the spectral
+  energy distribution of the source.  The numbers under {\tt
+    rotTelPos} reflect the designed orientation of DCR that was input
+  to {\tt phoSim}.  The numbers under {\tt Wcs} reflect the
+  empirically determined direction to zenith in each image, using the
+  {\tt calexp} fitted {\tt Wcs} and topocentric corrections
+  appropriate for each visit.  Finally, we report the measured median
+  orientation of DiaSources in each image difference, when differenced
+  against the template taken at zenith (visit \C). \\ ~ \\ For the
+  {\tt rotTelPos} and {\tt Wcs} columns, the numbers for the red {\tt
+    M2.0V} stars are simply $180^{\circ}$ from those of the blue {\tt
+    A0V} stars.  For the orientation column, we use fitted values from
+  $g$--band data, seeing {\tt 1}.  Dipole results in the $r$--band, in
+  cases where there are more than 10 dipoles measured, show
+  quantitatively similar results.  We also see no dependence of these
+  orientations on seeing.  We only report these numbers using the
+  postfiltered data, where dipole measurement is known to operate
+  correctly.  Full results may be found in the file {\tt NOTES}.}
+\label{tab:dcrang}
+\end{table}
+
+\begin{table}
+\centering
+\begin{tabular}{cccccccc}
+\hline
+\multicolumn{8}{|c|}{Subtask 3: Amplitude of DCR} \\ \hline \\
+Visit    & SED & Filter & Theory & {\tt Wcs} Offsets & Dipole Fit         & Dipole Fit         & Dipole Fit \\
+         &     &        &        &                   & Seeing Bin {\tt 1} & Seeing Bin {\tt 2} & Seeing Bin {\tt 3} \\
+\hline
+\A & {\tt A0V}   & $g$ & 0.0406'' & 0.0421$\pm$0.0014'' & 0.167''  & 0.259''  & 0.208''  \\
+   &             & $r$ & 0.0125'' & 0.0129$\pm$0.0005'' & 0.049''  & $\cdots$ & $\cdots$ \\
+   &             & $i$ & 0.0040'' & 0.0044$\pm$0.0005'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+   & {\tt M2.0V} & $g$ & 0.0862'' & 0.0768$\pm$0.0029'' & 0.144''  & 0.204''  & 0.293''  \\
+   &             & $r$ & 0.0207'' & 0.0199$\pm$0.0007'' & 0.230''  & $\cdots$ & $\cdots$ \\
+   &             & $i$ & 0.0125'' & 0.0120$\pm$0.0008'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+\hline
+\B & {\tt A0V}   & $g$ & 0.0199'' & 0.0205$\pm$0.0008'' & 0.183''  & 0.243''  & $\cdots$ \\
+   &             & $r$ & 0.0060'' & 0.0064$\pm$0.0007'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+   &             & $i$ & 0.0019'' & 0.0023$\pm$0.0004'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+   & {\tt M2.0V} & $g$ & 0.0424'' & 0.0385$\pm$0.0012'' & 0.222''  & 0.266''  & $\cdots$ \\
+   &             & $r$ & 0.0101'' & 0.0099$\pm$0.0007'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+   &             & $i$ & 0.0061'' & 0.0056$\pm$0.0008'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+\hline
+\D & {\tt A0V}   & $g$ & 0.0199'' & 0.0200$\pm$0.0008'' & 0.201''  & 0.251''  & $\cdots$ \\
+   &             & $r$ & 0.0060'' & 0.0062$\pm$0.0006'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+   &             & $i$ & 0.0019'' & 0.0025$\pm$0.0005'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+   & {\tt M2.0V} & $g$ & 0.0424'' & 0.0385$\pm$0.0010'' & 0.201''  & 0.254''  & $\cdots$ \\
+   &             & $r$ & 0.0101'' & 0.0097$\pm$0.0006'' & $\cdots$ & $\cdots$ & $\cdots$ \\ 
+   &             & $i$ & 0.0061'' & 0.0057$\pm$0.0008'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+\hline
+\E & {\tt A0V}   & $g$ & 0.0406'' & 0.0430$\pm$0.0027'' & 0.169''  & 0.235''  & 0.360''  \\
+   &             & $r$ & 0.0125'' & 0.0127$\pm$0.0004'' & 0.135''  & $\cdots$ & $\cdots$ \\
+   &             & $i$ & 0.0040'' & 0.0049$\pm$0.0007'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+   & {\tt M2.0V} & $g$ & 0.0862'' & 0.0771$\pm$0.0022'' & 0.158''  & 0.213''  & 0.267''  \\
+   &             & $r$ & 0.0207'' & 0.0197$\pm$0.0006'' & 0.262''  & $\cdots$ & $\cdots$ \\
+   &             & $i$ & 0.0125'' & 0.0115$\pm$0.0010'' & $\cdots$ & $\cdots$ & $\cdots$ \\
+\end{tabular}
+\caption[So I can have 2 paragraphs]{The expected and measured
+  amplitudes of DCR, in arcseconds.  These numbers represent the
+  differential offset between positions of an object at zenith (visit
+  \C) and at the airmasses associated with visits \A\B\D\E, with
+  respect to the positions of the reference {\tt G0V} stars, which
+  define the astrometric reference system in this study.  The Theory
+  column is the expected amplitude as described in
+  Section~\ref{sec:theory}, using airmass--dependent filter profiles,
+  atmospheric water vapor pressure of $f=8$ mmHg, ambient air pressure
+  of $P$ = 520 mmHg, and ground temperature of $T=20$ C.  \\ ~ \\ The
+  {\tt Wcs} column represents the median (over all seeing values and
+  sensors) offsets between stars of the given SED and the astrometric
+  reference solution, determined using the {\tt Wcs} and {\tt Source}
+  products.  Results in all passbands are consistent with zero
+  refraction for the \C\C\ visits (within 0.001'').  We find moderate
+  airmass dependence of the {\tt G0V} star residuals with an ampltude
+  of 0.002'', 0.0005'', and 0.0006'' in the $g,r,i$--bands,
+  respectively.  \\ ~ \\ The mean dipole amplitudes are determined
+  using the same fits that yield the dipole orientations in
+  Table~\ref{tab:dcrang}, and represent the offset between the fitted
+  positive and negative lobes of the dipole.  These numbers are only
+  reported for data sets that contain more than 10 measurements.
+  Because we see a seeing dependence on these numbers, we report them
+  for each of the seeing bins {\tt 1,2,3}.  Theory results were
+  determined using script {\tt python/DCR2.py}.  Astrometric residuals
+  were determined using script {\tt astrometricResids.py}.  Full
+  results may be found in the file {\tt NOTES}.}
+\label{tab:dcramp}
+\end{table}
 
 Our second validation of DCR comes from looking at the astrometric
 residuals of the stars with respect to the reference catalog, after
@@ -580,6 +885,46 @@ there were not enough dipoles in any conditions to provide a
 measurement.
 
 \subsection{Dipole Rate}
+
+
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=1.0\textwidth]{\figdir/heatmapFalse.png}
+  \caption{{\bf Number of False Positives, Postfiltering}: This figure
+    shows the median number of false positives across the nine {\tt
+      raft=2,2} CCDs.  The first row of information shows these
+    ``heat-maps'' for $g$--band data, the second for $r$--band, and
+    the third for $i$--band.  The first column represents the
+    good--seeing images, the second the medium--seeing images (same
+    quality as template), and the third the poor-seeing images.
+    Within each filter--seeing combination, the heat--map represents
+    the median number of false positives as a function of the image
+    airmass (visit \A\B\C\D\E) along the y--axis, and template airmass
+    (visit \A\B\C\D\E) along the x--axis.  The diagonal elements
+    represent the situation where the template and science image are
+    taken at the same airmass and have the same orientation
+    w.r.t. zenith.  The off--diagonal elements represent a mismatch
+    between the template and science image in terms of airmass and/or
+    parallactic angle.  The general trend is that the numbers of false
+    positives decrease with decreasing differences in the
+    airmass,angle attributes of the template and science image,
+    decrease with increasing seeing, and decrease with increasing
+    wavelength.  The $i$-band data in poor seeing do not appear
+    sensitive to DCR.  This figure was created using the script {\tt
+      python/heatMap.py}.}
+  \label{fig:heatpost}
+\end{figure}
+
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=1.0\textwidth]{\figdir/heatmapTrue.png}
+  \caption{{\bf Number of False Positives, Prefiltering}: Same as
+    Figure~\ref{fig:heatpost}, but using prefiltering of the science
+    image with its Psf.  The numbers of false positives is generally
+    lower than in the postfiltering case (Figure~\ref{fig:heatpost}).
+    This figure was created using the script {\tt python/heatMap.py}.}
+  \label{fig:heatpre}
+\end{figure}
 
 Figures~\ref{fig:heatpost} and \ref{fig:heatpre} show the median
 number of false positives per CCD within raft {\tt 2,2}.  These are
@@ -749,416 +1094,6 @@ Other options are both solicited and welcome.
 
 \end{itemize}
 
-%%%%%%%%%%%%%%%%%%%%%%%%% FIGURES %%%%%%%%%%%
-
-\clearpage
-\begin{figure}[!ht]
-  \centering
-  \includegraphics[width=1.1\textwidth]{\figdir/DCR1.png}
-  \caption{{\bf Effective Spectral Energy Distributions} : The
-    effective spectra of 5 reference objects -- a ``blue'' {\tt A0V},
-    a reference {\tt G0V}, and a ``red'' {\tt M2.0V} star, along with
-    a QSO at redshift $z=0$ and $z=0.5$ -- filtered through 3
-    transmission profiles corresponding to the LSST $g$, $r$, and
-    $i$--bands.  The top row shows the input spectral energy
-    distribution $f_\nu(\lambda)$, while the leftmost column shows the
-    LSST filter transmission profile in units of the normalized
-    system response $\phi$.  The inner row,column figures show the
-    effective spectrum of each SED (along columns) when multiplied
-    through the respective filter (along rows).  In all subpanels, the
-    x--axis is wavelength.  The {\tt A0V}, {\tt G0V}, and {\tt M2.0V}
-    spectra correspond to {CAT\_SHARE\_DATA} files {\tt
-      kp01\_9750.fits\_g45\_9830.gz}, {\tt
-      km20\_6000.fits\_g30\_6020.gz}, and {\tt m2.0Full.dat.gz}
-    respectively, and were used as the SEDs of the stars in the W14
-    image simulations.  This figure may be recreated using the script
-    {\tt python/DCR.py}.}
-  \label{fig:spectra}
-\end{figure}
-
-\clearpage
-\begin{figure}[!ht]
-  \centering
-  \includegraphics[width=1.1\textwidth]{\figdir/DCR2.png}
-  \caption{{\bf Refraction Amplitude vs. Filter and Spectral Energy
-      Distribution}: The flux-weighted amplitude of refraction (in
-    arcseconds) for each of the filtered SEDs in
-    Figure~\ref{fig:spectra}, as a function of zenith distance in
-    degrees along the x--axis.  The solid black line is the nominal
-    result from Eqn~\ref{eqn:dcr}, while the dashed red line ignores
-    the corrections for temperature and pressure (Eqn~\ref{eqn:dcr0}).
-    Note the maximum amplitude of refraction reaches nearly 1
-    arcminute.  This figure may be recreated using the script {\tt
-      python/DCR.py}.}
-  \label{fig:refraction}
-\end{figure}
-
-\clearpage
-\begin{figure}[!ht]
-  \centering
-  \includegraphics[width=1.1\textwidth]{\figdir/DCR3.png}
-  \caption{{\bf Differential Chromatic Refraction vs. Filter and
-      Spectral Energy Distribution}: The differential chromatic
-    refraction of all sources from Figure~\ref{fig:spectra} with
-    respect to the reference {\tt G0V} star, as a function of zenith
-    distance.  The maximum amplitude of DCR between the ``red'' and
-    ``blue'' objects reaches $0.2''$, or approximately one LSST pixel.
-    This figure may be recreated using the script {\tt
-      python/DCR.py}.}
-  \label{fig:dcr}
-\end{figure}
-
-\begin{figure}[!ht]
-  \centering
-  \subfloat[Prefiltering = False]{{\includegraphics[width=0.65\textwidth]{\figdir/outputs5b_doPreConvolveFalse_fp.png} }} \\
-  \subfloat[Prefiltering = True]{{\includegraphics[width=0.65\textwidth]{\figdir/outputs5b_doPreConvolveTrue_fp.png} }} \\
-  \caption{{\bf Subtask 2: False Positive Rates vs. Theory}: Using the
-    mean realized seeing for each passband and {\tt Opsim\_rawseeing}
-    combination, we plot the expected numbers of false positives per
-    sensor (both positive and negative going) as a function of
-    detection threshold.  We plot the median number of {\tt
-      DiaSources} detected at 5 sigma across the nine {\tt raft=2,2}
-    CCDs in red, using the interquartile range to calculate the RMS.
-    Results using postfiltering of the data with its {\tt Psf} are on
-    the top, and prefiltering are on the bottom.  Note that the
-    postfiltering false positives in seeing {\tt 1} which correspond
-    to a template deconvolution, are lower than expected due to an
-    overestimate of the noise by the variance plane.  The
-    postfiltering positives for seeing {\tt 2,3} are consistently
-    above the theoretical curve, likely due to a 4--5\% underestimate
-    of the noise by the variance plane.  Prefiltering false positives
-    appear more evenly distributed above and below the theoretical
-    curves.  This figure was created using the script {\tt
-      python/falsePositivePlots.py}.}
-  \label{fig:fptheory}
-\end{figure}
-
-
-
-\begin{figure}[!ht]
-  \centering
-  \includegraphics[width=1.1\textwidth]{\figdir/dcrPhoSim.png}
-  \caption{{\bf Designed Orientation of DCR in W14 PhoSim Runs}: This
-    figure represents the anticipated orientations of DCR in the W14
-    {\tt phoSim} data.  The x,y coordinate system is depicted, as well
-    as the convention that angles ({\tt rotTelPos}, {\tt rotSkyPos})
-    rotate clockwise with respect to the positive y--axis in the image
-    coordinate system (and counterclockwise in the camera coordinate
-    system).  The {\tt rotTelPos} of 251 degrees specified for all
-    simulations, which reflects the direction to the pole, is shown
-    with the red vector \P\ and the red arc at y=0.6.  The derived
-    {\tt rotSkyPos} for visits \A,\B,\D,\E\ are shown with the blue
-    vectors, and reflect the angle towards zenith (the angle of
-    increasing altitude).  DCR is expected to happen along these
-    vectors.  The angles \P\A,\P\E\ are similar, and represented by
-    the green arcs at y=0.4; the angles \P\B,\P\D\ are also similar,
-    and represented by the purple arcs at y=0.2.  This is expected as
-    observations \A\ and \E\ are taken at airmass 1.55 (zenith
-    distance of 50 degrees) but at opposite sides of the meridian
-    crossing of the star field; a similar situation was designed for
-    observations \B\ and \D, which are taken at airmass 1.16 (zenith
-    distance of 30 degrees).  Visit \C\ is not depicted as it was
-    taken at zenith.  This figure was created using the script {\tt
-      python/dcrSchematic.py}.}
-  \label{fig:phosimdcr}
-\end{figure}
-
-\begin{figure}
-    \centering
-    \subfloat[Visit A]{{\includegraphics[width=0.46\textwidth]{\figdir/outputs8bCA_dcr_wcs.png} }}
-    \qquad
-    \subfloat[Visit B]{{\includegraphics[width=0.46\textwidth]{\figdir/outputs8bCB_dcr_wcs.png} }} \\
-    \subfloat[Visit D]{{\includegraphics[width=0.46\textwidth]{\figdir/outputs8bCD_dcr_wcs.png} }}
-    \qquad
-    \subfloat[Visit E]{{\includegraphics[width=0.46\textwidth]{\figdir/outputs8bCE_dcr_wcs.png} }} \\
-    \caption{{\bf Wcs-Derived Orientations of PhoSim Data}: These
-      figures show the orientations of the Right Ascension and
-      Declination axes (red), and Azimuth and Altitude axes (blue) of
-      visits \A,\B,\D,\E.  Arrows represent the directions of {\it
-        increasing} coordinate value.  The Ra,Dec axes are the same in
-      all images since they were designed to have a common {\tt
-        rotTelPos}.  Ideally, the directions of increasing Alt will
-      correspond to the {\tt rotSkyPos} depicted in
-      Figure~\ref{fig:phosimdcr}.  All coordinate system orientations
-      were derived from the fitted Wcs of the {\tt calexp} of the
-      $g$--band observation of seeing {\tt 2} data.  To determine the
-      orientations empirically, small steps were taken in each
-      coordinate starting at the center of the image, and the {\tt
-        Wcs} and topocentric corrections used to map these back into
-      offsets in the pixel plane.  This figure was created using the
-      script {\tt python/compareDcrFromSims.py}.}
-    \label{fig:wcsdcr}
-\end{figure}
-
-\begin{figure}[!ht]
-  \centering
-  \includegraphics[width=1.0\textwidth]{\figdir/heatmapFalse.png}
-  \caption{{\bf Number of False Positives, Postfiltering}: This figure
-    shows the median number of false positives across the nine {\tt
-      raft=2,2} CCDs.  The first row of information shows these
-    ``heat-maps'' for $g$--band data, the second for $r$--band, and
-    the third for $i$--band.  The first column represents the
-    good--seeing images, the second the medium--seeing images (same
-    quality as template), and the third the poor-seeing images.
-    Within each filter--seeing combination, the heat--map represents
-    the median number of false positives as a function of the image
-    airmass (visit \A\B\C\D\E) along the y--axis, and template airmass
-    (visit \A\B\C\D\E) along the x--axis.  The diagonal elements
-    represent the situation where the template and science image are
-    taken at the same airmass and have the same orientation
-    w.r.t. zenith.  The off--diagonal elements represent a mismatch
-    between the template and science image in terms of airmass and/or
-    parallactic angle.  The general trend is that the numbers of false
-    positives decrease with decreasing differences in the
-    airmass,angle attributes of the template and science image,
-    decrease with increasing seeing, and decrease with increasing
-    wavelength.  The $i$-band data in poor seeing do not appear
-    sensitive to DCR.  This figure was created using the script {\tt
-      python/heatMap.py}.}
-  \label{fig:heatpost}
-\end{figure}
-
-\begin{figure}[!ht]
-  \centering
-  \includegraphics[width=1.0\textwidth]{\figdir/heatmapTrue.png}
-  \caption{{\bf Number of False Positives, Prefiltering}: Same as
-    Figure~\ref{fig:heatpost}, but using prefiltering of the science
-    image with its Psf.  The numbers of false positives is generally
-    lower than in the postfiltering case (Figure~\ref{fig:heatpost}).
-    This figure was created using the script {\tt python/heatMap.py}.}
-  \label{fig:heatpre}
-\end{figure}
-
-%%%%%%%%%%%%%%%%%%%%%%%%% /FIGURES %%%%%%%%%%
-%
-%%%%%%%%%%%%%%%%%%%%%%%%% TABLES %%%%%%%%%%%%
-
-\clearpage
-
-\begin{table}
-\centering
-\begin{tabular}{ccccc}
-\hline
-\multicolumn{5}{|c|}{Subtask 1: False Positives in {\tt raft=2,2 sensor=1,1}} \\ \hline \\
-Seeing  & Prefilter    & W13  & W14 pipeline on W13 data   & W14   \\
-\hline
-{\tt 1} & True         & 10   & 10                         & 17    \\
-        & False        & 23   & 19                         & 68630 \\
-{\tt 2} & True         & 7    & 6                          & 6     \\
-        & False        & 8    & 8                          & 6     \\
-{\tt 3} & True         & 3    & 3                          & 3     \\
-        & False        & 7    & 7                          & 3 
-\end{tabular}
-\caption[]{Summary of the results of subtask 1, which aims to
-  reproduce the results of W13 using {\tt phoSim} v3.3.2 and the
-  current v7\_3 stack.  The first column shows the numbers of false
-  positives from {\tt raft=2,2 sensor=1,1} of the original W13
-  analysis, the central column from the re--reduction of those same
-  data using the v7\_3 stack, and the final column the results of the
-  regenerated images during W14.  The large numbers of false positives
-  in the deconvolution configuration (seeing {\tt 1}, prefilter False)
-  were triggered by the bug resolved in ticket \#3143.  Results from
-  this table were generated using script {\tt
-    python/countDiaSourcesT1.py} in this repository.}
-\label{tab:task1}
-\end{table}
-
-\begin{table}
-\centering
-\begin{tabular}{cccc}
-\hline
-\multicolumn{4}{|c|}{Subtask 2: Average False Positives in {\tt raft=2,2}} \\ \hline \\
-Seeing   & Filter & N & N  \\
-         &        & Prefilter=False & Prefilter=True   \\
-\hline
-{\tt 1}  & g      & 2 & 12    \\
-{\tt 2}  &        & 7 & 4    \\
-{\tt 3}  &        & 4 & 3    \\
-\hline
-{\tt 1}  & r      & 2 & 8    \\
-{\tt 2}  &        & 7 & 5    \\
-{\tt 3}  &        & 4 & 3    \\
-\hline
-{\tt 1}  & i      & 1 & 10    \\
-{\tt 2}  &        & 5 & 4    \\
-{\tt 3}  &        & 3 & 2    \\
-\end{tabular}
-\caption[]{Summary of the results of subtask 2.  We show the average
-  (over all 9 sensors of raft {\tt 2,2}) of the total number of false
-  detections per sensor at 5--sigma, both positive going and negative
-  going.  The vast majority of these sources are ``orphans''; the
-  average number that associate with a source in the image is less
-  than 1 in all cases.  Comparisons of these numbers with theoretical
-  expectations are presented in Figure~\ref{fig:fptheory}.  Results
-  from this table were generated using script {\tt
-    python/countDiaSourcesT2.py} in this repository.}
-\label{tab:task2}
-\end{table}
-
-%False 4866601 (False,) 9 2 0 2
-%True 4866601 (True,) 9 13 0 12
-%False 5866601 (False,) 9 2 0 2
-%True 5866601 (True,) 9 8 0 8
-%False 6866601 (False,) 9 1 0 1
-%True 6866601 (True,) 9 10 0 10
-
-%False 4866602 (False,) 9 7 0 7
-%True 4866602 (True,) 9 5 0 4
-%False 5866602 (False,) 9 7 0 7
-%True 5866602 (True,) 9 5 0 5
-%False 6866602 (False,) 9 5 0 5
-%True 6866602 (True,) 9 4 0 4
-
-%False 4866603 (False,) 9 4 0 4
-%True 4866603 (True,) 9 3 0 3
-%False 5866603 (False,) 9 4 0 4
-%True 5866603 (True,) 9 3 0 3
-%False 6866603 (False,) 9 3 0 3
-%True 6866603 (True,) 9 2 0 2
-
-
-\begin{table}
-\centering
-\begin{tabular}{cccccc}
-\hline
-\multicolumn{6}{|c|}{Subtask 3: PhoSim Visit Configuration} \\ \hline \\
-Visit & MJD           & rotSkyPos   & rotTelPos   & Altitude & Airmass \\
-\hline
-\A    & 51130.111719  & 251.0689567 & 145.7139810 & 40.1     & 1.55 \\
-\B    & 51130.176302  & 251.0689567 & 152.2708405 & 59.9     & 1.16 \\
-\C    & 51130.272830  & 251.0689567 & 341.0975816 & 89.9     & 1.00 \\
-\D    & 51130.272830  & 251.0689567 & 349.8619334 & 59.9     & 1.16 \\
-\E    & 51130.433247  & 251.0689567 & 356.4181128 & 40.1     & 1.55 \\
-\end{tabular}
-\caption[So I can have 2 paragraphs]{Summary of the configuration
-  parameters that define each subtask 3 visit \A\B\C\D\E.
-  Observations were designed to follow a single star field through
-  zenith on a single night, and observed twice before and twice after
-  crossing the meridian, as well as at zenith.  Each visit was
-  simulated using the same random seed (153555399), in 3 filters ($g$,
-  $r$, $i$), and under 4 observing conditions.  These correspond to
-  the template image ({\tt Opsim\_rawseeing} = 0.878'' and {\tt
-    SIM\_VISTIME} = 300) and then 3 bins in seeing for the science
-  image corresponding to {\tt Opsim\_rawseeing} = 0.6'', 0.878'', and
-  1.2'' for seeing bins {\tt 1,2,3}, respectively.  All science images
-  were simulated with {\tt SIM\_VISTIME} = 15.  \\ ~ \\ Overall, this
-  yielded $5 \times 3 \times 4 = 60$ runs of {\tt phoSim}, which are
-  encoded as {\tt visitId=X00Y00Z} where {\tt X} represents the
-  filterId $gri$={\tt 123}, {\tt Y} represents the visit \A\B\C\D\E =
-  {\tt 01234}, and {\tt Z} represents the seeing: {\tt 0} for the
-  template and {\tt 123} for the science images.  All 9 CCDs within
-  {\tt raft=2,2} were simulated.  All trim files used to generate the
-  sims for this analysis may be found in the {\tt sims8/} directory.}
-\label{tab:visits}
-\end{table}
-
-\begin{table}
-\centering
-\begin{tabular}{ccccc}
-\hline
-\multicolumn{5}{|c|}{Subtask 3: Orientation of DCR} \\ \hline \\
-Visit    & SED & {\tt rotTelPos} & {\tt Wcs} + Topo & Measured \\
-         &     &                 &                  & Dipole Orientation \\
-\hline
-\A & {\tt A0V}   & $145.7^{\circ}$ & $144.9^{\circ}$ & $145.7^{\circ}$    \\
-   & {\tt M2.0V} & $325.7^{\circ}$ & $324.9^{\circ}$ & $325.6^{\circ}$    \\
-\hline
-\B & {\tt A0V}   & $152.3^{\circ}$ & $151.1^{\circ}$ & $151.7^{\circ}$    \\
-   & {\tt M2.0V} & $332.3^{\circ}$ & $331.1^{\circ}$ & $331.8^{\circ}$    \\
-\hline
-\D & {\tt A0V}   & $349.9^{\circ}$ & $351.0^{\circ}$ & $349.3^{\circ}$    \\
-   & {\tt M2.0V} & $169.9^{\circ}$ & $171.0^{\circ}$ & $170.0^{\circ}$    \\
-\hline
-\E & {\tt A0V}   & $356.4^{\circ}$ & $357.1^{\circ}$ & $355.2^{\circ}$    \\
-   & {\tt M2.0V} & $176.4^{\circ}$ & $177.1^{\circ}$ & $176.2^{\circ}$    \\
-\end{tabular}
-\caption[So I can have 2 paragraphs]{The expected and measured
-  orientations of DCR, using the coordinate conventions depicted in
-  Figure~\ref{fig:phosimdcr}.  These numbers represent the orientation
-  of the {\it positive} lobe of any dipole arising from the DCR effect
-  for blue sources, and reflect the angle of increasing altitude.
-  Numbers are reported as a function of visit \A--\E, and the spectral
-  energy distribution of the source.  The numbers under {\tt
-    rotTelPos} reflect the designed orientation of DCR that was input
-  to {\tt phoSim}.  The numbers under {\tt Wcs} reflect the
-  empirically determined direction to zenith in each image, using the
-  {\tt calexp} fitted {\tt Wcs} and topocentric corrections
-  appropriate for each visit.  Finally, we report the measured median
-  orientation of DiaSources in each image difference, when differenced
-  against the template taken at zenith (visit \C). \\ ~ \\ For the
-  {\tt rotTelPos} and {\tt Wcs} columns, the numbers for the red {\tt
-    M2.0V} stars are simply $180^{\circ}$ from those of the blue {\tt
-    A0V} stars.  For the orientation column, we use fitted values from
-  $g$--band data, seeing {\tt 1}.  Dipole results in the $r$--band, in
-  cases where there are more than 10 dipoles measured, show
-  quantitatively similar results.  We also see no dependence of these
-  orientations on seeing.  We only report these numbers using the
-  postfiltered data, where dipole measurement is known to operate
-  correctly.  Full results may be found in the file {\tt NOTES}.}
-\label{tab:dcrang}
-\end{table}
-
-\begin{table}
-\centering
-\begin{tabular}{cccccccc}
-\hline
-\multicolumn{8}{|c|}{Subtask 3: Amplitude of DCR} \\ \hline \\
-Visit    & SED & Filter & Theory & {\tt Wcs} Offsets & Dipole Amplitude   & Dipole Amplitude   & Dipole Amplitude \\
-         &     &        &        &                   & Seeing Bin {\tt 1} & Seeing Bin {\tt 2} & Seeing Bin {\tt 3} \\
-\hline
-\A & {\tt A0V}   & $g$ & 0.049'' & 0.042'' & 0.167''  & 0.259''  & 0.208''  \\
-   &             & $r$ & 0.015'' & 0.013'' & 0.049''  & $\cdots$ & $\cdots$ \\
-   &             & $i$ & 0.005'' & 0.005'' & $\cdots$ & $\cdots$ & $\cdots$ \\
-   & {\tt M2.0V} & $g$ & 0.105'' & 0.077'' & 0.144''  & 0.204''  & 0.293''  \\
-   &             & $r$ & 0.025'' & 0.020'' & 0.230''  & $\cdots$ & $\cdots$ \\
-   &             & $i$ & 0.015'' & 0.012'' & $\cdots$ & $\cdots$ & $\cdots$ \\
-\hline
-\B & {\tt A0V}   & $g$ & 0.024'' & 0.020'' & 0.183''  & 0.243''  & $\cdots$ \\
-   &             & $r$ & 0.007'' & 0.006'' & $\cdots$ & $\cdots$ & $\cdots$ \\
-   &             & $i$ & 0.002'' & 0.002'' & $\cdots$ & $\cdots$ & $\cdots$ \\
-   & {\tt M2.0V} & $g$ & 0.051'' & 0.038'' & 0.222''  & 0.266''  & $\cdots$ \\
-   &             & $r$ & 0.012'' & 0.010'' & $\cdots$ & $\cdots$ & $\cdots$ \\
-   &             & $i$ & 0.007'' & 0.005'' & $\cdots$ & $\cdots$ & $\cdots$ \\
-\hline
-\D & {\tt A0V}   & $g$ & 0.024'' & 0.020'' & 0.201''  & 0.251''  & $\cdots$ \\
-   &             & $r$ & 0.007'' & 0.006'' & $\cdots$ & $\cdots$ & $\cdots$ \\
-   &             & $i$ & 0.002'' & 0.002'' & $\cdots$ & $\cdots$ & $\cdots$ \\
-   & {\tt M2.0V} & $g$ & 0.051'' & 0.038'' & 0.201''  & 0.254''  & $\cdots$ \\
-   &             & $r$ & 0.012'' & 0.010'' & $\cdots$ & $\cdots$ & $\cdots$ \\ 
-   &             & $i$ & 0.007'' & 0.006'' & $\cdots$ & $\cdots$ & $\cdots$ \\
-\hline
-\E & {\tt A0V}   & $g$ & 0.049'' & 0.042'' & 0.169''  & 0.235''  & 0.360''  \\
-   &             & $r$ & 0.015'' & 0.013'' & 0.135''  & $\cdots$ & $\cdots$ \\
-   &             & $i$ & 0.005'' & 0.005'' & $\cdots$ & $\cdots$ & $\cdots$ \\
-   & {\tt M2.0V} & $g$ & 0.105'' & 0.077'' & 0.158''  & 0.213''  & 0.267''  \\
-   &             & $r$ & 0.025'' & 0.020'' & 0.262''  & $\cdots$ & $\cdots$ \\
-   &             & $i$ & 0.015'' & 0.011'' & $\cdots$ & $\cdots$ & $\cdots$ \\
-\end{tabular}
-\caption[So I can have 2 paragraphs]{The expected and measured
-  amplitudes of DCR, in arcseconds.  These numbers represent the
-  differential offset between positions of an object at zenith (visit
-  \C) and at the airmasses associated with visits \A\B\D\E, with
-  respect to the positions of the reference {\tt G0V} stars, which
-  define the astrometric reference system in this study.  The Theory
-  column is the expected amplitude as described in
-  Section~\ref{sec:theory}.  The {\tt Wcs} column represents the mean
-  offsets between stars of the given SED and the astrometric reference
-  solution, determined using the {\tt Wcs} and {\tt Source} products.
-  Residuals of the reference {\tt G0V} stars are smaller than 0.002''
-  in all cases.  The mean dipole amplitudes are determined using the
-  same fits that yield the dipole orientations in
-  Table~\ref{tab:dcrang}, and represent the offset between the fitted
-  positive and negative lobes of the dipole.  These numbers are only
-  reported for data sets that contain more than 10 measurements.
-  Because we see a seeing dependence on these numbers, we report them
-  for each of the seeing bins {\tt 1,2,3}.  Full results may be found
-  in the file {\tt NOTES}.}
-\label{tab:dcramp}
-\end{table}
-
-%%%%%%%%%%%%%%%%%%%%%%%%% /TABLES %%%%%%%%%%%
-
-
 \clearpage
 \bibliographystyle{apj}
 \bibliography{refs}
@@ -1167,11 +1102,61 @@ Visit    & SED & Filter & Theory & {\tt Wcs} Offsets & Dipole Amplitude   & Dipo
 \begin{appendices}
 
 The root directory for this analysis is located on the NCSA machines
-at {\tt /nfs/lsst/home/becker/Winter2014}.  All files not included in
+at \\{\tt /nfs/lsst/home/becker/Winter2014}.  All files not included in
 this {\tt git} repository may be found there, including the output
 repositories needed by the majority of the analysis and plotting
 scripts.  A complete guide to every step in this W14 process may be
 found in the {\tt NOTES} file.
+
+\section{Ticket Work}
+
+\subsection{Ticket \#3128 \label{sec:3128}}
+
+This ticket was opened to allow the user to select the sample of
+``red'' and ``blue'' stars to be added to the control sample.  This
+enabled after--the--fact diagnostics of the different populations of
+objects.
+
+\subsection{Ticket \#3143 \label{sec:3143}}
+
+This ticket was opened to fix a bug in the settings of the
+deconvolution kernel sizes.  A variable was unintentionally causing a
+misconfiguration of the kernel basis in the $g$ and $r$--band
+postfiltering seeing {\tt 1} data (which result in a deconvolution).
+This resulted in a factor of 10--100 increase in the deconvolution
+false positives, compared to the $i$--band.  This misconfiguration
+results in the large numbers of false positives reported in
+Section~\ref{sec:task1} below, and was fixed for the analysis of
+Section~\ref{sec:task2}.  This indicates that deconvolution may be
+undertaken with the proper kernel configuration, resulting in an
+acceptable false positive rate, although the variance in the images
+ends up being much higher (and the effective detection threshold much
+lower) compared to the prefiltering route.
+
+\subsection{Ticket \#3161 \label{sec:3161}}
+
+This ticket was the most extensive implemented in this W14 work.
+Previously, joint--Psf dipole measurement (simultaneously fitting for
+a positive and negative--going {\tt Psf} with 6 model terms including
+two x,y centroids and two fluxes) used a very coarse ``minimization''
+routine.  This routine effectively took half pixel steps in the 4
+centroid positions, and performed a linear fit for the two fluxes at
+each step, returning the step that yielded the lowest $\chi^2$.
+However, the dipole separations expected from DCR were in general far
+smaller than the default step size, and thus the measurements were too
+coarse for this task.  In addition, this process was slow and
+inefficient, making measurement of more than $\sim 200$ dipoles in a
+given image infeasible.
+
+In Ticket \#3161 we implemented a fully non--linear joint {\tt Psf}
+fit, using the {\tt Minuit} package.  This substantially sped up the
+per--dipole measurement process by a factor of 20--30, from 1--2
+measurements per second to 20--60 per second.  This speed--up analysis
+was performed using script {\tt python/compareMeasurementTiming.py} in
+this repository.  Dipole measurement is currently {\it not} the tall
+pole in processing; resources should be spend on speeding up the
+convolution and warping code to minimize the overall run time.
+
 
 \section{Use of PhoSim}
 
