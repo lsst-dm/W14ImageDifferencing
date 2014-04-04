@@ -1,0 +1,30 @@
+\contentsline {section}{\numberline {1}Production Scope and Goals}{3}
+\contentsline {subsection}{\numberline {1.1}Subtask 1: Reproduce W13 Results Using Current PhoSim}{3}
+\contentsline {subsection}{\numberline {1.2}Subtask 2: Simulate Starfield using Multiple SEDs at a Single Airmass}{4}
+\contentsline {subsection}{\numberline {1.3}Subtask 3: Simulate Starfield using Multiple SEDs at Multiple Airmasses}{4}
+\contentsline {subsection}{\numberline {1.4}Subtask 4: Include Realistic Mix of Stars and Galaxies}{5}
+\contentsline {section}{\numberline {2}Review of Wavelength Dependent Refraction }{5}
+\contentsline {section}{\numberline {3}Results: Subtask 1 }{7}
+\contentsline {section}{\numberline {4}Results: Subtask 2 }{8}
+\contentsline {section}{\numberline {5}Results: Subtask 3 }{10}
+\contentsline {subsection}{\numberline {5.1}Dipole Orientation and Amplitude}{10}
+\contentsline {subsection}{\numberline {5.2}Dipole Rate}{13}
+\contentsline {section}{\numberline {6}Implications for Image Subtraction Templates }{13}
+\contentsline {section}{\numberline {7}Thoughts on the DCR Issue}{14}
+\contentsline {section}{\numberline {8}Conclusions}{15}
+\contentsline {section}{Appendices}{25}
+\contentsline {section}{\numberline {A}Ticket Work}{25}
+\contentsline {subsection}{\numberline {A.1}Ticket \#3128 }{25}
+\contentsline {subsection}{\numberline {A.2}Ticket \#3143 }{25}
+\contentsline {subsection}{\numberline {A.3}Ticket \#3161 }{25}
+\contentsline {section}{\numberline {B}Use of PhoSim}{25}
+\contentsline {subsection}{\numberline {B.1}Setting up PhoSim}{26}
+\contentsline {subsection}{\numberline {B.2}Running {\tt phosim.py}}{26}
+\contentsline {subsection}{\numberline {B.3}Creating Astrometry Index Files}{27}
+\contentsline {subsection}{\numberline {B.4}Running processEimage.py}{28}
+\contentsline {subsection}{\numberline {B.5}Running imageDifferenceWinter2013.py}{28}
+\contentsline {section}{\numberline {C}Generation of Instance Catalogs for W14 }{28}
+\contentsline {subsection}{\numberline {C.1}Subtask 1}{28}
+\contentsline {subsection}{\numberline {C.2}Subtask 2}{29}
+\contentsline {subsection}{\numberline {C.3}Subtask 3}{29}
+\contentsline {section}{\numberline {D}Refraction and DCR Overlays}{30}
