@@ -26,13 +26,13 @@
 \def\E{{\tt E}}
 \def\P{{\tt P}}
 
-\title{\vspace{-22mm} \Large{Report on Winter 2014 Production: Image Differencing} \vspace{-6mm}}
+\title{\vspace{-22mm} \Large{Report on Winter 2014 Production: Image Differencing}}
 \date{\today}
 \author{
-  %Andrew Becker (UW) {\it for LSST Data Management}
+%  Andrew Becker, Simon Krughoff, Andrew Connolloy {\it for LSST Data Management}
 }
 \begin{document}
-\maketitle
+\maketitle\vspace{-8mm}
 
 The goals of this Winter 2014 (W14) task are to investigate the
 effects of differential chromatic refraction (DCR) on the rate of
@@ -47,8 +47,8 @@ fluctuations in the background in the absence of DCR.
 
 The underlying image simulation software ({\tt phoSim}) and the DM
 stack have evolved since our W13 work, {\tt phoSim} from v3.2.2 to
-v3.3.2) and DM from v7\_2 to v7\_3.  Accordingly, our first subtask
-was to reproduce the results of W13, which involve a suite of 15s
+v3.3.2 and DM from v7\_2 to v7\_3.  Accordingly, our first subtask was
+to reproduce the results of W13, which involve a suite of 15s
 $i$--band images taken at a zenith angle of $20.2^{\circ}$ and in
 seeings of 0.66, 0.8, and 1.2 arcseconds.  These were differenced
 against a 300s $i$--band image generated at the same airmass, with
@@ -56,14 +56,12 @@ seeing 0.8''.  The focus of this analysis was the image--vs--template
 seeing dependence of the rate of false positives, and how
 pre--filtering of the science {\tt Exposures} with their {\tt Psfs}
 affects this rate.  We limited our reanalysis to the central sensor of
-central raft {\tt 2,2}.  The second subtask involved the generation of
+central raft {\tt 2,2}, and quantitatively (but not exactly) recover
+the results of W13.  The second subtask involved the generation of
 $g$--band and $r$--band images in the same observing configuration, to
-verify there is no wavelength dependence to our results.  For these
-first and second subtasks, the simulated catalog included stars of a
-single spectral energy distribution (SED) covering a narrow range in
-(high S/N) brightness.  We find that our results are quantitatively
-similar to those of the W13 analysis.  We do not see substantial
-issues with DCR in these data, as expected.
+verify there is no wavelength dependence to our results.  We find that
+our results are quantitatively similar to those of the first subtask.
+We do not see substantial issues with DCR in these data, as expected.
 
 Our third subtask involved creating a similar suite of $gri$--band
 images, but at 5 airmasses throughout a single night, using a star
@@ -85,18 +83,23 @@ another, we find a significantly enhanced rate of false positives.
 This rate is both passband and seeing dependent, in the sense that the
 false positives are more enhanced in the $g$--band than in the
 $i$--band, and higher in the better seeing data than in the worse
-seeing data.  We validated that the amplitudes and orientations of DCR
-``dipoles'' are similar both to theory and to the effects designed
-into the simulations.  We also find that joint--Psf dipole
-measurements of DiaSources tend to overestimate the amplitude of the
-effect, with a dependence on seeing.  A fourth subtask --
-investigating the false positive rates using a more realistic mixture
-of stars and galaxies in the input catalog -- was deferred to later
-analysis, as this is not central to resolving the DCR issue.
+seeing data.  We find that DCR offsets of 1--2 mas are sufficient to
+lead to dipole rates similar to those expected from the background
+fluctuations.  This suggests that parallactic angle differences
+between science and template images of 20--30 degrees in the
+$g$--band, and $\sim 90$ degrees in the $r$--band, will lead to
+significant false positive rates.  A fourth subtask -- using a more
+realistic mixture of stars and galaxies in the input catalog -- was
+deferred to later analysis, as this is not central to resolving the
+DCR issue.
 
-Finally, we provide extensive documentation on the generation and data
-reduction of image simulations, how to design DCR into the data, and
-how to interpret the results.
+We validated that the amplitudes and orientations of DCR ``dipoles''
+are similar both to theory and to the effects designed into the
+simulations.  We also find that joint--Psf dipole measurements of
+DiaSources tend to overestimate the amplitude of the effect, with a
+dependence on seeing.  Finally, we provide extensive documentation on
+the generation and data reduction of image simulations, how to design
+DCR into the data, and how to interpret the results.
 
 \clearpage
 \tableofcontents
@@ -109,12 +112,10 @@ of DCR on the image differencing process, with the expectation that
 this informs the requirements on image differencing templates.  The
 current DM baseline is that LSST will have up to 9 templates per
 passband per region of sky, binned 3x3 in airmass and seeing.  The
-airmass bins are currently segmented {\it only} on the zenith distance
-of the observation, and are designed to minimize mismatch between the
-DCR effects on a science image and on the nearest (in terms of airmass
-and seeing) template.  However, this design does {\it not} account for
-the angle that refraction displaces objects within the image, which will
-be different for every observation, and which ideally requires a
+airmass bins are currently segmented only on the zenith distance of
+the observation.  However, this design does not account for the angle
+that refraction displaces objects within the image, which will be
+different for every observation, and which ideally requires a
 per--image (in orientation) and per--object (in amplitude) correction
 to properly compensate for it.
 
@@ -161,11 +162,7 @@ as a function of filter, image seeing, image airmass, and (where
 applicable) template airmass.  In the following, we reference the 3
 bins in seeing as {\tt Seeings 1,2,3} for seeing = 0.6'', 0.88'',
 1.2'', respectively, and the 5 visits at different airmasses as {\tt
-  Visits A,B,C,D,E}.
-
-We briefly summarize each of the proposed and performed subtasks
-below, and elaborate on the development tickets relevant to this
-production.
+  Visits A,B,C,D,E}.  We briefly summarize each of the subtasks below.
 
 \subsection{Subtask 1: Reproduce W13 Results Using Current PhoSim}
 
@@ -255,14 +252,13 @@ Visit & MJD           & rotSkyPos   & rotTelPos   & Altitude & Airmass \\
     SIM\_VISTIME} = 300) and then 3 bins in seeing for the science
   image corresponding to {\tt Opsim\_rawseeing} = 0.6'', 0.878'', and
   1.2'' for seeing bins {\tt 1,2,3}, respectively.  All science images
-  were simulated with {\tt SIM\_VISTIME} = 15.  \\ ~ \\ Overall, this
-  yielded $5 \times 3 \times 4 = 60$ runs of {\tt phoSim}, which are
-  encoded as {\tt visitId=X00Y00Z} where {\tt X} represents the
-  filterId $gri$={\tt 123}, {\tt Y} represents the visit \A\B\C\D\E =
-  {\tt 01234}, and {\tt Z} represents the seeing: {\tt 0} for the
+  were simulated with {\tt SIM\_VISTIME} = 15.  Overall, this yielded
+  $5 \times 3 \times 4 = 60$ runs of {\tt phoSim}, which are encoded
+  as {\tt visitId=X00Y00Z} where {\tt X} represents the filterId
+  $gri$={\tt 123}, {\tt Y} represents the visit \A\B\C\D\E = {\tt
+    01234}, and {\tt Z} represents the seeing: {\tt 0} for the
   template and {\tt 123} for the science images.  All 9 CCDs within
-  {\tt raft=2,2} were simulated.  All trim files used to generate the
-  sims for this analysis may be found in the {\tt sims8/} directory.}
+  {\tt raft=2,2} were simulated.  }
 \label{tab:visits}
 \end{table}
 
@@ -331,9 +327,9 @@ light, meaning that photons from the blue end of the spectrum are
 refracted more than ones from the red.  This effect is dependent on
 the zenith distance $Z$, such that:
 \begin{eqnarray}
-R(\lambda) & = & \frac{n(\lambda)^2 - 1}{2~n(\lambda)^2}~{\rm tan}(Z)
+R(\lambda, Z) & = & \frac{n(\lambda)^2 - 1}{2~n(\lambda)^2}~{\rm tan}(Z)
 \end{eqnarray}
-where R is the deflection angle in radians.  This deflection is
+where R is the deflection amplitude in radians.  This deflection is
 expressed along the direction of increasing altitude, such that blue
 sources will appear higher in the sky, compared to red sources, when
 seen through the atmosphere.  What this means in practice is that
@@ -401,10 +397,10 @@ show the {\it differential} refraction of each spectrum, DCR, with
 respect to the {\tt G0V} star.  Note that the maximum amplitude of DCR
 is approximately 0.1'' at $50^{\circ}$, or approximately half an LSST
 pixel.  This is the effect we wish to explore in this sequence of
-analyses.  Finally, we included an airmass--dependence to the filter
-profiles using the {\tt throughputs} package to yield the
-flux--weighted DCR offsets expected for each source, and at each
-airmass, listed in Table~\ref{tab:dcramp}.
+analyses.  We included an airmass--dependence to the filter profiles
+using the {\tt throughputs} package to yield the flux--weighted DCR
+offsets expected for each source in subtask 3, with values listed in
+Table~\ref{tab:dcramp}.
 
 \begin{figure}[!t]
   \centering
@@ -490,13 +486,12 @@ the algorithms.  The W14 analysis is qualitatively similar, {\it
   except} the configuration that leads to deconvolution of the
 template (seeing visit {\tt 1} and no prefiltering).  The moderately
 better seeing triggered a bug in the configuration of the
-deconvolution kernels, which was resolved in ticket \#3143.  We report
-the poor results here, but the equivalent $i$--band results in subtask
-2 come from the repaired software.  This improvement suggests both
-that the deconvolution configuration is currently highly sensitive to
-the inputs, and that catastrophic deconvolution failures appear to be
-potentially resolvable at the configuration level (i.e. a solution is
-not ``impossible'').
+deconvolution kernels, which was resolved in ticket \#3143 and in
+subtask 2.  This improvement suggests both that the deconvolution
+configuration is currently highly sensitive to the input FWHMs, and
+that catastrophic deconvolution failures appear to be potentially
+resolvable at the configuration level (i.e. a solution is not
+``impossible'').
 
 \section{Results: Subtask 2 \label{sec:task2}}
 
@@ -554,7 +549,7 @@ Seeing   & Filter & N & N  \\
 %True 6866603 (True,) 9 2 0 2
 
 
-\begin{figure}[!ht]
+\begin{figure}[!H]
   \centering
   \subfloat[Prefiltering = False]{{\includegraphics[width=0.65\textwidth]{\figdir/outputs5b_doPreConvolveFalse_fp.png} }} \\
   \subfloat[Prefiltering = True]{{\includegraphics[width=0.65\textwidth]{\figdir/outputs5b_doPreConvolveTrue_fp.png} }} \\
@@ -597,11 +592,11 @@ difference image.
 
 To quantify this effect in W14, we examined the variance in two ways.
 First, we calculated the median value of the difference image variance
-plane, ignoring any masked pixels, and call this $V_p$.  We then
-calculated the empirical variance of the corresponding image plane,
-scaling the interquartile range by 0.741 as expected from a Gaussian
-distribution, and squared this result to yield $V_e$.  We calculated
-the ratio $V_e$/$V_p$ to measure how much the propagated variance
+plane $V_p$, ignoring any masked pixels.  We then calculated the
+empirical variance of the corresponding image plane, scaling its
+interquartile range by 0.741 as expected from a Gaussian distribution,
+and squared this result to yield $V_e$.  We calculated the ratio
+$V_e$/$V_p$ to measure how much the propagated variance
 over/underestimates the empirical variance.  We find that the median
 of this ratio was within 1\% of 1.0 for all prefiltering and
 postfiltering data, {\it including the deconvolution configuration}.
@@ -626,19 +621,18 @@ deconvolution configurations, the variance plane provided an {\it
 overestimate of the variance by 35\% should lead to 15--20 times lower
 false positive rate at 5--sigma; a variance underestimate by 5\%
 should lead to a false positive rate 2--3 times higher.  These numbers
-are roughly consistent with, but larger in amplitude than, the {\tt
-  prefiltering = False} panels in Figure~\ref{fig:fptheory}, where the
-false positives rates are significantly lower than theory in the
-prefiltering seeing {\tt 1} data (deconvolution; the variance plane
-overestimates the true noise) and moderately but consistently higher
-than theory in the seeing {\tt 2,3} data (convolution; variance plane
-underestimates the true noise).  As mentioned in the W13 report, the
-fact that the template is convolved twice is thought to be the main
-reason we have a poor estimate of the noise at the detection stage in
-the postfiltering analysis.  For completeness, we found no
-filter--dependence to these results.
-
-We used script {\tt python/examineVariance.py} for this analysis.
+are roughly consistent with, but larger in amplitude than, empirical
+results.  Figure~\ref{fig:fptheory} shows that the {\tt
+  prefilter=False} false positives rates are significantly lower than
+theory in the prefiltering seeing {\tt 1} data (deconvolution; the
+variance plane overestimates the true noise) and moderately but
+consistently higher than theory in the seeing {\tt 2,3} data
+(convolution; variance plane underestimates the true noise).  As
+mentioned in the W13 report, the fact that the template is convolved
+twice is thought to be the main reason we have a poor estimate of the
+noise at the detection stage in the postfiltering analysis.  For
+completeness, we found no filter--dependence to these results.  We
+used script {\tt python/examineVariance.py} for this analysis.
 
 \section{Results: Subtask 3 \label{sec:task3}}
 
@@ -751,23 +745,22 @@ Visit    & SED & {\tt rotTelPos} & {\tt Wcs} + Topo & Measured \\
   Figure~\ref{fig:phosimdcr}.  These numbers represent the orientation
   of the {\it positive} lobe of any dipole arising from the DCR effect
   for blue sources, and reflect the angle of increasing altitude.
-  Numbers are reported as a function of visit \A--\E, and the spectral
-  energy distribution of the source.  The numbers under {\tt
+  Numbers are reported as a function of visit \A\B\D\E, and the
+  spectral energy distribution of the source.  The numbers under {\tt
     rotTelPos} reflect the designed orientation of DCR that was input
   to {\tt phoSim}.  The numbers under {\tt Wcs} reflect the
   empirically determined direction to zenith in each image, using the
   {\tt calexp} fitted {\tt Wcs} and topocentric corrections
   appropriate for each visit.  Finally, we report the measured median
   orientation of DiaSources in each image difference, when differenced
-  against the template taken at zenith (visit \C). \\ ~ \\ For the
-  {\tt rotTelPos} and {\tt Wcs} columns, the numbers for the red {\tt
+  against the template taken at zenith (visit \C).  For the {\tt
+    rotTelPos} and {\tt Wcs} columns, the numbers for the red {\tt
     M2.0V} stars are simply $180^{\circ}$ from those of the blue {\tt
     A0V} stars.  For the orientation column, we use fitted values from
-  $g$--band data, seeing {\tt 1}.  Dipole results in the $r$--band, in
-  cases where there are more than 10 dipoles measured, show
-  quantitatively similar results.  We also see no dependence of these
-  orientations on seeing.  We only report these numbers using the
-  postfiltered data, where dipole measurement is known to operate
+  $g$--band data, seeing {\tt 1} (dipole results in the $r$--band show
+  quantitatively similar results).  We also find no dependence of
+  these orientations on seeing.  We only report these numbers using
+  the postfiltered data, where dipole measurement is known to operate
   correctly.  Full results may be found in the file {\tt NOTES}.}
 \label{tab:dcrang}
 \end{table}
@@ -817,24 +810,23 @@ Visit    & SED & Filter & Theory & {\tt Wcs} Offsets & Dipole Fit         & Dipo
   column is the expected amplitude as described in
   Section~\ref{sec:theory}, using airmass--dependent filter profiles,
   atmospheric water vapor pressure of $f=8$ mmHg, ambient air pressure
-  of $P$ = 520 mmHg, and ground temperature of $T=20$ C.  \\ ~ \\ The
-  {\tt Wcs} column represents the median (over all seeing values and
+  of $P$ = 520 mmHg, and ground temperature of $T=20$ C.  The {\tt
+    Wcs} column represents the median (over all seeing values and
   sensors) offsets between stars of the given SED and the astrometric
   reference solution, determined using the {\tt Wcs} and {\tt Source}
   products.  Results in all passbands are consistent with zero
   refraction for the \C\C\ visits (within 0.001'').  We find moderate
-  airmass dependence of the {\tt G0V} star residuals with an ampltude
+  airmass dependence of the {\tt G0V} star residuals with an amplitude
   of 0.002'', 0.0005'', and 0.0006'' in the $g,r,i$--bands,
-  respectively.  \\ ~ \\ The mean dipole amplitudes are determined
-  using the same fits that yield the dipole orientations in
+  respectively.  The mean dipole amplitudes are determined using the
+  same fits that yield the dipole orientations in
   Table~\ref{tab:dcrang}, and represent the offset between the fitted
-  positive and negative lobes of the dipole.  These numbers are only
-  reported for data sets that contain more than 10 measurements.
-  Because we see a seeing dependence on these numbers, we report them
-  for each of the seeing bins {\tt 1,2,3}.  Theory results were
-  determined using script {\tt python/DCR2.py}.  Astrometric residuals
-  were determined using script {\tt astrometricResids.py}.  Full
-  results may be found in the file {\tt NOTES}.}
+  positive and negative lobes of the dipole.  Because we see a seeing
+  dependence on these numbers, we report them for each of the seeing
+  bins {\tt 1,2,3}.  Theory results were determined using script {\tt
+    python/DCR2.py}.  Astrometric residuals were determined using
+  script {\tt astrometricResids.py}.  Full results may be found in the
+  file {\tt NOTES}.}
 \label{tab:dcramp}
 \end{table}
 
@@ -843,32 +835,31 @@ residuals of the stars with respect to the reference catalog, after
 fitting for the {\tt Wcs} model.  We grouped the stars into 3 bins
 based upon their SED.  We then calculated the mean amplitude of
 residuals to the astrometric fit, which is driven by the {\tt G0V}
-stars (indeed, their mean astrometric residuals are less than 0.002''
-in any particular image).  The second numerical column of
-Table~\ref{tab:dcramp} provides this information.  We note that the
-DCR amplitudes for the {\tt A0V} objects are roughly consistent with
-theory, although uniformly under--refracted by $\sim 15\%$.  The
-amplitudes of the relative refraction of the {\tt M2.0V} objects are
-also under--refracted but by $\sim 30\%$.  The expected trend of the
-``red'' star DCR amplitude being larger than the ``blue'' stars
-amplitude, as depicted in Figure~\ref{fig:dcr}, is seen here.
+stars.  The second numerical column of Table~\ref{tab:dcramp} provides
+this information.  We note that the DCR amplitudes for the {\tt A0V}
+objects are roughly consistent with theory, although uniformly
+over--refracted by $\sim 4\%$.  The amplitudes of the relative
+refraction of the {\tt M2.0V} objects are under--refracted but by
+$\sim 10\%$.  The expected trend of the ``red'' star DCR amplitude
+being larger than the ``blue'' stars amplitude, as depicted in
+Figure~\ref{fig:dcr}, is seen here.
 
 Finally, we compared the measurements of dipoles in the difference
 images to the expected effects of DCR.  For this analysis, we only
 looked at difference images where the template image comes from zenith
 (i.e. visit \C).  The joint--Psf dipole measurement model
-simultaneously fit for a positive--going and negative--going component
-of the source, a 6--parameter fit including 2 centroids and 2 fluxes.
-The separation of the positive--going and negative--going component
-are proxies for the DCR effect.  We used measurements from the
-postfiltered data only because the measurement suite is not fully
-implemented for prefiltered data.  Because we found the most dipoles
-in the $g$--band seeing {\tt 1} data, we used these measurements to
-validate the DCR orientation.  The orientation numbers are presented
-in the third numerical column of Table~\ref{tab:dcrang}.  We find that
-these numbers are also consistent with the designed orientation to
-within approximately $1^{\circ}$.  We find no seeing dependence on
-these values.
+simultaneously fits for a positive--going and negative--going
+component of the source -- a 6--parameter fit including 2 centroids
+and 2 fluxes.  The separation of the positive--going and
+negative--going component are proxies for the DCR effect.  We used
+measurements from the postfiltered data only because the measurement
+suite is not fully implemented for prefiltered data.  Because we found
+the most dipoles in the $g$--band seeing {\tt 1} data, we used these
+measurements to validate the DCR orientation.  The orientation numbers
+are presented in the third numerical column of Table~\ref{tab:dcrang}.
+We find that these numbers are also consistent with the designed
+orientation to within approximately $1^{\circ}$.  We find no seeing
+dependence on these values.
 
 The passband--dependent separations of the dipole lobes are given in
 the final columns of Table~\ref{tab:dcramp}, again only using the data
@@ -943,11 +934,12 @@ significantly smaller in the prefiltering data.  Importantly, when the
 airmasses are similar but the parallactic angle through the images
 different, an enhanced rate of false positives is seen, suggesting
 that the image subtraction template suite must accommodate orientation
-as well as airmass.  The effects of mismatched parallactic angles are
-mostly negligible in the $i$--band data, except in the best seeing
-conditions.  However, for the majority of the $g$ and $r$--band (and
-presumably $u$--band) data, DCR appears to be a significant impediment
-to achieving a noise--limited false positive rate.
+as well as airmass.  We elaborate on this in
+Section~\ref{sec:templates}.  The effects of mismatched parallactic
+angles are mostly negligible in the $i$--band data, except in the best
+seeing conditions.  However, for the majority of the $g$ and $r$--band
+(and presumably $u$--band) data, DCR appears to be a significant
+impediment to achieving a noise--limited false positive rate.
 
 There are 2 apparent components to the heat maps.  The first
 corresponds to an enhancement in the rate of the no--refraction to
@@ -957,6 +949,136 @@ data appears localized to the $g$--band data.  The second component
 corresponds to the maximal mismatch between the DCR vector (\A\E\ and
 \E\A), and appears to be the dominant mode in the worse seeing data,
 in the redder passbands, and in the non--$g$--band prefiltering data.
+
+\section{Implications for Image Subtraction Templates \label{sec:templates}}
+
+We examine the implications for the image subtraction template suite,
+using the observed correlation between DCR amplitude and false positive
+rate.
+
+We first look at the number of false positives when differencing
+against the zenith template \C.  We associated these false positives
+with the reference catalog, and binned them based upon the SED they
+match to.  We then normalize each of these populations by the number
+that are expected from background fluctuations.  We plot these values
+against the measured DCR offsets (using the WCS--based analysis from
+Table~\ref{tab:dcramp}), in units of the PSF FWHM, in
+Figure~\ref{fig:fpregress}.  Data from the {\tt A0V} stars are plotted
+in blue, and from the {\tt M2.0V} stars in red.  We use information
+from all passbands and all seeings on this plot; the seeing {\tt
+  1,2,3} data are encoded as circles, squares, and triangles,
+respectively.
+
+We fit a linear regression to each curve of the form $log_{10}~y = a +
+b * log_{10}~x$, finding:
+\begin{eqnarray}
+{\tt A0V}   & {\rm Prefilter=True}  & log_{10}~y = 6.0913 + 2.2470 ~log_{10}~x \\ \nonumber
+            & {\rm Prefilter=False} & log_{10}~y = 7.4561 + 2.7537 ~log_{10}~x \\ \nonumber
+{\tt M2.0V} & {\rm Prefilter=True}  & log_{10}~y = 6.4141 + 2.6279 ~log_{10}~x \\ \nonumber
+            & {\rm Prefilter=False} & log_{10}~y = 6.5785 + 2.6713 ~log_{10}~x 
+\end{eqnarray}
+We plot these as the solid lines in Figure~\ref{fig:fpregress}.  The
+curves are significantly different for the red and blue stars, which
+is not entirely understood at this time.  We naively expect the curves
+to look the same since we are effectively including information about
+the spectral type in the amplitude of the DCR shift, along the {\tt
+  x}--axis.  It is possible that these difference come from
+second--order color effects in the sims, including color--dependent
+shape and size of the PSF.  Vertical lines are plotted where these
+curves cross {\tt y=1}, which effectively represents a doubling of the
+false positive rate due to DCR from each class of stars.  We find that
+the prefiltering and postfiltering lines cross at essentially the same
+value, amplitude/FWHM = 0.0019 and 0.0034 for the {\tt A0V} and {\tt
+  M2.0V} stars, respectively.  For a fiducial seeing value of $0.6''$,
+this means that DCR begins to dominate the false positive rate at
+around DCR amplitudes of 1--2 mas.
+
+We next examined the consequences of this on the airmass and
+parallactic angle requirements for image subtraction templates.  We
+first calculated the DCR for each source star at a fiducial airmass of
+1.25, corresponding to the first leg of a triangle.  The second leg is
+calculated by considering the amplitude {\it and} orientation of DCR
+at a range of airmasses from 1..1.5, and orientation differences from
+1..180 degrees.  The airmass is used to calculate the length of the
+second leg of the triangle; we assume that the intersection of these 2
+legs represents a coordinate system defined here by the {\tt G0V}
+stars, such that these vectors represent 2 different realizations of
+DCR.  The opening angle between theses two vectors is set to 0..180
+degrees in steps of 10, and represents the mismatch between the
+parallactic angle in the 2 images.  We use the law of cosines to
+describe the astrometric offset between the two apparitions of the
+source (at airmass 1.25, and at all other combinations of airmass and
+parallactic angle).  This offset is used to color--code the panels in
+Figure~\ref{fig:fpsummary}, which show DCR amplitude as a function of
+airmass along the {\tt y}--axis, and difference in the parallactic
+angle along the {\tt x}--axis.  We overplot lines of constant offset
+at 1mas and 2mas, which we found in Figure~\ref{fig:fpregress}
+corresponds roughly to the DCR amplitudes that cause significant false
+positive rates for the {\tt A0V} and {\tt M2.0V} stars, respectively.
+Formally, we should only consider the blue lines in the {\tt A0V}
+plots, and the red lines in the {\tt M2.0V} plots.  However, since we
+don't fully understand the reasons for these curves being different,
+we plot both lines in all figures.  We note that
+Figure~\ref{fig:fpsummary} suggests that, for the reddest objects in
+the $g$--band, a difference in parallactic angle of 20--30 degrees is
+sufficient to start driving the false positive rate with DCR dipoles.
+For the bluest objects, a similar effect is seen starting at
+parallactic angle differences of 40--50 degrees.  For the $r$--band,
+and only for the reddest objects, a difference in parallactic angle of
+90 degrees is required before DCR drives the false positive rate.  We
+emphasize that these values are w.r.t. a template at 1.25 airmasses;
+we see slight differences in these curves when comparing to reference
+observations at 1.0 and 1.5 airmasses due to the non--linearity of the
+refraction vs. airmass curve.
+
+`\begin{figure}[!ht]
+  \centering
+  \subfloat[Prefiltering = False]{{\includegraphics[width=0.65\textwidth]{\figdir/regressFalse.png} }} \\
+  \subfloat[Prefiltering = True]{{\includegraphics[width=0.65\textwidth]{\figdir/regressTrue.png} }} \\
+  \caption{{\bf DCR Impact on False Positives}: We plot the number of
+    false positives that associate with {\tt A0V} stars as the blue
+    points, and {\tt M2.0V} stars as the red points.  We normalize by
+    the number expected due to fluctuations in the background, such
+    that {\tt y=1} (horizontal black line) represents a doubling of
+    false positives.  We plot this value as a function of the measured
+    DCR offset determined via WCS residuals (Table~\ref{tab:dcramp}),
+    normalized by the FWHM of the PSF.  We collapse information from
+    all 3 passbands on this figure; the $i$--band data tend to have
+    the smaller {\tt x}--values, and the $g$--band data larger values.
+    We additionally include information from all 3 seeings by plotting
+    seeing {\tt 1} data as {\it circles}, seeing {\tt 2} as {\it
+      squares}, and seeing {\tt 3} as {\tt triangles}.  We plot
+    regressions of the form $log_{10}~y = a + b * log_{10}~x$ as solid
+    lines, and the positions where these curves cross {\tt y=1} as
+    vertical dashed lines.  This figure was created using the script
+    {\tt python/fpRegressions.py}.}
+  \label{fig:fpregress}
+\end{figure}
+
+`\begin{figure}[!ht]
+  \centering
+  \subfloat[$g$--band]{{\includegraphics[width=0.65\textwidth]{\figdir/ampG.png} }} \\
+  \subfloat[$r$--band]{{\includegraphics[width=0.65\textwidth]{\figdir/ampR.png} }} \\
+  \caption{{\bf DCR Offsets vs. Airmass and Orientation}: Each of
+    these panels shows the amplitude of the DCR vector in arcseconds,
+    calculated as a function of passband ($g$--band top panel,
+    $r$--band bottom panel) and spectral type ({\tt A0V} star top
+    subpanel in each, {\tt M2.0V} star bottom subpanel).  We start
+    with a reference observation of each star at airmass of 1.25, and
+    calculate the amplitude of the relative DCR vector assuming
+    observations at other airmasses (encoded by the ordinate value)
+    and differences in the parallactic angle orientation (abscissa).
+    We assume the astrometric reference frame does not itself shift
+    due to DCR.  Contours of constant offsets are plotted at 1 mas in
+    blue, and 2 mas in red, and approximately correspond to the
+    offsets where DCR starts to dominate the the false positive rate
+    (Figure~\ref{fig:fpregress}) at a fiducial seeing of 0.6'', the
+    blue line from the {\tt A0V}--star analysis and red from the {\tt
+      M2.0V}.  This figure was created using the script {\tt
+      python/DCR3.py}.}
+  \label{fig:fpsummary}
+\end{figure}
+
 
 \section{Thoughts on the DCR Issue}
 
@@ -1009,6 +1131,9 @@ some guidance from the analysis presented in Section~3.3 of
 \cite{1999ApJ...521..602A}, who use a per--pixel color map to
 compensate for DCR.  A necessary improvement over that technique is
 the need to undertake this operation in a way that preserves the PSF.
+A final option is to make this a consideration during the acquisition
+of the data (e.g. observing a field within a narrow range of azimuth),
+the feasibility of which may be tested via OpSim.
 
 Other options are both solicited and welcome.
 
@@ -1068,13 +1193,23 @@ Other options are both solicited and welcome.
   prefiltered difference images than in the postfiltered, it is not
   negligible.
 
+\item DCR of 1--2 milliarcseconds appears sufficient to produce a
+  false positive rate similar to that expected from Gaussian
+  background fluctuations, at a reference seeing of 0.6''.
+
+\item This translates into a requirement that $g$--band templates not
+  have differences in parallactic angle of more than 20--30 degrees,
+  to avoid substantial DCR from the reddest stars (assuming a
+  coordinate system defined by {\tt G0V} stars).  This requirement is
+  loosened to one every $\sim 90$ degrees in the $r$--band.
+
 \item The orientation of the DCR effect is consistent with
   expectations.
 
 \item We find that the amplitude of DCR shift in the red {\tt M2.0V}
-  stars is under-realized by $\sim 30\%$ compared to expectations.
-  The DCR shift in the {\tt A0V} is under-realized by $\sim 15\%$
-  compared to expectations.
+  stars is under-realized by $\sim 10\%$ compared to expectations.
+  {\tt A0V} stars are over-refracted by $\sim 4\%$ compared to
+  expectations.
 
 \item Dipole measurement measures lobe separations that are
   substantially larger than the effects of DCR.  This effect gets
