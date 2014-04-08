@@ -15,6 +15,8 @@ import lsst.pex.logging as pexLog
 pexLog.Trace_setVerbosity("CameraMapper", -100) # No logging info please
 pexLog.Trace_setVerbosity("", -100) # No logging info please
 
+# THis one normalizes by the number of stars in the field.  So its a likelihood.
+
 # From DCR.py
 dcr = {}
 for pb in ["g", "r", "i"]:
@@ -74,8 +76,8 @@ if __name__ == "__main__":
     astrometer = measAstrom.Astrometry(measAstrom.MeasAstromConfig())
     indir = "/nfs/lsst/home/becker/Winter2014"
 
-    if os.path.isfile("SAVEME.pickle"):
-        buff = open("SAVEME.pickle", "rb")
+    if os.path.isfile("SAVEME2.pickle"):
+        buff = open("SAVEME2.pickle", "rb")
         allResults = cPickle.load(buff)
         buff.close()
     else:
@@ -123,19 +125,25 @@ if __name__ == "__main__":
                                     src       = butler.get(datasetType="src", dataId=dataId)
                                     mat       = astrometer.useKnownWcs(src, exposure=calexp).matches
                                     matches   = {}
+                                    nAcalexp  = 0.
+                                    nGcalexp  = 0.
+                                    nMcalexp  = 0.
                                     for m in mat:
                                         refId = m.first.getId()
                                         gr    = -2.5 * np.log10(m.first["g"]) - -2.5 * np.log10(m.first["r"])
                                         matches[refId] = gr
+                                        if gr < 0: nAcalexp += 1
+                                        elif (gr > 0) and (gr < 1): nGcalexp += 1
+                                        else: nMcalexp += 1
     
-                                    # Count the realized false positives
+                                    # Count the realized false positives, normalize by the number of stars in there
                                     Amatch, Gmatch, Mmatch, orphan = countSources(diaSrc)
                                     Aamp = dcr[filterName]["A"][airmassI]
                                     Gamp = dcr[filterName]["G"][airmassI]
                                     Mamp = dcr[filterName]["M"][airmassI]
-                                    nA.append(Amatch)
-                                    nG.append(Gmatch)
-                                    nM.append(Mmatch)
+                                    nA.append(Amatch/nAcalexp)
+                                    nG.append(Gmatch/nGcalexp)
+                                    nM.append(Mmatch/nMcalexp)
                                     nO.append(orphan)
     
                             AstarAll.append((Aamp, Aamp/psfFwhm, np.median(nA), nExpect, airmassI, filterName))
@@ -162,7 +170,11 @@ if __name__ == "__main__":
             plt.axhline(y=1, c='k', linestyle='--')
     
             allResults[doPreConvolve] = results
-        plt.show()
+
+        buff = open("SAVEME2.pickle", "wb")
+        import cPickle
+        cPickle.dump(allResults, buff)
+        buff.close()
 
     import pdb; pdb.set_trace()
     for doPrefilter in (True, False):
@@ -174,51 +186,44 @@ if __name__ == "__main__":
         regX = np.array(())
         regY = np.array(())
         for visitId in (1,2,3): regX = np.concatenate((regX, np.array([x[1] if x[1]>0 else 1e-4 for x in results[visitId][0]])))
-        for visitId in (1,2,3): regY = np.concatenate((regY, np.array([x[2]/x[3] for x in results[visitId][0]])))
+        for visitId in (1,2,3): regY = np.concatenate((regY, np.array([x[2] for x in results[visitId][0]])))
         idx = np.isfinite(np.log10(regY))
         regA = stats.linregress(np.log10(regX)[idx], np.log10(regY)[idx])
-        print "A-star %s: logy = %.4f + %.4f logx.  logy=0 at x=%.4f" % (doPrefilter, regA[1], regA[0], 10**(-regA[1]/regA[0]))
+        print "A-star %s: logy = %.4f + %.4f logx.  logy=-2 at x=%.4f" % (doPrefilter, regA[1], regA[0], 10**((-regA[1]-2)/regA[0]))
         xmodA = np.arange(regX.min(), regX.max(), 0.0005)
         ymodA = 10**(regA[1] + regA[0] * np.log10(xmodA))
         plt.plot(xmodA, ymodA, "b-", alpha=0.75)
-        plt.axvline(x=10**(-regA[1]/regA[0]), c='b', linestyle='--', alpha=0.5)
+        plt.axvline(x=10**((-regA[1]-2)/regA[0]), c='b', linestyle='--', alpha=0.5)
     
         # M
         regX = np.array(())
         regY = np.array(())
         for visitId in (1,2,3): regX = np.concatenate((regX, np.array([x[1] if x[1]>0 else 1e-4 for x in results[visitId][2]])))
-        for visitId in (1,2,3): regY = np.concatenate((regY, np.array([x[2]/x[3] for x in results[visitId][2]])))
+        for visitId in (1,2,3): regY = np.concatenate((regY, np.array([x[2] for x in results[visitId][2]])))
         idx = np.isfinite(np.log10(regY))
         regM = stats.linregress(np.log10(regX)[idx], np.log10(regY)[idx])
-        print "M-star %s: logy = %.4f + %.4f logx.  logy=0 at x=%.4f" % (doPrefilter, regM[1], regM[0], 10**(-regM[1]/regM[0]))
+        print "M-star %s: logy = %.4f + %.4f logx.  logy=-2 at x=%.4f" % (doPrefilter, regM[1], regM[0], 10**((-regM[1]-2)/regM[0]))
         xmodM = np.arange(regX.min(), regX.max(), 0.0005)
         ymodM = 10**(regM[1] + regM[0] * np.log10(xmodM))
         plt.plot(xmodM, ymodM, "r-", alpha=0.75)
-        plt.axvline(x=10**(-regM[1]/regM[0]), c='r', linestyle='--', alpha=0.5)
-
+        plt.axvline(x=10**((-regM[1]-2)/regM[0]), c='r', linestyle='--', alpha=0.5)
+        
         yfoo = np.linspace(-3, 1, 10)
         xrat = 10**((yfoo-regM[1])/regM[0]) / 10**((yfoo-regA[1])/regA[0])
         print "RATIOS", yfoo, xrat
     
-        for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-4 for x in results[visitId][0]], [x[2]/x[3] for x in results[visitId][0]], "b%s" % (shape))
-        for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-4 for x in results[visitId][1]], [x[2]/x[3] for x in results[visitId][1]], "g%s" % (shape))
-        for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-4 for x in results[visitId][2]], [x[2]/x[3] for x in results[visitId][2]], "r%s" % (shape))
-        plt.axhline(y=1, c='k', linestyle='--', alpha=0.5)
-        plt.axvline(x=1, c='r', linestyle='--', alpha=0.5)
+        for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-4 for x in results[visitId][0]], [x[2] for x in results[visitId][0]], "b%s" % (shape))
+        for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-4 for x in results[visitId][1]], [x[2] for x in results[visitId][1]], "g%s" % (shape))
+        for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-4 for x in results[visitId][2]], [x[2] for x in results[visitId][2]], "r%s" % (shape))
+        plt.axhline(y=0.01, c='k', linestyle='--', alpha=0.5)
         plt.semilogx()
+        #plt.semilogy()
     
         plt.xlabel("DCR Amplitude / FWHM", weight="bold", fontsize=15)
-        plt.ylabel("Nfp / Nexpect", weight="bold", fontsize=15)
+        plt.ylabel("Likelihood of false positive", weight="bold", fontsize=15)
         plt.title("Prefilter %s" % (doPrefilter), weight="bold", fontsize=16)
         plt.setp(fig.gca().get_xticklabels()+fig.gca().get_yticklabels(), weight="bold", fontsize=14)
-        plt.xlim(9e-5, 4e-2)
-        plt.ylim(-1, 30)
+        plt.xlim(9e-5, 2e-2)
+        plt.ylim(-0.1, 1.0)
         plt.show()
-    
-    
-        # REMEMBER YOU DID THIS
-        #(Pdb) buff = open("SAVEME.pickle", "wb")
-        #(Pdb) import cPickle
-        #(Pdb) cPickle.dump(allResults, buff)
-        #(Pdb) buff.close()
     
