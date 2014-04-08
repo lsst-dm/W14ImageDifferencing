@@ -979,19 +979,40 @@ b * log_{10}~x$, finding:
 \end{eqnarray}
 We plot these as the solid lines in Figure~\ref{fig:fpregress}.  The
 curves are significantly different for the red and blue stars, which
-is not entirely understood at this time.  We naively expect the curves
-to look the same since we are effectively including information about
-the spectral type in the amplitude of the DCR shift, along the {\tt
-  x}--axis.  It is possible that these difference come from
-second--order color effects in the sims, including color--dependent
-shape and size of the PSF.  Vertical lines are plotted where these
-curves cross {\tt y=1}, which effectively represents a doubling of the
-false positive rate due to DCR from each class of stars.  We find that
-the prefiltering and postfiltering lines cross at essentially the same
-value, amplitude/FWHM = 0.0019 and 0.0034 for the {\tt A0V} and {\tt
-  M2.0V} stars, respectively.  For a fiducial seeing value of $0.6''$,
-this means that DCR begins to dominate the false positive rate at
-around DCR amplitudes of 1--2 mas.
+is not entirely understood at this time.  The ratio of the amplitudes
+that lead to a given number of false positives is between 1.7--3, with
+bluer objects leading to a larger number of false positives at a given
+astrometric offset.  We naively expect the curves to look the same
+since we are effectively including information about the spectral type
+in the amplitude of the DCR shift, along the {\tt x}--axis.  It is
+possible that these difference come from second--order color effects
+in the sims, including color--dependent shape and size of the PSF.
+Vertical lines are plotted where these curves cross {\tt y=1}, which
+effectively represents a doubling of the false positive rate due to
+DCR from each class of stars.  We find that the prefiltering and
+postfiltering lines cross at essentially the same value,
+amplitude/FWHM = 0.0019 and 0.0034 for the {\tt A0V} and {\tt M2.0V}
+stars, respectively.  For a fiducial seeing value of $0.6''$, this
+means that DCR begins to dominate the false positive rate at around
+DCR amplitudes of 1--2 mas.
+
+We repeat the above analysis normalizing by the number of stars in
+each image, which typically number 80--90 for the {\tt A0V} and {\tt
+  M2.0V} stars.  This provides the likelihood that a given object will
+lead to a false positive as a function of DCR offset, for objects in
+our S/N range (100--200).  We regress using the same functional form
+as above and find:
+\begin{eqnarray}
+{\tt A0V}   & {\rm Prefilter=True}  & log_{10}~y = 4.1188 + 2.0063 ~log_{10}~x \\ \nonumber
+            & {\rm Prefilter=False} & log_{10}~y = 5.9835 + 2.7322 ~log_{10}~x \\ \nonumber
+{\tt M2.0V} & {\rm Prefilter=True}  & log_{10}~y = 4.8358 + 2.5494 ~log_{10}~x \\ \nonumber
+            & {\rm Prefilter=False} & log_{10}~y = 4.9828 + 2.5848 ~log_{10}~x 
+\end{eqnarray}
+where now $log~y$ represents the log--likelihood that a given object
+will yield a false positive.  These curves cross the 1\% likelihood
+mark at $x \sim 0.001, 0.002$ for the {\tt A0V} and {\tt M2.0V},
+respectively, corresponding to DCR shifts of 0.6 and 0.001 mas.  These
+results are shown in Figure~\ref{fig:fpregress2}.
 
 We next examined the consequences of this on the airmass and
 parallactic angle requirements for image subtraction templates.  We
@@ -1004,34 +1025,36 @@ second leg of the triangle; we assume that the intersection of these 2
 legs represents a coordinate system defined here by the {\tt G0V}
 stars, such that these vectors represent 2 different realizations of
 DCR.  The opening angle between theses two vectors is set to 0..180
-degrees in steps of 10, and represents the mismatch between the
+degrees in steps of 5, and represents the mismatch between the
 parallactic angle in the 2 images.  We use the law of cosines to
 describe the astrometric offset between the two apparitions of the
 source (at airmass 1.25, and at all other combinations of airmass and
-parallactic angle).  This offset is used to color--code the panels in
+parallactic angle).  The geometric basis for this analysis is
+presented in Figure~\ref{fig:fpgeom}.
+
+The overall offset $\Delta r$ is used to color--code the panels in
 Figure~\ref{fig:fpsummary}, which show DCR amplitude as a function of
 airmass along the {\tt y}--axis, and difference in the parallactic
 angle along the {\tt x}--axis.  We overplot lines of constant offset
-at 1mas and 2mas, which we found in Figure~\ref{fig:fpregress}
-corresponds roughly to the DCR amplitudes that cause significant false
-positive rates for the {\tt A0V} and {\tt M2.0V} stars, respectively.
-Formally, we should only consider the blue lines in the {\tt A0V}
-plots, and the red lines in the {\tt M2.0V} plots.  However, since we
-don't fully understand the reasons for these curves being different,
-we plot both lines in all figures.  We note that
-Figure~\ref{fig:fpsummary} suggests that, for the reddest objects in
-the $g$--band, a difference in parallactic angle of 20--30 degrees is
-sufficient to start driving the false positive rate with DCR dipoles.
-For the bluest objects, a similar effect is seen starting at
-parallactic angle differences of 40--50 degrees.  For the $r$--band,
-and only for the reddest objects, a difference in parallactic angle of
-90 degrees is required before DCR drives the false positive rate.  We
-emphasize that these values are w.r.t. a template at 1.25 airmasses;
-we see slight differences in these curves when comparing to reference
-observations at 1.0 and 1.5 airmasses due to the non--linearity of the
-refraction vs. airmass curve.
+at 1mas and 2mas, corresponding roughly to the DCR amplitudes that
+cause significant false positive rates for the {\tt A0V} and {\tt
+  M2.0V} stars, respectively.  Formally, we should only consider the
+blue lines in the {\tt A0V} plots, and the red lines in the {\tt
+  M2.0V} plots.  However, since we don't fully understand the reasons
+for these curves being different, we plot both lines in all figures.
+We note that Figure~\ref{fig:fpsummary} suggests that, for the reddest
+objects in the $g$--band, a difference in parallactic angle of 20--30
+degrees is sufficient to start driving the false positive rate with
+DCR dipoles.  For the bluest objects, a similar effect is seen
+starting at parallactic angle differences of 40--50 degrees.  For the
+$r$--band, and only for the reddest objects, a difference in
+parallactic angle of 90 degrees is required before DCR drives the
+false positive rate.  We emphasize that these values are w.r.t. a
+template at 1.25 airmasses; we see slight differences in these curves
+when comparing to reference observations at 1.0 and 1.5 airmasses due
+to the non--linearity of the refraction vs. airmass curve.
 
-`\begin{figure}[!ht]
+\begin{figure}[!ht]
   \centering
   \subfloat[Prefiltering = False]{{\includegraphics[width=0.65\textwidth]{\figdir/regressFalse.png} }} \\
   \subfloat[Prefiltering = True]{{\includegraphics[width=0.65\textwidth]{\figdir/regressTrue.png} }} \\
@@ -1047,7 +1070,7 @@ refraction vs. airmass curve.
     the smaller {\tt x}--values, and the $g$--band data larger values.
     We additionally include information from all 3 seeings by plotting
     seeing {\tt 1} data as {\it circles}, seeing {\tt 2} as {\it
-      squares}, and seeing {\tt 3} as {\tt triangles}.  We plot
+      squares}, and seeing {\tt 3} as {\it triangles}.  We plot
     regressions of the form $log_{10}~y = a + b * log_{10}~x$ as solid
     lines, and the positions where these curves cross {\tt y=1} as
     vertical dashed lines.  This figure was created using the script
@@ -1055,7 +1078,44 @@ refraction vs. airmass curve.
   \label{fig:fpregress}
 \end{figure}
 
-`\begin{figure}[!ht]
+\begin{figure}[!ht]
+  \centering
+  \subfloat[Prefiltering = False]{{\includegraphics[width=0.65\textwidth]{\figdir/regressFalse2.png} }} \\
+  \subfloat[Prefiltering = True]{{\includegraphics[width=0.65\textwidth]{\figdir/regressTrue2.png} }} \\
+  \caption{{\bf DCR Impact on False Positives}: Same as
+    Figure~\ref{fig:fpregress}, but the {\tt y}--axis value represents
+    the likelihood that an object of each spectral type will lead to a
+    false positive.  This is appropriate for objects in the S/N range
+    100-200.  Vertical lines are drawn where this curve crosses a 1\%
+    likelihood.  This figure was created using the script {\tt
+      python/fpRegressions2.py}.}
+  \label{fig:fpregress2}
+\end{figure}
+
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=1.0\textwidth]{\figdir/DCR_001.png} 
+  \caption{{\bf Geometric Basis for Figure~\ref{fig:fpsummary}}: This
+    figure provides the geometric basis for the study of astrometric
+    offsets induced by DCR, as a function of difference in airmass and
+    parallactic angle, for a single SED.  We use a reference DCR
+    amplitude for the basis of this study, labeled here as {\tt DCR1}
+    and representing the DCR of the {\tt M2.0V} star at 1.25 airmasses
+    with respect to the {\tt G0V} star.  A second observation of this
+    object is labeled {\tt DCR2}, and is observed at a different
+    airmass (representing a different DCR amplitude, plotted along the
+    {\tt y}--axis in Figure~\ref{fig:fpsummary}) and parallactic angle
+    (denoted by theta, plotted along the {\tt x}--axis in
+    Figure~\ref{fig:fpsummary}) than the reference observation.  The
+    law of cosines is used to find the amplitude of the DCR offset
+    $\Delta r$, which is used to color--code the panels in
+    Figure~\ref{fig:fpsummary}.  The distance $\Delta r$ is
+    effectively the distance from point {\tt DCR1} to the perimeter of
+    the circle whose radius is {\tt DCR2}.}
+  \label{fig:fpgeom}
+\end{figure}
+
+\begin{figure}[!ht]
   \centering
   \subfloat[$g$--band]{{\includegraphics[width=0.65\textwidth]{\figdir/ampG.png} }} \\
   \subfloat[$r$--band]{{\includegraphics[width=0.65\textwidth]{\figdir/ampR.png} }} \\

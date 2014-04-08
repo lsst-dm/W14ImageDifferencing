@@ -4224,3 +4224,14 @@ A-star True: logy = 6.0913 + 2.2470 logx.  logy=0 at x=0.0019
 M-star True: logy = 6.4141 + 2.6279 logx.  logy=0 at x=0.0036
 A-star False: logy = 7.4561 + 2.7537 logx.  logy=0 at x=0.0020
 M-star False: logy = 6.5785 + 2.6713 logx.  logy=0 at x=0.0034
+
+# As probabilities:
+A-star True: logy = 4.1188 + 2.0063 logx.  logy=-2 at x=0.0009
+M-star True: logy = 4.8358 + 2.5494 logx.  logy=-2 at x=0.0021
+RATIOS [ 2.98277944  2.67566877  2.40017859  2.15305322  1.93137219  1.73251571
+  1.55413374  1.3941182   1.25057806  1.12181699]
+
+A-star False: logy = 5.9835 + 2.7322 logx.  logy=-2 at x=0.0012
+M-star False: logy = 4.9828 + 2.5848 logx.  logy=-2 at x=0.0020
+[ 1.58345941  1.61765137  1.65258164  1.68826617  1.72472124  1.76196349
+  1.80000993  1.8388779   1.87858516  1.91914983]
