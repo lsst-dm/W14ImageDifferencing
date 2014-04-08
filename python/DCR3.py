@@ -84,12 +84,12 @@ if __name__ == "__main__":
 
         airmass1   = 1.25
         dairmasses = np.arange(-0.25, 0.26, 0.05)
-        airmass1   = 1.00
-        dairmasses = np.arange(0., 0.51, 0.05)
-        airmass1   = 1.50
-        dairmasses = np.arange(-0.5, 0.1, 0.05)
+        #airmass1   = 1.00
+        #dairmasses = np.arange(0., 0.51, 0.05)
+        #airmass1   = 1.50
+        #dairmasses = np.arange(-0.5, 0.1, 0.05)
 
-        dthetas    = np.arange(0, 181, 10)
+        dthetas    = np.arange(0, 181, 5)
         drA        = np.empty((len(dairmasses)-1, len(dthetas)-1))
         drM       =  np.empty((len(dairmasses)-1, len(dthetas)-1))
 
