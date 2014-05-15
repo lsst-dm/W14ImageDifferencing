@@ -48,9 +48,9 @@ if __name__ == "__main__":
     aStar  = Sed() 
     gStar  = Sed() 
     mStar  = Sed() 
-    aStar.readSED_flambda(os.path.join(catDir, "data/starSED/kurucz", "kp01_9750.fits_g45_9830.gz"))
-    gStar.readSED_flambda(os.path.join(catDir, "data/starSED/kurucz", "km20_6000.fits_g30_6020.gz"))
-    mStar.readSED_flambda(os.path.join(catDir, "data/starSED/mlt", "m2.0Full.dat"))
+    aStar.readSED_flambda(os.path.join(catDir, "SEDs/starSED/kurucz", "kp01_9750.fits_g45_9830.gz"))
+    gStar.readSED_flambda(os.path.join(catDir, "SEDs/starSED/kurucz", "km20_6000.fits_g30_6020.gz"))
+    mStar.readSED_flambda(os.path.join(catDir, "SEDs/starSED/mlt", "m2.0Full.dat"))
     seds.append(aStar)
     seds.append(gStar)
     seds.append(mStar)
@@ -93,11 +93,13 @@ if __name__ == "__main__":
         drA        = np.empty((len(dairmasses)-1, len(dthetas)-1))
         drM       =  np.empty((len(dairmasses)-1, len(dthetas)-1))
 
-        zd1       = np.arctan(airmass1) * 180 / np.pi
+        #zd1       = np.arctan(airmass1) * 180 / np.pi
+        zd1       = np.arccos(1./airmass1) * 180/np.pi
         dA1       = getOffset(wavelenA, fluxA, zd1) - getOffset(wavelenG, fluxG, zd1) 
         dM1       = getOffset(wavelenM, fluxM, zd1) - getOffset(wavelenG, fluxG, zd1) 
         for ia, dairmass in enumerate(dairmasses):
-            zd2       = np.arctan(airmass1 + dairmass) * 180 / np.pi
+            #zd2       = np.arctan(airmass1 + dairmass) * 180 / np.pi
+            zd2       = np.arccos(1./(airmass1 + dairmass)) * 180/np.pi
             dA2       = getOffset(wavelenA, fluxA, zd2) - getOffset(wavelenG, fluxG, zd2) 
             dM2       = getOffset(wavelenM, fluxM, zd2) - getOffset(wavelenG, fluxG, zd2) 
 
@@ -118,13 +120,15 @@ if __name__ == "__main__":
         sp1.set_xticklabels(dthetas[::2], minor=False, weight="bold", fontsize=12)
         sp1.set_yticklabels(airmass1+dairmasses[::2], minor=False, weight="bold", fontsize=12)
         sp1.set_title("A star, %s-band" % (bpname), weight="bold", fontsize=14)
-        sp1.contour(drA, levels=(np.log10(0.00114), np.log10(0.00204)), colors=("b", "r"), linewidths=(3,), linestyles=("solid",))
+        #sp1.contour(drA, levels=(np.log10(0.00114), np.log10(0.00204)), colors=("b", "r"), linewidths=(3,), linestyles=("solid",))
+        sp1.contour(drA, levels=(np.log10(0.0005), np.log10(0.001), np.log10(0.002)), colors=("g", "b", "r"), linewidths=(3,), linestyles=("solid",))
         hmap2 = sp2.pcolor(drM, cmap=plt.cm.Greys, shading="faceted", vmin=-4, vmax=-1)
         sp2.xaxis.set_major_locator(majorLocator)
         sp2.set_xticklabels(dthetas[::3], minor=False, weight="bold", fontsize=12)
         sp2.set_yticklabels(airmass1+dairmasses[::2], minor=False, weight="bold", fontsize=12)
         sp2.set_title("M star, %s-band" % (bpname), weight="bold", fontsize=14)
-        sp2.contour(drM, levels=(np.log10(0.00114), np.log10(0.00204)), colors=("b", "r"), linewidths=(3,), linestyles=("solid",))
+        #sp2.contour(drM, levels=(np.log10(0.00114), np.log10(0.00204)), colors=("b", "r"), linewidths=(3,), linestyles=("solid",))
+        sp2.contour(drM, levels=(np.log10(0.0005), np.log10(0.001), np.log10(0.002)), colors=("g", "b", "r"), linewidths=(3,), linestyles=("solid",))
         cb1 = plt.colorbar(hmap1, ax=sp1, fraction=0.1)
         cb1.set_label("Log10 Offset('')", weight="bold", fontsize=10)
         cb2 = plt.colorbar(hmap2, ax=sp2, fraction=0.1)
