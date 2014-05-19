@@ -13,7 +13,7 @@ majorLocator   = MultipleLocator(3)
 # And makes a heat map of delta r in airmass vs. delta_theta
 
 def getOffset(wavelen, flux, zd):
-    off = refract(wavelen*10**-3,  zd * np.pi / 180.) * 180. / np.pi * 3600.
+    off = refract(wavelen*10**-3,  zd * np.pi / 180.) * 180. / np.pi * 3600. # arcseconds
     return np.sum(off * flux) / np.sum(flux)
 
 def refract(wavelength, zd, docorr=True, P=520.0, T=20.0, f=8.0):
@@ -34,7 +34,7 @@ def refract(wavelength, zd, docorr=True, P=520.0, T=20.0, f=8.0):
 
     xn = xnm1 + 1
     r0 = (xn**2 - 1) / (2 * xn**2)
-    of  = r0 * np.tan(zd)
+    of  = r0 * np.tan(zd)  # RADIANS
     return of
 
 if __name__ == "__main__":
@@ -102,11 +102,11 @@ if __name__ == "__main__":
             zd2       = np.arccos(1./(airmass1 + dairmass)) * 180/np.pi
             dA2       = getOffset(wavelenA, fluxA, zd2) - getOffset(wavelenG, fluxG, zd2) 
             dM2       = getOffset(wavelenM, fluxM, zd2) - getOffset(wavelenG, fluxG, zd2) 
-
+            
             for it, dtheta in enumerate(dthetas):
                 try:
-                    drA[ia, it] = dA1**2 + dA2**2 - 2 * dA1 * dA2 * np.cos(dtheta * np.pi / 180)
-                    drM[ia, it] = dM1**2 + dM2**2 - 2 * dM1 * dM2 * np.cos(dtheta * np.pi / 180)
+                    drA[ia, it] = np.sqrt(dA1**2 + dA2**2 - 2 * dA1 * dA2 * np.cos(dtheta * np.pi / 180))
+                    drM[ia, it] = np.sqrt(dM1**2 + dM2**2 - 2 * dM1 * dM2 * np.cos(dtheta * np.pi / 180))
                 except:
                     pass
 
@@ -120,15 +120,13 @@ if __name__ == "__main__":
         sp1.set_xticklabels(dthetas[::2], minor=False, weight="bold", fontsize=12)
         sp1.set_yticklabels(airmass1+dairmasses[::2], minor=False, weight="bold", fontsize=12)
         sp1.set_title("A star, %s-band" % (bpname), weight="bold", fontsize=14)
-        #sp1.contour(drA, levels=(np.log10(0.00114), np.log10(0.00204)), colors=("b", "r"), linewidths=(3,), linestyles=("solid",))
-        sp1.contour(drA, levels=(np.log10(0.0005), np.log10(0.001), np.log10(0.002)), colors=("g", "b", "r"), linewidths=(3,), linestyles=("solid",))
+        sp1.contour(drA, levels=(np.log10(0.001/0.6), np.log10(0.002/0.6)), colors=("b", "r"), linewidths=(3,), linestyles=("solid",))
         hmap2 = sp2.pcolor(drM, cmap=plt.cm.Greys, shading="faceted", vmin=-4, vmax=-1)
         sp2.xaxis.set_major_locator(majorLocator)
         sp2.set_xticklabels(dthetas[::3], minor=False, weight="bold", fontsize=12)
         sp2.set_yticklabels(airmass1+dairmasses[::2], minor=False, weight="bold", fontsize=12)
         sp2.set_title("M star, %s-band" % (bpname), weight="bold", fontsize=14)
-        #sp2.contour(drM, levels=(np.log10(0.00114), np.log10(0.00204)), colors=("b", "r"), linewidths=(3,), linestyles=("solid",))
-        sp2.contour(drM, levels=(np.log10(0.0005), np.log10(0.001), np.log10(0.002)), colors=("g", "b", "r"), linewidths=(3,), linestyles=("solid",))
+        sp2.contour(drM, levels=(np.log10(0.001/0.6), np.log10(0.002/0.6)), colors=("b", "r"), linewidths=(3,), linestyles=("solid",))
         cb1 = plt.colorbar(hmap1, ax=sp1, fraction=0.1)
         cb1.set_label("Log10 Offset('')", weight="bold", fontsize=10)
         cb2 = plt.colorbar(hmap2, ax=sp2, fraction=0.1)
