@@ -83,15 +83,20 @@ another, we find a significantly enhanced rate of false positives.
 This rate is both passband and seeing dependent, in the sense that the
 false positives are more enhanced in the $g$--band than in the
 $i$--band, and higher in the better seeing data than in the worse
-seeing data.  We find that DCR offsets of 1--2 mas are sufficient to
-lead to dipole rates similar to those expected from the background
-fluctuations, at a fiducial seeing of 0.6''.  This indicates that,
-when compared to zenith templates, $i$--band images at airmass
-1.1--1.4 will start to show significant dipoles due to DCR (in 0.6''
-seeing).  This effect will be more pronounced for the bluer passbands.
-At reference airmass 1.25, orientation differences of 15 degrees in
-the $r$--band, and 25 degrees in $i$--band, will lead to a similar
-increase in dipole rate.  In the $u$ and $g$--bands, all examined
+seeing data.  We find that DCR offsets of 3--6 mas are sufficient to
+yield 1\% likelihood of yielding a dipole for the SEDs used, at a
+fiducial seeing of 0.6''.  At seeing of 0.88'', offsets of 5--9 mas
+yield the same likelihood.  This indicates a narrow range of science
+data that zenith templates may be applied to: airmass $<1.05$ for
+$r$--band and $<1.15$ for $i$--band.  At airmass 1.25, the interaction
+of airmass and orientation difference sets a range of tolerance for a
+given relative DCR offset.  At the same airmass, the stars used in the
+simulations show a 1\% chance of showing DCR dipoles at orientation
+differences of $5^{\circ}, 15^{\circ}, 25^{\circ}$ in $g,r,i$, and in
+the same orientation at airmass differences of $0.05, 0.1, 0.15$,
+respectively.  This rate should to be examined using a realistic
+distribution of SEDs to understand the wider implications of this
+study.  In the $g$ (and especially $u$) bands, nearly all examined
 combinations of airmass and orientation differences should yield
 significant numbers of false positives.  A fourth subtask -- using a
 more realistic mixture of stars and galaxies in the input catalog --
@@ -977,29 +982,31 @@ respectively.
 We fit a linear regression to each curve of the form $log_{10}~y = a +
 b * log_{10}~x$, finding:
 \begin{eqnarray}
-{\tt A0V}   & {\rm Prefilter=True}  & log_{10}~y = 6.0913 + 2.2470 ~log_{10}~x \\ \nonumber
-            & {\rm Prefilter=False} & log_{10}~y = 7.4561 + 2.7537 ~log_{10}~x \\ \nonumber
-{\tt M2.0V} & {\rm Prefilter=True}  & log_{10}~y = 6.4141 + 2.6279 ~log_{10}~x \\ \nonumber
-            & {\rm Prefilter=False} & log_{10}~y = 6.5785 + 2.6713 ~log_{10}~x 
+%A-star True:  logy = 4.5207 + 2.2470 logx.  logy=0 at x=0.0097
+%A-star False: logy = 5.5313 + 2.7537 logx.  logy=0 at x=0.0098
+{\tt A0V}   & {\rm Prefilter=True}  & log_{10}~y = 4.52 + 2.25 ~log_{10}~x \\ \nonumber
+            & {\rm Prefilter=False} & log_{10}~y = 5.53 + 2.75 ~log_{10}~x \\ \nonumber
+%M-star True:  logy = 4.5773 + 2.6279 logx.  logy=0 at x=0.0181
+%M-star False: logy = 4.7113 + 2.6713 logx.  logy=0 at x=0.0172
+{\tt M2.0V} & {\rm Prefilter=True}  & log_{10}~y = 4.58 + 2.63 ~log_{10}~x \\ \nonumber
+            & {\rm Prefilter=False} & log_{10}~y = 4.71 + 2.67 ~log_{10}~x 
 \end{eqnarray}
 We plot these as the solid lines in Figure~\ref{fig:fpregress}.  The
 curves are significantly different for the red and blue stars, which
-is not entirely understood at this time.  The ratio of the amplitudes
-that lead to a given number of false positives is between 1.7--3, with
-bluer objects leading to a larger number of false positives at a given
-astrometric offset.  We naively expect the curves to look the same
-since we are effectively including information about the spectral type
-in the amplitude of the DCR shift, along the {\tt x}--axis.  It is
-possible that these difference come from second--order color effects
-in the sims, including color--dependent shape and size of the PSF.
-Vertical lines are plotted where these curves cross {\tt y=1}, which
-effectively represents a doubling of the false positive rate due to
-DCR from each class of stars.  We find that the prefiltering and
-postfiltering lines cross at essentially the same value,
-amplitude/FWHM = 0.0019 and 0.0034 for the {\tt A0V} and {\tt M2.0V}
-stars, respectively.  For a fiducial seeing value of $0.6''$, this
-means that DCR begins to dominate the false positive rate at around
-DCR amplitudes of 1--2 mas.
+is not entirely understood at this time.  We naively expect the curves
+to look the same since we are effectively including information about
+the spectral type in the amplitude of the DCR shift, along the {\tt
+  x}--axis.  It is possible that these difference come from
+second--order color effects in the sims, including color--dependent
+shape and size of the PSF.  Vertical lines are plotted where these
+curves cross {\tt y=1}, which effectively represents a doubling of the
+false positive rate due to DCR from each class of stars.  We find that
+the prefiltering and postfiltering lines cross at essentially the same
+value, amplitude/FWHM = 0.01 and 0.02 for the {\tt A0V} and {\tt
+  M2.0V} stars, respectively.  For a fiducial seeing value of $0.6''$,
+this means that DCR begins to dominate the false positive rate at DCR
+amplitudes of 6--11 mas.  At $0.88''$, similar rates will be seen at
+DCR amplitudes of 9--16 mas.
 
 We repeat the above analysis normalizing by the number of stars in
 each image, which typically number 80--90 for the {\tt A0V} and {\tt
@@ -1008,16 +1015,21 @@ lead to a false positive as a function of DCR offset, for objects in
 our S/N range (100--200).  We regress using the same functional form
 as above and find:
 \begin{eqnarray}
-{\tt A0V}   & {\rm Prefilter=True}  & log_{10}~y = 4.1188 + 2.0063 ~log_{10}~x \\ \nonumber
-            & {\rm Prefilter=False} & log_{10}~y = 5.9835 + 2.7322 ~log_{10}~x \\ \nonumber
-{\tt M2.0V} & {\rm Prefilter=True}  & log_{10}~y = 4.8358 + 2.5494 ~log_{10}~x \\ \nonumber
-            & {\rm Prefilter=False} & log_{10}~y = 4.9828 + 2.5848 ~log_{10}~x 
+%A-star True:  logy = 2.7165 + 2.0063 logx.  logy=-2 at x=0.0045
+%A-star False: logy = 4.0737 + 2.7322 logx.  logy=-2 at x=0.0060
+{\tt A0V}   & {\rm Prefilter=True}  & log_{10}~y = 2.72 + 2.01 ~log_{10}~x \\ \nonumber
+            & {\rm Prefilter=False} & log_{10}~y = 4.07 + 2.73 ~log_{10}~x \\ \nonumber
+%M-star True:  logy = 3.0538 + 2.5494 logx.  logy=-2 at x=0.0104
+%M-star False: logy = 3.1761 + 2.5848 logx.  logy=-2 at x=0.0099
+{\tt M2.0V} & {\rm Prefilter=True}  & log_{10}~y = 3.05 + 2.55 ~log_{10}~x \\ \nonumber
+            & {\rm Prefilter=False} & log_{10}~y = 3.18 + 2.58 ~log_{10}~x 
 \end{eqnarray}
 where now $log~y$ represents the log--likelihood that a given object
 will yield a false positive.  These curves cross the 1\% likelihood
-mark at $x \sim 0.001, 0.002$ for the {\tt A0V} and {\tt M2.0V},
-respectively, corresponding to DCR shifts of 0.0006 and 0.001 as.
-These results are shown in Figure~\ref{fig:fpregress2}.
+mark at $x \sim 0.005, 0.01$ for the {\tt A0V} and {\tt M2.0V} stars,
+respectively, corresponding to DCR shifts of 3 and 6 mas at $0.6''$
+seeing, and 5 and 9 mas in $0.88''$ seeing.  These results are shown in
+Figure~\ref{fig:fpregress2}.
 
 We next examined the consequences of this on the airmass and
 parallactic angle requirements for image subtraction templates.  We
@@ -1040,30 +1052,34 @@ The overall offset $\Delta r$ is used to color--code the panels in
 Figure~\ref{fig:fpsummary}, which show relative DCR amplitude as a
 function of airmass along the {\tt y}--axis, and difference in the
 parallactic angle along the {\tt x}--axis.  We overplot lines of
-constant offset at 1 and 2mas.  The top panel shows these results for
-a template at airmass 1.0, which has no DCR in any passband.  Thus
-observations at {\it all} orientations yield similar results, and
-there is only a rate dependence on airmass difference.  On the top
-left we show these results for the $r$--band, where the amplitudes are
-all larger than 2mas and thus no contours displayed.  On the top
-right we show the same plots for $i$--band.  We find that airmass 1.1
-science images will have relative DCR offsets of 1mas in the blue
-stars, and airmass 1.4 images will have relative offsets of 2mas.  For
-the red stars, which have higher overall DCR amplitudes in this study,
-all data have relative offsets larger than 2mas.  The bottom panels
-show these same results for airmass 1.25 templates, and demonstrate
-the interaction between airmass and orientation difference.  For data
-taken at the same airmass, orientation differences of 15 degrees will
-yield to enhanced dipole rate in $r$--band (lower left), and 25
-degrees in $i$--band (lower right), driven by the red stars.  At the
-same DCR orientation, airmass differences of approximately 0.1 in
-$r$--band and 0.15 in $i$--band will yield the same enhanced rate of
-false positives.  We note that at the coarseness of this study (steps
-of 0.1 in airmass and 5 degrees in orientation), {\it all} $g$--band
-data will show enhanced dipole rates.  This will be seen to a larger
-degree in the $u$--band, although the faintness of the redder stars
-may mean that there will be fewer red objects in the images, and
-accordingly a bluer astrometric reference frame used.
+constant offset at 3 (blue solid line) and 6 (red dashed line) mas,
+corresponding to the approximate DCR offsets that yield 1\% likelihood
+of dipoles in 0.6'' seeing for the {\tt A0V} and {\tt M2.0V} stars,
+respectively.  The top panel shows these results for a template at
+airmass 1.0, which has no DCR in any passband.  Thus observations at
+{\it all} orientations yield similar results, and there is only a rate
+dependence on airmass difference.  On the top left we show these
+results for the $g$--band, where the amplitudes are all larger than
+6mas and thus no contours displayed.  At top middle we show the same
+plots for $r$--band templates, which show 6mas relative DCR against
+airmass 1.05 to 1.15 science images, and on the top right for
+$i$--band which show 6mas relative DCR at airmass 1.15 for the red
+stars and 3mas relative DCR at airmass 1.35 for the blue stars.
+
+The bottom panels show these same results for airmass 1.25 templates,
+and demonstrate the interaction between airmass and orientation
+difference.  For data taken at the same airmass, orientation
+differences of 15--25 degrees will yield to 3mas relative DCR in
+$r$--band (lower middle), and 20--65 degrees in $i$--band (lower
+right), driven by the red stars.  At the same DCR orientation, airmass
+differences of approximately 0.1 in $r$--band and 0.15--0.2 in
+$i$--band will yield the same enhanced rate of false positives.  We
+note that at the coarseness of this study (steps of 0.1 in airmass and
+5 degrees in orientation), nearly {\it all} $g$--band data will show
+enhanced dipole rates.  This will be seen to a larger degree in the
+$u$--band, although the faintness of the redder stars may mean that
+there will be fewer red objects in the images, and accordingly a bluer
+astrometric reference frame used.
 
 \begin{figure}[!ht]
   \centering
@@ -1097,9 +1113,9 @@ accordingly a bluer astrometric reference frame used.
     Figure~\ref{fig:fpregress}, but the {\tt y}--axis value represents
     the likelihood that an object of each spectral type will lead to a
     false positive.  This is appropriate for objects in the S/N range
-    100-200.  Vertical lines are drawn where this curve crosses a 1\%
-    likelihood.  This figure was created using the script {\tt
-      python/fpRegressions2.py}.}
+    100-200, and for the SEDs used in this simulation.  Vertical lines
+    are drawn where this curve crosses a 1\% likelihood.  This figure
+    was created using the script {\tt python/fpRegressions2.py}.}
   \label{fig:fpregress2}
 \end{figure}
 
@@ -1128,28 +1144,33 @@ accordingly a bluer astrometric reference frame used.
 
 \begin{figure}[!ht]
   \centering
-  \subfloat[$r$--band, 1.0 airmass template]{{\includegraphics[width=0.46\textwidth]{\figdir/ampRedo3B.png} }}
+  \subfloat[$g$--band, 1.0 airmass template]{{\includegraphics[width=0.29\textwidth]{\figdir/dcrG1.png} }}
   \qquad
-  \subfloat[$i$--band, 1.0 airmass template]{{\includegraphics[width=0.46\textwidth]{\figdir/ampRedo3A.png} }} \\
-  \subfloat[$r$--band, 1.25 airmass template]{{\includegraphics[width=0.46\textwidth]{\figdir/ampRedo3D.png} }}
+  \subfloat[$r$--band, 1.0 airmass template]{{\includegraphics[width=0.29\textwidth]{\figdir/dcrR1.png} }} 
   \qquad
-  \subfloat[$i$--band, 1.25 airmass template]{{\includegraphics[width=0.46\textwidth]{\figdir/ampRedo3C.png} }} \\
+  \subfloat[$i$--band, 1.0 airmass template]{{\includegraphics[width=0.29\textwidth]{\figdir/dcrI1.png} }} \\
+  \subfloat[$g$--band, 1.25 airmass template]{{\includegraphics[width=0.29\textwidth]{\figdir/dcrG125.png} }}
+  \qquad
+  \subfloat[$r$--band, 1.25 airmass template]{{\includegraphics[width=0.29\textwidth]{\figdir/dcrR125.png} }} 
+  \qquad
+  \subfloat[$i$--band, 1.25 airmass template]{{\includegraphics[width=0.29\textwidth]{\figdir/dcrI125.png} }} \\
   \caption{{\bf DCR Offsets vs. Airmass and Orientation}: Each of
     these panels shows the amplitude of the relative DCR vector in
     arcseconds, calculated as a function of reference airmass (1.0 top
-    panels, 1.25 bottom panels) and spectral type ({\tt A0V} star top
+    row, 1.25 bottom row) and spectral type ({\tt A0V} star top
     subpanel in each, {\tt M2.0V} star bottom subpanel).  We calculate
     the DCR w.r.t. the {\tt G0V} star at each reference airmass, and
     subsequently calculate the DCR vector at other airmasses (encoded
     by the ordinate value) and parallactic angle orientations
     (abscissa).  The color of each pixel corresponds to the length of
     this differential DCR vector.  Contours of constant offsets are
-    plotted at 1 mas in blue and 2 mas in red, corresponding to the
-    approximate offsets where DCR starts to dominate the the false
-    positive rate (Figure~\ref{fig:fpregress}) at a fiducial seeing of
-    0.6''.  We note that the top panels, with the reference observation
-    at airmass 1.0, have no orientation dependence of this value
-    because there is no DCR in the reference observation.
+    plotted at 3 mas in blue solid lines and 6 mas in red dashed
+    lines, corresponding to the approximate DCR offsets yielding 1\%
+    likelihood of a false positive (Figure~\ref{fig:fpregress2}) at a
+    fiducial seeing of 0.6''.  We note that the top panels, with the
+    reference observation at airmass 1.0, have no orientation
+    dependence of this value because there is no DCR in the reference
+    observation.
 %
 %    , but indicates that for the red objects, DCR will
 %    start to dominate the false positive rate when differencing
@@ -1270,31 +1291,33 @@ Other options are both solicited and welcome.
   data.
 
 \item Two components in the false positive ``heat maps'' correspond to
-  enhanced false positive rates in the no--fraction vs
+  enhanced false positive rates in the no--refraction vs
   high--refraction data (\C\A\ and \C\E\ differences) and in the data
-  with maximal mismatch between the DCR vectors (\A\E\ and \E\A).
+  with maximal mismatch between the DCR orientation vectors (\A\E\ and
+  \E\A).
 
 \item While the enhanced false positive rate is lower in the
   prefiltered difference images than in the postfiltered, it is not
   negligible.
 
-\item DCR of 1--2 milliarcseconds appears sufficient to produce a
-  false positive rate similar to that expected from Gaussian
-  background fluctuations, at a reference seeing of 0.6''.
+\item Relative DCR offsets of 3--6 milliarcseconds allow a 1\% chance
+  of a red/blue source yielding a dipole, at seeing of 0.6''.  This is
+  relaxed to 5--9 mas in seeing of 0.88''.  This conclusion is
+  restricted to the SEDs used in this study.  A comprehensive
+  understanding of the number of stars that may yield DCR dipoles
+  requires a realistic distribution of SEDs.
 
-\item This indicates that most/all data taken in the $u$--band and
-  $g$--bands will be highly sensitive to this DCR effect.
+\item Templates obtained at zenith are applicable to a limited range
+  of science data before DCR amplitudes reach 3--6 mas
+  (Figure~\ref{fig:fpsummary}).
 
-\item Assuming airmass 1.0 templates, all $r$--band data (within the
-  coarseness of this study) will yield significant DCR dipoles.
-  Templates in $i$--band from airmass 1.0 should not be used to
-  difference against science images at larger than 1.1--1.4 airmass
+\item Templates imaged at airmass 1.25 are applicable to science data
+  having differences in airmass of less than $0.05, 0.1, 0.15$ for
+  $g,r,i$ or parallactic angle orientation differences of less than
+  $5^{\circ}, 15^{\circ}, 25^{\circ}$.
 
-\item Assuming airmass 1.25 templates, science images at the same
-  airmass but having orientation differences of (15; 25) degrees
-  ($r$--band; $i$--band) will yield the same rate of dipoles.
-  Assuming the same parallactic angle orientation, airmass differences
-  of (0.1, 0.15) respectively will yield the same results.
+\item Most/all image differences in the $u$--band and $g$--bands will
+  be highly sensitive to this DCR effect.
 
 \item The orientation of the DCR effect in the simulations is
   consistent with expectations.
