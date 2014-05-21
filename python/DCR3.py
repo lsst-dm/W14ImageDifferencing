@@ -84,8 +84,8 @@ if __name__ == "__main__":
 
         airmass1   = 1.25
         dairmasses = np.arange(-0.25, 0.26, 0.05)
-        #airmass1   = 1.00
-        #dairmasses = np.arange(0., 0.51, 0.05)
+        airmass1   = 1.00
+        dairmasses = np.arange(0., 0.51, 0.05)
         #airmass1   = 1.50
         #dairmasses = np.arange(-0.5, 0.1, 0.05)
 
@@ -120,13 +120,13 @@ if __name__ == "__main__":
         sp1.set_xticklabels(dthetas[::2], minor=False, weight="bold", fontsize=12)
         sp1.set_yticklabels(airmass1+dairmasses[::2], minor=False, weight="bold", fontsize=12)
         sp1.set_title("A star, %s-band" % (bpname), weight="bold", fontsize=14)
-        sp1.contour(drA, levels=(np.log10(0.001/0.6), np.log10(0.002/0.6)), colors=("b", "r"), linewidths=(3,), linestyles=("solid",))
+        sp1.contour(drA, levels=(np.log10(0.003), np.log10(0.006)), colors=("b", "r"), linewidths=(3,), linestyles=("solid","dashed"))
         hmap2 = sp2.pcolor(drM, cmap=plt.cm.Greys, shading="faceted", vmin=-4, vmax=-1)
         sp2.xaxis.set_major_locator(majorLocator)
         sp2.set_xticklabels(dthetas[::3], minor=False, weight="bold", fontsize=12)
         sp2.set_yticklabels(airmass1+dairmasses[::2], minor=False, weight="bold", fontsize=12)
         sp2.set_title("M star, %s-band" % (bpname), weight="bold", fontsize=14)
-        sp2.contour(drM, levels=(np.log10(0.001/0.6), np.log10(0.002/0.6)), colors=("b", "r"), linewidths=(3,), linestyles=("solid",))
+        sp2.contour(drM, levels=(np.log10(0.003), np.log10(0.006)), colors=("b", "r"), linewidths=(3,), linestyles=("solid","dashed"))
         cb1 = plt.colorbar(hmap1, ax=sp1, fraction=0.1)
         cb1.set_label("Log10 Offset('')", weight="bold", fontsize=10)
         cb2 = plt.colorbar(hmap2, ax=sp2, fraction=0.1)
