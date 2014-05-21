@@ -23,13 +23,13 @@ for pb in ["g", "r", "i"]:
         dcr[pb][sed] = {}
         dcr[pb][sed][0] = 0.0
 
-# Note: these are the realized offsets!
-dcr["g"]["A"][30] = 0.0205
-dcr["g"]["A"][50] = 0.0421
-dcr["r"]["A"][30] = 0.0062
-dcr["r"]["A"][50] = 0.0127
-dcr["i"]["A"][30] = 0.0025
-dcr["i"]["A"][50] = 0.0049
+# Note: these are the realized offsets in arcseconds; convert to pixels
+dcr["g"]["A"][30] = 0.0205 / 0.2
+dcr["g"]["A"][50] = 0.0421 / 0.2
+dcr["r"]["A"][30] = 0.0062 / 0.2
+dcr["r"]["A"][50] = 0.0127 / 0.2
+dcr["i"]["A"][30] = 0.0025 / 0.2
+dcr["i"]["A"][50] = 0.0049 / 0.2
 
 dcr["g"]["G"][30] = 0.0
 dcr["g"]["G"][50] = 0.0
@@ -38,12 +38,12 @@ dcr["r"]["G"][50] = 0.0
 dcr["i"]["G"][30] = 0.0
 dcr["i"]["G"][50] = 0.0
 
-dcr["g"]["M"][30] = 0.0385
-dcr["g"]["M"][50] = 0.0771
-dcr["r"]["M"][30] = 0.0097
-dcr["r"]["M"][50] = 0.0197
-dcr["i"]["M"][30] = 0.0057
-dcr["i"]["M"][50] = 0.0115
+dcr["g"]["M"][30] = 0.0385 / 0.2
+dcr["g"]["M"][50] = 0.0771 / 0.2
+dcr["r"]["M"][30] = 0.0097 / 0.2
+dcr["r"]["M"][50] = 0.0197 / 0.2
+dcr["i"]["M"][30] = 0.0057 / 0.2
+dcr["i"]["M"][50] = 0.0115 / 0.2
 
 
 def nVsThreshold(threshold):
@@ -151,9 +151,9 @@ if __name__ == "__main__":
                 results[visitId] = ((AstarAll, GstarAll, MstarAll, OrphAll))
     
             fig = plt.figure()
-            for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-4 for x in results[visitId][0]], [x[2]/x[3] for x in results[visitId][0]], "b%s" % (shape))
-            for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-4 for x in results[visitId][1]], [x[2]/x[3] for x in results[visitId][1]], "g%s" % (shape))
-            for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-4 for x in results[visitId][2]], [x[2]/x[3] for x in results[visitId][2]], "r%s" % (shape))
+            for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-3 for x in results[visitId][0]], [x[2]/x[3] for x in results[visitId][0]], "b%s" % (shape))
+            for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-3 for x in results[visitId][1]], [x[2]/x[3] for x in results[visitId][1]], "g%s" % (shape))
+            for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-3 for x in results[visitId][2]], [x[2]/x[3] for x in results[visitId][2]], "r%s" % (shape))
             plt.semilogx()
             #plt.semilogy()
             plt.xlabel("DCR Amplitude / FWHM")
@@ -164,6 +164,11 @@ if __name__ == "__main__":
             allResults[doPreConvolve] = results
         plt.show()
 
+        buff = open("SAVEME.pickle", "wb")
+        import cPickle
+        cPickle.dump(allResults, buff)
+        buff.close()
+
     import pdb; pdb.set_trace()
     for doPrefilter in (True, False):
         results = allResults[doPrefilter]
@@ -173,7 +178,7 @@ if __name__ == "__main__":
         # A
         regX = np.array(())
         regY = np.array(())
-        for visitId in (1,2,3): regX = np.concatenate((regX, np.array([x[1] if x[1]>0 else 1e-4 for x in results[visitId][0]])))
+        for visitId in (1,2,3): regX = np.concatenate((regX, np.array([x[1] if x[1]>0 else 1e-3 for x in results[visitId][0]])))
         for visitId in (1,2,3): regY = np.concatenate((regY, np.array([x[2]/x[3] for x in results[visitId][0]])))
         idx = np.isfinite(np.log10(regY))
         regA = stats.linregress(np.log10(regX)[idx], np.log10(regY)[idx])
@@ -186,7 +191,7 @@ if __name__ == "__main__":
         # M
         regX = np.array(())
         regY = np.array(())
-        for visitId in (1,2,3): regX = np.concatenate((regX, np.array([x[1] if x[1]>0 else 1e-4 for x in results[visitId][2]])))
+        for visitId in (1,2,3): regX = np.concatenate((regX, np.array([x[1] if x[1]>0 else 1e-3 for x in results[visitId][2]])))
         for visitId in (1,2,3): regY = np.concatenate((regY, np.array([x[2]/x[3] for x in results[visitId][2]])))
         idx = np.isfinite(np.log10(regY))
         regM = stats.linregress(np.log10(regX)[idx], np.log10(regY)[idx])
@@ -200,9 +205,9 @@ if __name__ == "__main__":
         xrat = 10**((yfoo-regM[1])/regM[0]) / 10**((yfoo-regA[1])/regA[0])
         print "RATIOS", yfoo, xrat
     
-        for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-4 for x in results[visitId][0]], [x[2]/x[3] for x in results[visitId][0]], "b%s" % (shape))
-        for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-4 for x in results[visitId][1]], [x[2]/x[3] for x in results[visitId][1]], "g%s" % (shape))
-        for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-4 for x in results[visitId][2]], [x[2]/x[3] for x in results[visitId][2]], "r%s" % (shape))
+        for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-3 for x in results[visitId][0]], [x[2]/x[3] for x in results[visitId][0]], "b%s" % (shape))
+        for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-3 for x in results[visitId][1]], [x[2]/x[3] for x in results[visitId][1]], "g%s" % (shape))
+        for visitId, shape in zip((1,2,3), ("o", "s", "^")): plt.plot([x[1] if x[1]>0 else 1e-3 for x in results[visitId][2]], [x[2]/x[3] for x in results[visitId][2]], "r%s" % (shape))
         plt.axhline(y=1, c='k', linestyle='--', alpha=0.5)
         plt.axvline(x=1, c='r', linestyle='--', alpha=0.5)
         plt.semilogx()
@@ -211,14 +216,9 @@ if __name__ == "__main__":
         plt.ylabel("Nfp / Nexpect", weight="bold", fontsize=15)
         plt.title("Prefilter %s" % (doPrefilter), weight="bold", fontsize=16)
         plt.setp(fig.gca().get_xticklabels()+fig.gca().get_yticklabels(), weight="bold", fontsize=14)
-        plt.xlim(9e-5, 4e-2)
+        plt.xlim(9e-4, 2e-1)
         plt.ylim(-1, 30)
         plt.show()
     
     
-        # REMEMBER YOU DID THIS
-        #(Pdb) buff = open("SAVEME.pickle", "wb")
-        #(Pdb) import cPickle
-        #(Pdb) cPickle.dump(allResults, buff)
-        #(Pdb) buff.close()
     
