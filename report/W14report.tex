@@ -5,6 +5,7 @@
 \usepackage[toc,page]{appendix}
 \usepackage{subfig}
 \usepackage{fancyvrb}
+\usepackage{hyperref} 
 
 % pdflatex W14report.tex; bibtex W14report; pdflatex W14report; pdflatex W14report
 
@@ -161,18 +162,27 @@ image as the image subtraction template.  For this reason, the derived
 class {\tt Winter2013ImageDifferenceTask} (so--called as it was
 initially designed for the W13 production cycle) was used, as this
 includes a specific flag to use a visit as the template, instead of an
-extraction from the coadd repository.  We next ran detection and
-measurement on the difference image to extract the {\tt DiaSources}
-from the image.  We looked at detections of both positive and negative
-polarity, and at a detection threshold of 5--sigma.  Dipoles were
-identified and measured, and their separation and orientation compared
-to what was expected from theory, and what was expected based on the
-inputs to {\tt phoSim}.  The numbers of false positives were recorded
-as a function of filter, image seeing, image airmass, and (where
-applicable) template airmass.  In the following, we reference the 3
-bins in seeing as {\tt Seeings 1,2,3} for seeing = 0.6'', 0.88'',
-1.2'', respectively, and the 5 visits at different airmasses as {\tt
-  Visits A,B,C,D,E}.  We briefly summarize each of the subtasks below.
+extraction from the coadd repository.  Two sets of image differencing
+runs were performed, the first being a ``classical'' analysis and the
+second pre--filtering the science image with its Psf\footnote{Briefly,
+  the science image is convolved with its Psf, yielding a maximum
+  likelihood image for point source detection.  The template is then
+  ``Psf''--matched to this image, where Psf is in quotes because the
+  signal being matched to is not truly a point spread function.  For
+  more details please see:
+  \url{https://dev.lsstcorp.org/cgit/LSST/DMS/report/W13report.git}}.
+We next ran detection and measurement on each difference image to
+extract the {\tt DiaSources} from the images.  We looked at detections
+of both positive and negative polarity, and at a detection threshold
+of 5--sigma.  Dipoles were identified and measured, and their
+separation and orientation compared to what was expected from theory,
+and what was expected based on the inputs to {\tt phoSim}.  The
+numbers of false positives were recorded as a function of filter,
+image seeing, image airmass, and (where applicable) template airmass.
+In the following, we reference the 3 bins in seeing as {\tt Seeings
+  1,2,3} for seeing = 0.6'', 0.88'', 1.2'', respectively, and the 5
+visits at different airmasses as {\tt Visits A,B,C,D,E}.  We briefly
+summarize each of the subtasks below.
 
 \subsection{Subtask 1: Reproduce W13 Results Using Current PhoSim}
 
